@@ -1,37 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { Booking } from '../../../types/booking';
-
-const BOOKINGS_FILE = path.join(process.cwd(), 'data', 'bookings.json');
-
-// Assicura che la cartella data esista
-async function ensureDataDir() {
-  const dataDir = path.join(process.cwd(), 'data');
-  try {
-    await fs.access(dataDir);
-  } catch {
-    await fs.mkdir(dataDir, { recursive: true });
-  }
-}
-
-// Legge le prenotazioni dal file
-async function readBookings(): Promise<Booking[]> {
-  try {
-    await ensureDataDir();
-    const data = await fs.readFile(BOOKINGS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    // Se il file non esiste o è vuoto, ritorna array vuoto
-    return [];
-  }
-}
-
-// Scrive le prenotazioni nel file
-async function writeBookings(bookings: Booking[]): Promise<void> {
-  await ensureDataDir();
-  await fs.writeFile(BOOKINGS_FILE, JSON.stringify(bookings, null, 2));
-}
+import { readBookings, writeBookings } from '../../../lib/storage';
 
 // Verifica se c'è conflitto di orario
 function hasTimeConflict(existingBookings: Booking[], newBooking: Omit<Booking, 'id'>): boolean {

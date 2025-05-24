@@ -1,19 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { Booking } from '../../../../types/booking';
-
-const BOOKINGS_FILE = path.join(process.cwd(), 'data', 'bookings.json');
-
-// Legge le prenotazioni dal file
-async function readBookings(): Promise<Booking[]> {
-  try {
-    const data = await fs.readFile(BOOKINGS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
+import { readBookings } from '../../../../lib/storage';
 
 // Genera gli slot temporali disponibili
 function generateTimeSlots(date: Date): string[] {
