@@ -9,8 +9,8 @@ import { services, barbers, generateTimeSlots, isDateAvailable } from '../data/b
 export default function BookingForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<BookingFormData>({
-    selectedService: null,
     selectedBarber: null,
+    selectedServices: [],
     selectedDate: '',
     selectedTime: '',
     customerInfo: {
