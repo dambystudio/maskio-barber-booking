@@ -1,0 +1,191 @@
+[
+  {
+    "id": "1748099636867jkn7kosgd",
+    "barberId": "1",
+    "customerInfo": {
+      "name": "Test Cliente",
+      "email": "test@example.com",
+      "phone": "1234567890",
+      "notes": "Test prenotazione"
+    },
+    "date": "2025-05-26",
+    "time": "10:00",
+    "services": [
+      {
+        "id": "taglio",
+        "name": "Taglio",
+        "duration": 30,
+        "price": 25
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 25,
+    "createdAt": "2025-05-24T15:13:56.867Z"
+  },
+  {
+    "id": "1748099724431qtas7p2vu",
+    "barberId": "1",
+    "customerInfo": {
+      "name": "Cliente Due",
+      "email": "cliente2@example.com",
+      "phone": "0987654321",
+      "notes": "Seconda prenotazione"
+    },
+    "date": "2025-05-26",
+    "time": "11:00",
+    "services": [
+      {
+        "id": "barba",
+        "name": "Barba",
+        "duration": 20,
+        "price": 15
+      }
+    ],
+    "totalDuration": 20,
+    "totalPrice": 15,
+    "createdAt": "2025-05-24T15:15:24.431Z"
+  },
+  {
+    "id": "17480997386647fxunnlpn",
+    "barberId": "2",
+    "customerInfo": {
+      "name": "Cliente Barbiere 2",
+      "email": "barbiere2@example.com",
+      "phone": "2222222222",
+      "notes": "Stesso orario ma barbiere diverso"
+    },
+    "date": "2025-05-26",
+    "time": "10:00",
+    "services": [
+      {
+        "id": "taglio",
+        "name": "Taglio",
+        "duration": 30,
+        "price": 25
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 25,
+    "createdAt": "2025-05-24T15:15:38.664Z"
+  },
+  {
+    "id": "1748099921141n2gqx7a2m",
+    "barberId": "1",
+    "customerInfo": {
+      "name": "Cliente Web Test",
+      "email": "webtest@example.com",
+      "phone": "3333333333",
+      "notes": "Prenotazione test dal web"
+    },
+    "date": "2025-05-26",
+    "time": "09:00",
+    "services": [
+      {
+        "id": "taglio",
+        "name": "Taglio Classico",
+        "duration": 30,
+        "price": 25
+      },
+      {
+        "id": "barba",
+        "name": "Rifinitura Barba",
+        "duration": 15,
+        "price": 15
+      }
+    ],
+    "totalDuration": 45,
+    "totalPrice": 40,
+    "duration": 45,
+    "createdAt": "2025-05-24T15:18:41.141Z"
+  },
+  {
+    "id": "1748099989608okdowhwjn",
+    "barberId": "fabio",
+    "date": "2025-05-24",
+    "time": "10:30",
+    "customerInfo": {
+      "name": "Davide D'Ambrosio",
+      "email": "davide431@outlook.it",
+      "phone": "+393382724488"
+    },
+    "services": [
+      {
+        "id": "taglio-fabio",
+        "name": "Taglio",
+        "description": "Taglio di capelli personalizzato",
+        "duration": 30,
+        "price": 18
+      }
+    ],
+    "createdAt": "2025-05-24T15:19:49.608Z"
+  },
+  {
+    "id": "1748100007695gi15tan9t",
+    "barberId": "fabio",
+    "date": "2025-05-24",
+    "time": "10:30",
+    "customerInfo": {
+      "name": "Davide D'Ambrosio",
+      "email": "davide431@outlook.it",
+      "phone": "+393382724488"
+    },
+    "services": [
+      {
+        "id": "taglio-fabio",
+        "name": "Taglio",
+        "description": "Taglio di capelli personalizzato",
+        "duration": 30,
+        "price": 18
+      }
+    ],
+    "createdAt": "2025-05-24T15:20:07.695Z"
+  },
+  {
+    "id": "1748100105506td3qtkdl6",
+    "barberId": "1",
+    "customerInfo": {
+      "name": "Test Oggi",
+      "email": "oggi@test.com",
+      "phone": "1111111111",
+      "notes": "Test per oggi"
+    },
+    "date": "2025-05-24",
+    "time": "10:30",
+    "services": [
+      {
+        "id": "taglio",
+        "name": "Taglio",
+        "duration": 30,
+        "price": 25
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 25,
+    "duration": 30,
+    "createdAt": "2025-05-24T15:21:45.506Z"
+  },
+  {
+    "id": "1748100186302y5tvoiap3",
+    "barberId": "1",
+    "customerInfo": {
+      "name": "Test Futuro",
+      "email": "futuro@test.com",
+      "phone": "4444444444",
+      "notes": "Dovrebbe funzionare"
+    },
+    "date": "2025-05-26",
+    "time": "16:00",
+    "services": [
+      {
+        "id": "taglio",
+        "name": "Taglio",
+        "duration": 30,
+        "price": 25
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 25,
+    "duration": 30,
+    "createdAt": "2025-05-24T15:23:06.302Z"
+  }
+]
