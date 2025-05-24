@@ -84,9 +84,8 @@ export default function BookingForm() {
     if (!formData.selectedBarber || formData.selectedServices.length === 0) {
       setError('Seleziona barbiere e servizi');
       return;
-    }
-
-    const totalDuration = getTotalDuration();
+    }    const totalDuration = getTotalDuration();
+    const totalPrice = getTotalPrice();
     
     // Crea i dati della prenotazione
     const bookingData = {
@@ -94,6 +93,8 @@ export default function BookingForm() {
       date: formData.selectedDate,
       time: formData.selectedTime,
       duration: totalDuration,
+      totalDuration: totalDuration,
+      totalPrice: totalPrice,
       customerInfo: {
         name: formData.customerInfo.name.trim(),
         email: formData.customerInfo.email.trim(),

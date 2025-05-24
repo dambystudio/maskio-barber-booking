@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { Booking } from '../../types/booking';
+import { Booking } from '../types/booking';
 
 const BOOKINGS_FILE = path.join(process.cwd(), 'data', 'bookings.json');
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -11,13 +11,14 @@ const DEMO_BOOKINGS: Booking[] = [
     id: "demo-1",
     barberId: "fabio",
     services: [
-      { id: "taglio-classico", name: "Taglio Classico", duration: 30, price: 25 }
+      { id: "taglio-classico", name: "Taglio Classico", description: "Taglio tradizionale con forbici", duration: 30, price: 25 }
     ],
     date: "2025-05-26",
     time: "10:00",
+    duration: 30,
     totalDuration: 30,
     totalPrice: 25,
-    customer: {
+    customerInfo: {
       name: "Marco Rossi",
       email: "marco.rossi@email.com",
       phone: "333-1234567"
@@ -28,14 +29,15 @@ const DEMO_BOOKINGS: Booking[] = [
     id: "demo-2", 
     barberId: "michele",
     services: [
-      { id: "taglio-moderno", name: "Taglio Moderno", duration: 45, price: 35 },
-      { id: "barba", name: "Rifinitura Barba", duration: 20, price: 15 }
+      { id: "taglio-moderno", name: "Taglio Moderno", description: "Taglio moderno e stiloso", duration: 45, price: 35 },
+      { id: "barba", name: "Rifinitura Barba", description: "Rifinitura e cura della barba", duration: 20, price: 15 }
     ],
     date: "2025-05-26",
     time: "15:30",
+    duration: 65,
     totalDuration: 65,
     totalPrice: 50,
-    customer: {
+    customerInfo: {
       name: "Luca Bianchi", 
       email: "luca.bianchi@email.com",
       phone: "347-9876543"
