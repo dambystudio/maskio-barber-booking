@@ -32,6 +32,74 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# file sensibili
+/private/
+/secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.csr
+
+# file di configurazione sensibili
+config.local.js
+config.production.js
+webpack.config.local.js
+
+# database locale
+*.sqlite
+*.sqlite3
+*.db
+*.mdb
+
+# backup files
+*.backup
+*.bak
+*.old
+
+# log files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# security related
+/security/
+auth.config.js
+security.config.js
+
+# credentials and certificates
+credentials/
+certificates/
+*.json.key
+google-credentials.json
+firebase-adminsdk.json
+
+# API documentation (if contains sensitive info)
+/docs/api/internal/
+
+# IDE specific files with potential sensitive data
+.vscode/settings.json
+.idea/
+
+# temporary files
+temp/
+tmp/
+*.tmp
+*.temp
+
+# source maps (can expose code structure)
+*.map
+*.js.map
+*.css.map
 
 # vercel
 .vercel
@@ -39,3 +107,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# webpack bundle analyzer
+.next/analyze/
+
+# Sentry
+.sentryclirc
+
+# Testing coverage
+coverage/
+.nyc_output/
+
+# Security scan results
+security-scan-results/
+vulnerability-reports/
