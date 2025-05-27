@@ -30,10 +30,35 @@ export default function BookingForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookingResponse, setBookingResponse] = useState<any>(null);
-  
-  // Add debouncing state and cache for rate limiting protection
+    // Add debouncing state and cache for rate limiting protection
   const [isDebouncing, setIsDebouncing] = useState(false);
   const [slotsCache, setSlotsCache] = useState<{[key: string]: {time: string, available: boolean}[]}>({});
+    // Closure system state
+  const [closedDays, setClosedDays] = useState<Set<number>>(new Set([0])); // Sunday closed by default
+  const [closedDates, setClosedDates] = useState<Set<string>>(new Set()); // Specific closed dates
+
+  // Load closure settings from localStorage
+  useEffect(() => {
+    const savedClosedDays = localStorage.getItem('maskio-closed-days');
+    if (savedClosedDays) {
+      try {
+        const parsed = JSON.parse(savedClosedDays);
+        setClosedDays(new Set(parsed));
+      } catch (error) {
+        console.error('Error parsing closed days from localStorage:', error);
+      }
+    }
+
+    const savedClosedDates = localStorage.getItem('maskio-closed-dates');
+    if (savedClosedDates) {
+      try {
+        const parsed = JSON.parse(savedClosedDates);
+        setClosedDates(new Set(parsed));
+      } catch (error) {
+        console.error('Error parsing closed dates from localStorage:', error);
+      }
+    }
+  }, []);
 
   // Load services and barbers from API
   useEffect(() => {
@@ -140,6 +165,31 @@ export default function BookingForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.selectedDate, formData.selectedBarber]);
 
+  // Check if a date is closed (either weekly recurring closure or specific date closure)
+  const isDateClosed = (dateString: string) => {
+    try {
+      // Parse the date string to get the day of week
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      const dayOfWeek = date.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
+      
+      // Check if this day of the week is closed
+      if (closedDays.has(dayOfWeek)) {
+        return true;
+      }
+      
+      // Check if this specific date is closed
+      if (closedDates.has(dateString)) {
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error checking if date is closed:', error);
+      return false;
+    }
+  };
+
   // Helper function to generate date buttons for the next 2 months (60 days)
   const generateDateButtons = () => {
     const dates = [];
@@ -149,11 +199,8 @@ export default function BookingForm() {
     for (let i = 0; i < 60; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
-      const dayNames = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
+        const dayNames = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
       const monthNames = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC'];
-        // Domenica chiuso
-      const isSunday = date.getDay() === 0;
       const isToday = i === 0;
       
       // Calculate proper week boundaries based on today's date
@@ -168,16 +215,19 @@ export default function BookingForm() {
       const day = String(date.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
       
+      // Check if date is closed using the flexible closure system
+      const isClosed = isDateClosed(dateString);
+      
       dates.push({
         date: dateString,
         dayName: dayNames[date.getDay()],
         dayNumber: date.getDate(),
         monthName: monthNames[date.getMonth()],
-        disabled: isSunday,
+        disabled: isClosed,
         isToday,
         isNextWeek,
         isNextMonth
-      });    }
+      });}
     
     return dates;
   };
@@ -582,8 +632,7 @@ export default function BookingForm() {
                     )}
                   </motion.button>
                 ))}              </div>
-              
-              {/* Legend for date colors */}
+                {/* Legend for date colors */}
               <div className="mt-4 flex flex-wrap gap-4 text-xs">
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-blue-200 border border-blue-400 rounded mr-2"></div>
@@ -599,7 +648,7 @@ export default function BookingForm() {
                 </div>
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-gray-200 border border-gray-400 rounded mr-2"></div>
-                  <span>Domenica (chiuso)</span>
+                  <span>Giorni di chiusura</span>
                 </div>
               </div>
               
