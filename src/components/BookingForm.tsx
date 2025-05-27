@@ -1,16 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Service, Barber, BookingFormData } from '../types/booking';
-import { barbers } from '../data/booking';
 import { BookingService, validateBookingData } from '../services/bookingService';
+import { fabioSpecificServices, micheleSpecificServices } from '../data/booking'; // Import specific services
+
+const steps = ['Barbiere', 'Servizi', 'Data e Ora', 'Dati Personali', 'Conferma'];
 
 export default function BookingForm() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [allServices, setAllServices] = useState<Service[]>([]); // All services from API
+  const [displayedServices, setDisplayedServices] = useState<Service[]>([]); // Services to show based on barber
+  const [barbers, setBarbers] = useState<Barber[]>([]);
   const [formData, setFormData] = useState<BookingFormData>({
     selectedBarber: null,
     selectedServices: [],
@@ -23,20 +26,148 @@ export default function BookingForm() {
       notes: ''
     }
   });
-
   const [availableSlots, setAvailableSlots] = useState<{time: string, available: boolean}[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [bookingResponse, setBookingResponse] = useState<any>(null);
+
+  // Load services and barbers from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Load all services from API
+        const servicesResponse = await fetch('/api/services');
+        if (!servicesResponse.ok) throw new Error('Failed to fetch services');
+        const servicesData = await servicesResponse.json();
+        setAllServices(servicesData);
+        // Initially, display all services or a subset if no barber is selected yet
+        // This might need adjustment based on desired initial state
+        setDisplayedServices(servicesData); 
+
+        // Load barbers from API
+        const barbersResponse = await fetch('/api/barbers');
+        if (!barbersResponse.ok) throw new Error('Failed to fetch barbers');
+        const barbersData = await barbersResponse.json();
+        
+        const updatedBarbers = barbersData.map((barber: any) => ({
+          ...barber,
+          specialties: typeof barber.specialties === 'string' 
+            ? JSON.parse(barber.specialties) 
+            : barber.specialties || [],
+          image: barber.image || '/placeholder-barber.jpg',
+          // Assign the hardcoded specific services for now, until API provides this
+          // IMPORTANT: This uses barber.name for matching, ensure names are consistent.
+          // Ideally, match by barber.id if the IDs from API match those in booking.ts
+          availableServices: barber.name === 'Fabio' ? fabioSpecificServices : barber.name === 'Michele' ? micheleSpecificServices : servicesData
+        }));
+        setBarbers(updatedBarbers);
+
+      } catch (err: any) {
+        console.error("Failed to load initial data", err);
+        setError(`Errore nel caricamento dei dati iniziali: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Update displayed services when a barber is selected
+  useEffect(() => {
+    if (formData.selectedBarber) {
+      // Use the pre-assigned availableServices from the barber object
+      setDisplayedServices(formData.selectedBarber.availableServices || allServices);
+    } else {
+      // If no barber is selected, show all services or a default set
+      setDisplayedServices(allServices);
+    }
+    // Reset selected services when barber changes or displayed services list changes
+    setFormData(prev => ({ ...prev, selectedServices: [] }));
+  }, [formData.selectedBarber, allServices]);
+
+  // Update available slots when date or barber changes
+  useEffect(() => {
+    const fetchSlots = async () => {
+      if (formData.selectedDate && formData.selectedBarber) {
+        setLoading(true);
+        try {
+          const slots = await BookingService.getAvailableSlots(formData.selectedDate, formData.selectedBarber.id);
+          setAvailableSlots(slots);
+        } catch (err: any) {
+          setError('Errore nel caricamento degli orari disponibili');
+          setAvailableSlots([]);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchSlots();
+  }, [formData.selectedDate, formData.selectedBarber]);
+
+  // Helper function to generate date buttons for the next 2 months (60 days)
+  const generateDateButtons = () => {
+    const dates = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+    
+    for (let i = 0; i < 60; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      
+      const dayNames = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
+      const monthNames = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC'];
+      
+      // Domenica chiuso
+      const isSunday = date.getDay() === 0;
+      const isToday = i === 0;
+      const isNextWeek = i >= 7 && i < 14;
+      const isNextMonth = i >= 30;
+      
+      // Fix timezone issue by manually formatting the date instead of using toISOString()
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      
+      dates.push({
+        date: dateString,
+        dayName: dayNames[date.getDay()],
+        dayNumber: date.getDate(),
+        monthName: monthNames[date.getMonth()],
+        disabled: isSunday,
+        isToday,
+        isNextWeek,
+        isNextMonth
+      });    }
+    
+    return dates;
+  };
+
+  // Helper function to format selected date
+  const formatSelectedDate = (dateString: string) => {
+    if (!dateString) return '';
+    
+    // Fix timezone issue by manually parsing the date string
+    const [year, month, day] = dateString.split('-').map(Number);
+    // Create date object using UTC to avoid any timezone confusion
+    const date = new Date(Date.UTC(year, month - 1, day)); // month is 0-indexed in JavaScript
+    
+    const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+    const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+    
+    // Use UTC methods to ensure consistency
+    return `${dayNames[date.getUTCDay()]} ${date.getUTCDate()} ${monthNames[date.getUTCMonth()]}`;
+  };
 
   // Handle barber selection
-  const handleBarberSelection = (barber: Barber) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      selectedBarber: barber,
-      selectedServices: [], // Reset services when changing barber
-      selectedDate: '',
-      selectedTime: ''
+  const handleBarberChange = (barberId: string) => {
+    const barber = barbers.find(b => b.id === barberId);
+    setFormData(prev => ({
+      ...prev,
+      selectedBarber: barber || null,
+      selectedTime: '' // Reset time as well
     }));
-    setAvailableSlots([]);
-    setError(null);
   };
 
   // Handle service selection (multiple services allowed)
@@ -70,73 +201,51 @@ export default function BookingForm() {
     }
   };
 
-  // Calculate total duration and price
-  const getTotalDuration = () => {
-    return formData.selectedServices.reduce((total, service) => total + service.duration, 0);
+  // Handle time selection
+  const handleTimeChange = (time: string) => {
+    setFormData(prev => ({ ...prev, selectedTime: time }));
   };
 
-  const getTotalPrice = () => {
-    return formData.selectedServices.reduce((total, service) => total + service.price, 0);
+  // Handle customer info change
+  const handleCustomerInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      customerInfo: {
+        ...prev.customerInfo,
+        [name]: value
+      }
+    }));
   };
+
+  // Calculate total duration and price
+  const totalDuration = formData.selectedServices.reduce((total, service) => total + service.duration, 0);
+  const totalPrice = formData.selectedServices.reduce((total, service) => total + service.price, 0);
 
   // Handle form submission
-  const handleSubmit = async () => {
-    if (!formData.selectedBarber || formData.selectedServices.length === 0) {
-      setError('Seleziona barbiere e servizi');
-      return;
-    }    const totalDuration = getTotalDuration();
-    const totalPrice = getTotalPrice();
-    
-    // Crea i dati della prenotazione
-    const bookingData = {
-      barberId: formData.selectedBarber.id,
-      date: formData.selectedDate,
-      time: formData.selectedTime,
-      duration: totalDuration,
-      totalDuration: totalDuration,
-      totalPrice: totalPrice,
-      customerInfo: {
-        name: formData.customerInfo.name.trim(),
-        email: formData.customerInfo.email.trim(),
-        phone: formData.customerInfo.phone.trim()
-      },
-      services: formData.selectedServices
-    };
-
-    // Validazione
-    const validationErrors = validateBookingData(bookingData);
-    if (validationErrors.length > 0) {
-      setError(validationErrors.join(', '));
-      return;
-    }
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!isStepValid(4)) return; // Ensure final step validation passes
 
     setLoading(true);
     setError(null);
-
-    try {
-      const newBooking = await BookingService.createBooking(bookingData);
+    setBookingResponse(null);    try {      const bookingPayload = {
+        barberId: formData.selectedBarber!.id,
+        serviceIds: formData.selectedServices.map(s => s.id),
+        services: formData.selectedServices, // Add the services array
+        date: formData.selectedDate,
+        time: formData.selectedTime,
+        customerInfo: formData.customerInfo,
+        totalPrice: totalPrice,
+        duration: totalDuration, // Use totalDuration for the main duration property
+        totalDuration: totalDuration // Keep this if it's used elsewhere, or remove if redundant
+      };
       
-      // Successo!
-      alert(`✅ Prenotazione confermata!\n\n📅 Data: ${new Date(formData.selectedDate).toLocaleDateString('it-IT')}\n🕐 Ora: ${formData.selectedTime}\n👨‍💼 Barbiere: ${formData.selectedBarber.name}\n💰 Totale: €${getTotalPrice()}\n\n📧 Riceverai una conferma via email.`);
-      
-      // Reset del form
-      setFormData({
-        selectedBarber: null,
-        selectedServices: [],
-        selectedDate: '',
-        selectedTime: '',
-        customerInfo: {
-          name: '',
-          email: '',
-          phone: '',
-          notes: ''
-        }
-      });
-      setCurrentStep(1);
-      setAvailableSlots([]);
-      
+      const response = await BookingService.createBooking(bookingPayload);
+      setBookingResponse(response); // Store full response
+      setCurrentStep(5); // Move to confirmation step
     } catch (err: any) {
-      setError(err.message || 'Errore nella prenotazione. Riprova.');
+      setError(err.message || 'Errore durante la creazione della prenotazione.');
     } finally {
       setLoading(false);
     }
@@ -158,6 +267,16 @@ export default function BookingForm() {
     }
   };
 
+  const nextStep = () => {
+    if (isStepValid(currentStep)) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep(Math.max(1, currentStep - 1));
+  };
+
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
@@ -174,7 +293,6 @@ export default function BookingForm() {
   };
 
   const stepLabels = ['Barbiere', 'Servizi', 'Data e Ora', 'Info Cliente'];
-
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
       {/* Error Message */}
@@ -188,18 +306,28 @@ export default function BookingForm() {
         </motion.div>
       )}
 
+      {/* Loading Initial Data */}
+      {barbers.length === 0 && !error && (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Caricamento barbieri e servizi...</p>
+        </div>
+      )}
+
       {/* Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
             <p className="mt-4 text-center">Caricamento...</p>
-          </div>
-        </div>
+          </div>        </div>
       )}
 
-      {/* Progress Bar */}
-      <div className="mb-8">
+      {/* Main Content - Only show when data is loaded */}
+      {barbers.length > 0 && (
+        <>
+          {/* Progress Bar */}
+          <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           {[1, 2, 3, 4].map((step) => (
             <div
@@ -248,7 +376,7 @@ export default function BookingForm() {
               <motion.div
                 key={barber.id}
                 variants={fadeInUp}
-                onClick={() => handleBarberSelection(barber)}
+                onClick={() => handleBarberChange(barber.id)}
                 className={`p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                   formData.selectedBarber?.id === barber.id
                     ? 'border-yellow-400 bg-yellow-50'
@@ -301,31 +429,34 @@ export default function BookingForm() {
           </motion.h2>
           
           <div className="grid md:grid-cols-2 gap-4">
-            {formData.selectedBarber.availableServices.map((service) => (
-              <motion.div
-                key={service.id}
-                variants={fadeInUp}
-                onClick={() => handleServiceToggle(service)}
-                className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                  formData.selectedServices.some(s => s.id === service.id)
+            {(formData.selectedBarber.availableServices || displayedServices).map((service: Service) => { // Use displayedServices as fallback, explicitly type service
+              const isSelected = formData.selectedServices.some(s => s.id === service.id);
+              return (
+                <motion.div
+                  key={service.id}
+                  variants={fadeInUp}
+                  onClick={() => handleServiceToggle(service)}
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    isSelected
                     ? 'border-yellow-400 bg-yellow-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold">{service.name}</h3>
-                    <p className="text-gray-600 text-sm">{service.description}</p>
-                    <p className="text-gray-500 text-sm mt-1">{service.duration} min</p>
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{service.name}</h3>
+                      <p className="text-gray-600 text-sm">{service.description}</p>
+                      <p className="text-gray-500 text-sm mt-1">{service.duration} min</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-bold">€{service.price}</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xl font-bold">€{service.price}</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
 
           {formData.selectedServices.length > 0 && (
@@ -342,7 +473,7 @@ export default function BookingForm() {
                   </div>
                 ))}
                 <div className="border-t pt-2 font-semibold flex justify-between">
-                  <span>Totale: €{getTotalPrice()} - {getTotalDuration()} min</span>
+                  <span>Totale: €{totalPrice} - {totalDuration} min</span>
                 </div>
               </div>
             </motion.div>
@@ -360,20 +491,100 @@ export default function BookingForm() {
         >
           <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6">
             Scegli data e orario
-          </motion.h2>
-
-          <motion.div variants={fadeInUp} className="space-y-4">
+          </motion.h2>          <motion.div variants={fadeInUp} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-4">
                 Seleziona la data
-              </label>
-              <input
-                type="date"
-                value={formData.selectedDate}
-                onChange={(e) => handleDateChange(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              />
+              </label>              {/* Date buttons */}
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 max-h-96 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                {generateDateButtons().map((dateButton) => (<motion.button
+                    key={dateButton.date}
+                    onClick={() => !dateButton.disabled && handleDateChange(dateButton.date)}
+                    disabled={dateButton.disabled}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 min-h-[80px] flex flex-col items-center justify-center relative ${
+                      formData.selectedDate === dateButton.date
+                        ? 'border-yellow-400 bg-yellow-400 text-black shadow-lg'
+                        : dateButton.disabled
+                        ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : dateButton.isToday
+                        ? 'border-blue-400 bg-blue-50 hover:border-blue-500 hover:shadow-md'
+                        : dateButton.isNextWeek
+                        ? 'border-green-300 bg-green-50 hover:border-green-400 hover:shadow-md'
+                        : dateButton.isNextMonth
+                        ? 'border-purple-300 bg-purple-50 hover:border-purple-400 hover:shadow-md'
+                        : 'border-gray-300 hover:border-yellow-400 bg-white hover:shadow-md'
+                    }`}
+                    whileHover={!dateButton.disabled ? { scale: 1.05 } : {}}
+                    whileTap={!dateButton.disabled ? { scale: 0.95 } : {}}
+                  >
+                    {dateButton.isToday && (
+                      <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full">
+                        OGGI
+                      </div>
+                    )}
+                    <div className={`text-xs font-medium ${
+                      formData.selectedDate === dateButton.date ? 'text-black' : 
+                      dateButton.disabled ? 'text-gray-400' : 
+                      dateButton.isToday ? 'text-blue-600' :
+                      dateButton.isNextWeek ? 'text-green-600' :
+                      dateButton.isNextMonth ? 'text-purple-600' :
+                      'text-gray-600'
+                    }`}>
+                      {dateButton.dayName}
+                    </div>
+                    <div className={`text-lg font-bold ${
+                      formData.selectedDate === dateButton.date ? 'text-black' : 
+                      dateButton.disabled ? 'text-gray-400' : 
+                      dateButton.isToday ? 'text-blue-700' :
+                      dateButton.isNextWeek ? 'text-green-700' :
+                      dateButton.isNextMonth ? 'text-purple-700' :
+                      'text-gray-900'
+                    }`}>
+                      {dateButton.dayNumber}
+                    </div>
+                    <div className={`text-xs ${
+                      formData.selectedDate === dateButton.date ? 'text-black' : 
+                      dateButton.disabled ? 'text-gray-400' : 
+                      dateButton.isToday ? 'text-blue-500' :
+                      dateButton.isNextWeek ? 'text-green-500' :
+                      dateButton.isNextMonth ? 'text-purple-500' :
+                      'text-gray-500'
+                    }`}>
+                      {dateButton.monthName}
+                    </div>
+                    {dateButton.disabled && (
+                      <div className="text-xs text-red-400 mt-1">Chiuso</div>
+                    )}
+                  </motion.button>
+                ))}              </div>
+              
+              {/* Legend for date colors */}
+              <div className="mt-4 flex flex-wrap gap-4 text-xs">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-200 border border-blue-400 rounded mr-2"></div>
+                  <span>Oggi</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-200 border border-green-400 rounded mr-2"></div>
+                  <span>Prossima settimana</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-purple-200 border border-purple-400 rounded mr-2"></div>
+                  <span>Prossimo mese</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-gray-200 border border-gray-400 rounded mr-2"></div>
+                  <span>Domenica (chiuso)</span>
+                </div>
+              </div>
+              
+              {formData.selectedDate && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 font-medium">
+                    📅 Data selezionata: {formatSelectedDate(formData.selectedDate)}
+                  </p>
+                </div>
+              )}
             </div>
 
             {formData.selectedDate && availableSlots.length > 0 && (
@@ -381,27 +592,42 @@ export default function BookingForm() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Orari disponibili
                 </label>
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                  {availableSlots.map((slot) => (
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">                  {availableSlots.map((slot) => (
                     <button
                       key={slot.time}
-                      onClick={() => setFormData(prev => ({ ...prev, selectedTime: slot.time }))}
+                      onClick={() => slot.available && setFormData(prev => ({ ...prev, selectedTime: slot.time }))}
                       disabled={!slot.available}
                       className={`p-3 rounded-lg border transition-all duration-200 ${
                         formData.selectedTime === slot.time
-                          ? 'border-yellow-400 bg-yellow-400 text-black'
+                          ? 'border-yellow-400 bg-yellow-400 text-black shadow-md'
                           : slot.available
-                          ? 'border-gray-300 hover:border-yellow-400 bg-white'
-                          : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                          ? 'border-gray-300 hover:border-yellow-400 bg-white hover:shadow-sm'
+                          : 'border-red-200 bg-red-100 text-red-400 cursor-not-allowed opacity-75'
                       }`}
                     >
-                      {slot.time}
+                      <span className={!slot.available ? 'line-through' : ''}>{slot.time}</span>
                     </button>
                   ))}
-                </div>
-                <div className="mt-2 text-sm text-gray-600">
-                  <p>📅 Orari: 9:00-12:30 e 15:00-17:30 (Domenica chiuso)</p>
-                  <p className="text-xs mt-1">❌ Gli slot occupati non sono selezionabili</p>
+                </div>                <div className="mt-2 text-sm text-gray-600">
+                  <p className="font-semibold text-blue-600">🗓️ Esteso! Ora puoi prenotare fino a 2 mesi in anticipo</p>
+                  <p>📅 Orari: 9:00-12:30 e 15:00-17:30 (Domenica chiuso)</p>                  <div className="flex flex-wrap gap-4 text-xs mt-2">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-yellow-400 border border-yellow-500 rounded mr-2"></div>
+                      <span>Selezionato</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-white border border-gray-300 rounded mr-2"></div>
+                      <span>Disponibile</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-red-100 border border-red-200 rounded mr-2 relative">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-red-500 text-xs font-bold">X</span>
+                        </div>
+                      </div>
+                      <span className="text-red-500">Occupato</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -416,7 +642,7 @@ export default function BookingForm() {
         </motion.div>
       )}
 
-      {/* Step 4: Customer Information */}
+      {/* Step 4: Customer Info & Summary */}
       {currentStep === 4 && (
         <motion.div
           variants={staggerContainer}
@@ -424,109 +650,202 @@ export default function BookingForm() {
           animate="visible"
           className="space-y-6"
         >
-          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6">
-            I tuoi dati
+          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-gray-800">
+            Dati Personali e Riepilogo
           </motion.h2>
 
-          <motion.div variants={fadeInUp} className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome *
-              </label>
-              <input
-                type="text"
-                value={formData.customerInfo.name}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  customerInfo: { ...prev.customerInfo, name: e.target.value }
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                placeholder="Il tuo nome"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email *
-              </label>
-              <input
-                type="email"
-                value={formData.customerInfo.email}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  customerInfo: { ...prev.customerInfo, email: e.target.value }
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                placeholder="la.tua@email.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Telefono *
-              </label>
-              <input
-                type="tel"
-                value={formData.customerInfo.phone}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  customerInfo: { ...prev.customerInfo, phone: e.target.value }
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                placeholder="+39 123 456 7890"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Note aggiuntive
-              </label>
-              <textarea
-                value={formData.customerInfo.notes}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  customerInfo: { ...prev.customerInfo, notes: e.target.value }
-                }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                placeholder="Eventuali richieste speciali..."
-              />
-            </div>
-          </motion.div>
-
-          {/* Booking Summary */}
-          <motion.div variants={fadeInUp} className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">📋 Riepilogo prenotazione</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>👨‍💼 Barbiere:</span>
-                <span className="font-medium">{formData.selectedBarber?.name}</span>
-              </div>
-              <div className="flex justify-between items-start">
-                <span>✂️ Servizi:</span>
-                <div className="text-right">
-                  {formData.selectedServices.map((service, index) => (
-                    <div key={service.id}>
-                      {service.name} - €{service.price}
-                    </div>
-                  ))}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Customer Info Input Fields */}
+            <motion.div variants={fadeInUp} className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+              <h3 className="text-xl font-semibold mb-6 text-gray-800 flex items-center">
+                <svg className="w-6 h-6 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                I tuoi dati
+              </h3>
+              
+              <div className="space-y-5">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Nome Completo *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    id="name"
+                    value={formData.customerInfo.name}
+                    onChange={handleCustomerInfoChange}
+                    required
+                    placeholder="Es. Mario Rossi"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    value={formData.customerInfo.email}
+                    onChange={handleCustomerInfoChange}
+                    required
+                    placeholder="mario.rossi@email.com"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    Telefono *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    id="phone"
+                    value={formData.customerInfo.phone}
+                    onChange={handleCustomerInfoChange}
+                    required
+                    placeholder="+39 123 456 7890"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+                    Note aggiuntive (opzionale)
+                  </label>
+                  <textarea
+                    name="notes"
+                    id="notes"
+                    value={formData.customerInfo.notes}
+                    onChange={handleCustomerInfoChange}
+                    rows={3}
+                    placeholder="Eventuali richieste speciali o note..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-gray-900 placeholder-gray-400 resize-none"
+                  ></textarea>
                 </div>
               </div>
-              <div className="flex justify-between">
-                <span>📅 Data e ora:</span>
-                <span className="font-medium">
-                  {new Date(formData.selectedDate).toLocaleDateString('it-IT')} alle {formData.selectedTime}
-                </span>
+            </motion.div>
+
+            {/* Booking Summary */}
+            <motion.div variants={fadeInUp} className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl shadow-lg border border-yellow-200">
+              <h3 className="text-xl font-semibold mb-6 text-gray-800 flex items-center">
+                <svg className="w-6 h-6 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Riepilogo Prenotazione
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
+                  <svg className="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm text-gray-600">Barbiere</p>
+                    <p className="font-semibold text-gray-800">{formData.selectedBarber?.name}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white rounded-lg shadow-sm">
+                  <div className="flex items-center mb-2">
+                    <svg className="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8" />
+                    </svg>
+                    <p className="text-sm text-gray-600">Servizi</p>
+                  </div>
+                  <ul className="space-y-1 ml-8">
+                    {formData.selectedServices.map(s => (
+                      <li key={s.id} className="text-sm text-gray-800 flex justify-between">
+                        <span>{s.name}</span>
+                        <span className="font-medium">€{s.price}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
+                  <svg className="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm text-gray-600">Data e Ora</p>
+                    <p className="font-semibold text-gray-800">{formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 mt-4">
+                  <div className="flex justify-between items-center p-3 bg-yellow-200 rounded-lg">
+                    <div className="flex items-center">
+                      <svg className="w-5 h-5 mr-3 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="font-semibold text-yellow-800">Durata Totale</span>
+                    </div>
+                    <span className="font-bold text-yellow-800">{totalDuration} min</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center p-3 bg-green-200 rounded-lg mt-2">
+                    <div className="flex items-center">
+                      <svg className="w-5 h-5 mr-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                      <span className="font-semibold text-green-800">Prezzo Totale</span>
+                    </div>
+                    <span className="font-bold text-green-800 text-lg">€{totalPrice}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>⏱️ Durata totale:</span>
-                <span className="font-medium">{getTotalDuration()} minuti</span>
-              </div>
-              <div className="border-t pt-2 flex justify-between font-semibold text-lg">
-                <span>💰 Totale:</span>
-                <span>€{getTotalPrice()}</span>
-              </div>
-            </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Step 5: Confirmation / Success Message */}
+      {currentStep === 5 && bookingResponse && (
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="text-center space-y-6"
+        >
+          <motion.div variants={fadeInUp}>
+            <svg className="w-16 h-16 mx-auto text-green-500" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </motion.div>
+          <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-green-600">
+            Prenotazione Confermata!
+          </motion.h2>
+          <motion.div variants={fadeInUp} className="bg-gray-50 p-6 rounded-lg shadow text-left space-y-2">
+            <p><strong>ID Prenotazione:</strong> {bookingResponse.id || bookingResponse.booking?.id}</p>
+            <p><strong>Barbiere:</strong> {formData.selectedBarber?.name}</p>
+            <p><strong>Servizi:</strong> {formData.selectedServices.map(s => s.name).join(', ')}</p>
+            <p><strong>Data:</strong> {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
+            <p><strong>Cliente:</strong> {formData.customerInfo.name}</p>
+            <p>Grazie per aver prenotato con Maskio Barber!</p>
+          </motion.div>
+
+          <motion.div variants={fadeInUp} className="mt-8 text-center">
+            <button
+              onClick={() => {
+                setCurrentStep(1);
+                setFormData({
+                  selectedBarber: null,
+                  selectedServices: [],
+                  selectedDate: '',
+                  selectedTime: '',
+                  customerInfo: { name: '', email: '', phone: '', notes: '' }
+                });
+                setBookingResponse(null);
+                setAvailableSlots([]);
+                setError(null);
+              }}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
+            >
+              Effettua Nuova Prenotazione
+            </button>
           </motion.div>
         </motion.div>
       )}
@@ -551,12 +870,12 @@ export default function BookingForm() {
         </motion.button>
 
         <motion.button
-          onClick={() => {
+          onClick={(event) => { // Add event parameter here
             if (currentStep === 4) {
-              handleSubmit();
+              handleSubmit(event); // Pass event to handleSubmit
             } else {
-              setCurrentStep(currentStep + 1);
-              setError(null);
+              // For other steps, nextStep() already handles validation and setError(null)
+              nextStep(); 
             }
           }}
           disabled={!isStepValid(currentStep) || loading}
@@ -567,10 +886,11 @@ export default function BookingForm() {
           }`}
           whileHover={{ scale: isStepValid(currentStep) && !loading ? 1.05 : 1 }}
           whileTap={{ scale: isStepValid(currentStep) && !loading ? 0.95 : 1 }}
-        >
-          {loading ? 'Caricamento...' : currentStep === 4 ? 'Conferma Prenotazione' : 'Continua'}
+        >          {loading ? 'Caricamento...' : currentStep === 4 ? 'Conferma Prenotazione' : 'Continua'}
         </motion.button>
       </div>
+        </>
+      )}
     </div>
   );
 }

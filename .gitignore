@@ -121,3 +121,5 @@ coverage/
 # Security scan results
 security-scan-results/
 vulnerability-reports/
+
+.vercel

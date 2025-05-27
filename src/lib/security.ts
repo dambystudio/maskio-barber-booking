@@ -5,20 +5,52 @@ class SecurityManager {
   private static instance: SecurityManager;
   private debugDetected = false;
   private devToolsOpen = false;
-  private isDevelopment = false;
-
-  private constructor() {
+  private isDevelopment = false;  private constructor() {
     if (typeof window !== 'undefined') {
       // Check if we're in development mode
       this.isDevelopment = process.env.NODE_ENV === 'development' || 
                           window.location.hostname === 'localhost' ||
                           window.location.hostname === '127.0.0.1';
       
-      // Only enable security in production
-      if (!this.isDevelopment) {
+      // Check if we're on mobile device
+      const isMobile = this.isMobileDevice();
+      
+      // Only enable security in production AND NOT on mobile
+      // This ensures mobile users can zoom and use the site normally
+      if (!this.isDevelopment && !isMobile) {
+        console.log('Security activated for desktop production');
         this.initProtections();
+      } else if (isMobile) {
+        console.log('Mobile device detected - security disabled for better UX');
+      } else {
+        console.log('Development mode - security disabled');
       }
     }
+  }
+  private isMobileDevice(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobileUserAgent = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isSmallScreen = window.innerWidth <= 768;
+    const isMobileViewport = window.screen.width <= 768;
+    
+    return isMobileUserAgent || (hasTouchScreen && (isSmallScreen || isMobileViewport));
+  }
+  
+  private isZoomEvent(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    // Check if it's a zoom event by comparing visual viewport
+    if ('visualViewport' in window && window.visualViewport) {
+      const zoomLevel = window.innerWidth / window.visualViewport.width;
+      return zoomLevel > 1.1; // Zoom detected if scale > 110%
+    }
+    
+    // Fallback: check devicePixelRatio changes
+    const currentZoom = window.devicePixelRatio || 1;
+    return currentZoom !== 1;
   }
 
   public static getInstance(): SecurityManager {
@@ -91,19 +123,28 @@ class SecurityManager {
       (window as any).__originalConsole = originalConsole;
     }
   }
-
   private detectDevTools(): void {
     if (typeof window === 'undefined') return;
 
-    // Method 1: Window size detection
+    // Method 1: Window size detection (enhanced for mobile)
     let devtools = {
       open: false,
       orientation: null as string | null
     };
 
     setInterval(() => {
-      if (window.outerHeight - window.innerHeight > 200 || 
-          window.outerWidth - window.innerWidth > 200) {
+      // Skip detection if mobile device or zoom event
+      if (this.isMobileDevice() || this.isZoomEvent()) {
+        return;
+      }
+      
+      const heightDiff = window.outerHeight - window.innerHeight;
+      const widthDiff = window.outerWidth - window.innerWidth;
+      
+      // More conservative thresholds and additional checks
+      if ((heightDiff > 250 || widthDiff > 250) && 
+          !this.isZoomEvent() && 
+          !this.isMobileDevice()) {
         if (!devtools.open) {
           devtools.open = true;
           this.devToolsOpen = true;
@@ -113,17 +154,27 @@ class SecurityManager {
         devtools.open = false;
         this.devToolsOpen = false;
       }
-    }, 500);
+    }, 1000); // Increased interval to 1 second
 
     // Method 2: toString modification detection
     let element = new Image();
     Object.defineProperty(element, 'id', {
       get: () => {
-        this.handleSecurityBreach('devtools_element');
+        // Only trigger on desktop
+        if (!this.isMobileDevice()) {
+          this.handleSecurityBreach('devtools_element');
+        }
         return 'devtools_detected';
       }
-    });    // Method 3: Performance timing
+    });
+
+    // Method 3: Performance timing (mobile-safe)
     setInterval(() => {
+      // Skip on mobile devices
+      if (this.isMobileDevice()) {
+        return;
+      }
+      
       const start = performance.now();
       // Use original console if available to avoid recursion
       if (typeof window !== 'undefined' && (window as any).__originalConsole) {
@@ -131,10 +182,10 @@ class SecurityManager {
       }
       const end = performance.now();
       
-      if (end - start > 1) {
+      if (end - start > 2) { // Increased threshold for mobile compatibility
         this.handleSecurityBreach('devtools_performance');
       }
-    }, 3000);
+    }, 5000); // Increased interval to 5 seconds
   }
 
   private disableContextMenu(): void {
@@ -206,15 +257,19 @@ class SecurityManager {
     };
     
     requestAnimationFrame(monitor);
-  }
-  private handleSecurityBreach(type: string): void {
+  }  private handleSecurityBreach(type: string): void {
+    // Double-check: never trigger on mobile devices or during zoom
+    if (this.isMobileDevice() || this.isZoomEvent()) {
+      return;
+    }
+    
     // Use original console if available to avoid recursion
     if (typeof window !== 'undefined' && (window as any).__originalConsole) {
       (window as any).__originalConsole.clear();
     }
     
-    // Redirect to blank page
-    if (typeof window !== 'undefined') {
+    // Redirect to blank page only on desktop
+    if (typeof window !== 'undefined' && !this.isMobileDevice()) {
       window.location.replace('about:blank');
     }
     
@@ -228,11 +283,10 @@ class SecurityManager {
     //   method: 'POST',
     //   body: JSON.stringify({ type, timestamp: Date.now() })
     // }).catch(() => {});
-  }
-  // Method to check if environment is secure
+  }  // Method to check if environment is secure
   public isSecure(): boolean {
-    // Always return true in development mode
-    if (this.isDevelopment) {
+    // Always return true in development mode or mobile devices
+    if (this.isDevelopment || this.isMobileDevice()) {
       return true;
     }
     return !this.debugDetected && !this.devToolsOpen;
@@ -256,11 +310,16 @@ class SecurityManager {
                          window.location.hostname === 'localhost' ||
                          window.location.hostname === '127.0.0.1';
     
+    // Check if we're on mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                     (window.innerWidth <= 768) ||
+                     ('ontouchstart' in window);
+    
     // Initialize security on load
     SecurityManager.getInstance();
     
-    // Additional protection layer (only in production)
-    if (!isDevelopment) {
+    // Additional protection layer (only in production and NOT mobile)
+    if (!isDevelopment && !isMobile) {
       const _0x7g8h9i = setInterval(() => {
         if (!SecurityManager.getInstance().isSecure()) {
           clearInterval(_0x7g8h9i);

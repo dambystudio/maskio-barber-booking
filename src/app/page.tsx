@@ -309,48 +309,8 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                 </motion.button>
               </Link>
             </motion.div>
-          </motion.div>
-        </div>
-
-        {/* Enhanced Scroll Indicator */}
-        <motion.div 
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white z-20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.5 }}
-        >
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="flex flex-col items-center cursor-pointer"
-            whileHover={{ scale: 1.1 }}
-          >
-            <motion.span 
-              className="text-sm mb-3 opacity-80"
-              animate={{ opacity: [0.8, 1, 0.8] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              Scorri per saperne di più
-            </motion.span>
-            <motion.div
-              className="w-8 h-8 border-2 border-amber-400 rounded-full flex items-center justify-center"
-              animate={{ 
-                borderColor: ["#fbbf24", "#f59e0b", "#fbbf24"],
-                boxShadow: [
-                  "0 0 0px rgba(245, 158, 11, 0)",
-                  "0 0 20px rgba(245, 158, 11, 0.5)",
-                  "0 0 0px rgba(245, 158, 11, 0)"
-                ]
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </div>      {/* About Section with Enhanced Animations */}
+          </motion.div>        </div>
+      </div>{/* About Section with Enhanced Animations */}
       <motion.section 
         className="py-20 bg-gradient-to-br from-gray-50 to-amber-50/20 relative overflow-hidden"
         initial="hidden"

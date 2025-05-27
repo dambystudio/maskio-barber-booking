@@ -1,0 +1,12 @@
+{
+  "barberId": "2ca026cf-400c-4fd1-9935-5fadbef7d4b9",
+  "services": ["a9244106-f6a5-4ab7-b3cc-d135a53b7572"],
+  "date": "2025-05-27",
+  "time": "14:00",
+  "customerInfo": {
+    "name": "Test Customer",
+    "email": "test@example.com",
+    "phone": "+39 123 456 7890",
+    "notes": "Test booking"
+  }
+}

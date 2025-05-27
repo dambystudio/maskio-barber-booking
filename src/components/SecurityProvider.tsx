@@ -8,18 +8,25 @@ interface SecurityProviderProps {
 }
 
 export default function SecurityProvider({ children }: SecurityProviderProps) {
-  useEffect(() => {
-    // Check if we're in development mode
+  useEffect(() => {    // Check if we're in development mode
     const isDevelopment = process.env.NODE_ENV === 'development' || 
                          typeof window !== 'undefined' && (
                            window.location.hostname === 'localhost' ||
                            window.location.hostname === '127.0.0.1'
                          );
-      // Initialize security protections
+    
+    // Check if we're on mobile device
+    const isMobile = typeof window !== 'undefined' && (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (window.innerWidth <= 768) ||
+      ('ontouchstart' in window)
+    );
+    
+    // Initialize security protections
     SecurityManager.getInstance();
     
-    // Additional runtime protections (only in production)
-    if (!isDevelopment) {
+    // Additional runtime protections (only in production and NOT mobile)
+    if (!isDevelopment && !isMobile) {
       const protectPage = () => {
         // Disable right-click
         document.addEventListener('contextmenu', (e) => {

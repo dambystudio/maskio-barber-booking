@@ -39,7 +39,6 @@ export class BookingService {
       throw error;
     }
   }
-
   // Ottieni slot disponibili per una data e barbiere
   static async getAvailableSlots(date: string, barberId: string): Promise<TimeSlot[]> {
     try {
@@ -50,7 +49,8 @@ export class BookingService {
         throw new Error('Errore nel caricamento degli slot disponibili');
       }
       
-      return await response.json();
+      const timeSlots = await response.json();
+      return timeSlots; // Now the API returns TimeSlot[] directly
     } catch (error) {
       console.error('Errore nel caricamento degli slot:', error);
       throw error;

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Panel API</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .loading { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 20px; }
+        .date-button { margin: 5px; padding: 8px 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer; }
+        .date-button.active { background: #ffc107; color: #000; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Panel API & Booking Display</h1>
+    
+    <div>
+        <h3>Test Different Dates:</h3>
+        <button class="date-button" onclick="testDate('2025-05-26')">2025-05-26 (2 bookings)</button>
+        <button class="date-button" onclick="testDate('2025-05-27')">2025-05-27 (1 booking)</button>
+        <button class="date-button" onclick="testDate('2025-05-28')">2025-05-28 (5 bookings)</button>
+        <button class="date-button" onclick="testDate('2025-06-01')">2025-06-01 (0 bookings)</button>
+    </div>
+    
+    <button onclick="testAllDates()">Test All Dates</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        let currentTest = 0;
+        
+        function addResult(message, type = 'loading') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testDate(date) {
+            addResult(`🔄 Testing date ${date}...`, 'loading');
+            
+            try {
+                // Add cache busting and proper headers like the panel does
+                const params = new URLSearchParams();
+                params.append('date', date);
+                params.append('_t', Date.now().toString());
+                
+                const url = `${API_BASE}/bookings?${params.toString()}`;
+                console.log('📡 Fetching URL:', url);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const bookings = data.bookings || [];
+                    
+                    addResult(`✅ Date ${date}: Found ${bookings.length} bookings`, 'success');
+                    
+                    if (bookings.length > 0) {
+                        bookings.forEach(booking => {
+                            addResult(`&nbsp;&nbsp;&nbsp;📋 ${booking.customer_name} - ${booking.booking_time} (${booking.barber_name})`, 'success');
+                        });
+                    }
+                } else {
+                    addResult(`❌ Date ${date}: API error ${response.status} - ${response.statusText}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Date ${date}: Error - ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAllDates() {
+            clearResults();
+            addResult('🚀 Starting comprehensive API test...', 'loading');
+            
+            const testDates = [
+                { date: '2025-05-26', expected: 2 },
+                { date: '2025-05-27', expected: 1 },
+                { date: '2025-05-28', expected: 5 },
+                { date: '2025-06-01', expected: 0 }
+            ];
+            
+            for (const test of testDates) {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between requests
+                await testDate(test.date);
+            }
+            
+            addResult('🎉 All tests completed!', 'success');
+        }
+        
+        // Test if we can access the panel directly
+        async function testPanelAccess() {
+            try {
+                const response = await fetch('http://localhost:3000/pannello-prenotazioni');
+                if (response.ok) {
+                    addResult('✅ Panel page accessible', 'success');
+                } else {
+                    addResult(`❌ Panel access error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Panel access error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Run initial test
+        window.onload = function() {
+            addResult('🌐 Testing panel access...', 'loading');
+            testPanelAccess();
+        };
+    </script>
+</body>
+</html>

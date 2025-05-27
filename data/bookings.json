@@ -187,5 +187,153 @@
     "totalPrice": 25,
     "duration": 30,
     "createdAt": "2025-05-24T15:23:06.302Z"
+  },
+  {
+    "id": "booking_1748180439573_k4mh2y8gn",
+    "barberId": "1",
+    "customerInfo": {
+      "name": "Test Cliente Timezone",
+      "email": "timezone@example.com",
+      "phone": "+39 123 456 7890",
+      "notes": ""
+    },
+    "date": "2025-05-26",
+    "time": "12:30",
+    "services": [
+      {
+        "price": 25,
+        "duration": 30,
+        "name": "Taglio Classico",
+        "id": 1
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 25,
+    "status": "confirmed",
+    "createdAt": "2025-05-25T13:40:39.573Z"
+  },
+  {
+    "id": "booking_1748180452176_dv5xu3f0c",
+    "barberId": "1",
+    "customerInfo": {
+      "name": "Test Cliente 17:30",
+      "email": "evening@example.com",
+      "phone": "+39 987 654 3210",
+      "notes": ""
+    },
+    "date": "2025-05-26",
+    "time": "17:30",
+    "services": [
+      {
+        "price": 35,
+        "duration": 45,
+        "name": "Taglio e Barba",
+        "id": 2
+      }
+    ],
+    "totalDuration": 45,
+    "totalPrice": 35,
+    "status": "confirmed",
+    "createdAt": "2025-05-25T13:40:52.176Z"
+  },
+  {
+    "id": "booking_1748180501212_9wgqrrhv1",
+    "barberId": "fabio",
+    "customerInfo": {
+      "name": "Davide D'Ambrosio",
+      "email": "davide431@outlook.it",
+      "phone": "+393382724488",
+      "notes": ""
+    },
+    "date": "2025-05-26",
+    "time": "15:30",
+    "services": [
+      {
+        "id": "taglio-fabio",
+        "name": "Taglio",
+        "description": "Taglio di capelli personalizzato",
+        "duration": 30,
+        "price": 18
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 18,
+    "status": "confirmed",
+    "createdAt": "2025-05-25T13:41:41.212Z"
+  },
+  {
+    "id": "booking_1748181309610_t66gqh3pj",
+    "barberId": "michele",
+    "customerInfo": {
+      "name": "Davide D'Ambrosio",
+      "email": "davide431@outlook.it",
+      "phone": "+393382724488",
+      "notes": ""
+    },
+    "date": "2025-05-26",
+    "time": "15:30",
+    "services": [
+      {
+        "id": "barba-michele",
+        "name": "Barba",
+        "description": "Modellatura e contorno barba",
+        "duration": 15,
+        "price": 10
+      }
+    ],
+    "totalDuration": 15,
+    "totalPrice": 10,
+    "status": "confirmed",
+    "createdAt": "2025-05-25T13:55:09.610Z"
+  },
+  {
+    "id": "booking_1748181504021_3qr9bc45w",
+    "barberId": "michele",
+    "customerInfo": {
+      "name": "reter",
+      "email": "etr@outlook.it",
+      "phone": "+t",
+      "notes": ""
+    },
+    "date": "2025-05-26",
+    "time": "16:00",
+    "services": [
+      {
+        "id": "taglio-barba-michele",
+        "name": "Taglio e Barba",
+        "description": "Taglio di capelli (qualsiasi), contorno barba e modellatura della stessa",
+        "duration": 40,
+        "price": 23
+      }
+    ],
+    "totalDuration": 40,
+    "totalPrice": 23,
+    "status": "confirmed",
+    "createdAt": "2025-05-25T13:58:24.021Z"
+  },
+  {
+    "id": "booking_1748253368174_m15nrtq01",
+    "barberId": "fabio",
+    "customerInfo": {
+      "name": "Davide D",
+      "email": "davide43@ot.it",
+      "phone": "+3933827",
+      "notes": ""
+    },
+    "date": "2025-05-26",
+    "time": "16:00",
+    "services": [
+      {
+        "id": "taglio-fabio",
+        "name": "Taglio",
+        "description": "Taglio di capelli personalizzato",
+        "duration": 30,
+        "price": 18
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 18,
+    "status": "confirmed",
+    "createdAt": "2025-05-26T09:56:08.175Z"
   }
 ]

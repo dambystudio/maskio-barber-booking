@@ -12,7 +12,7 @@ export interface Barber {
   specialties: string[];
   image: string;
   experience?: string;
-  availableServices: Service[];
+  availableServices?: Service[]; // Made optional
 }
 
 export interface TimeSlot {
