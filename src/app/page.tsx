@@ -373,7 +373,7 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                   variants={fadeInUp}
                   className="text-lg text-gray-600 leading-relaxed"
                 >
-                  Da oltre 10 anni, Maskio Barber Concept rappresenta l'eccellenza nella cura dell'uomo. 
+                  Maskio Barber Concept rappresenta l'eccellenza nella cura dell'uomo. 
                   Il nostro team di professionisti esperti combina tecniche tradizionali con le ultime 
                   tendenze per offrirti un'esperienza unica e personalizzata.
                 </motion.p>
@@ -596,21 +596,21 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                 title: 'Taglio & Styling',
                 description: 'Tagli personalizzati per esaltare la tua personalità e stile',
                 icon: '✂️',
-                price: 'da 25€',
+                price: 'da 18€',
                 gradient: 'from-blue-500/10 to-purple-500/10'
               },
               {
                 title: 'Rasatura Tradizionale',
                 description: 'L\'arte della rasatura con rasoio a mano libera',
                 icon: '🪒',
-                price: 'da 20€',
+                price: 'da 10€',
                 gradient: 'from-amber-500/10 to-orange-500/10'
               },
               {
                 title: 'Trattamenti Barba',
                 description: 'Cura completa per una barba sempre perfetta',
                 icon: '🧔',
-                price: 'da 15€',
+                price: 'da 25€',
                 gradient: 'from-green-500/10 to-teal-500/10'
               }
             ].map((service, index) => (

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '../components/Navbar';
 import SecurityProvider from '../components/SecurityProvider';
+import DailyUpdateManager from '../components/DailyUpdateManager';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,14 +32,14 @@ export default function RootLayout({
         <meta httpEquiv="Strict-Transport-Security" content="max-age=63072000; includeSubDomains; preload" />
         <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
         <meta httpEquiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()" />
-        
-        {/* Prevent caching of sensitive pages */}
+          {/* Prevent caching of sensitive pages */}
         <meta httpEquiv="Cache-Control" content="no-store, no-cache, must-revalidate, proxy-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
       </head>
       <body className={inter.className}>
         <SecurityProvider>
+          <DailyUpdateManager />
           <Navbar />
           <main className="min-h-screen pt-20">
             {children}

@@ -21,8 +21,9 @@ interface Booking {
 interface Stats {
   totalBookings: number;
   todayBookings: number;
-  weeklyRevenue: number;
-  popularService: string;
+  selectedDateBookings: number;
+  dailyRevenue: number;
+  selectedDate: string;
 }
 
 export default function PannelloPrenotazioni() {
@@ -31,8 +32,9 @@ export default function PannelloPrenotazioni() {
   const [loading, setLoading] = useState(true);
   const [isDebouncing, setIsDebouncing] = useState(false);
 
-  // Cache semplice per evitare chiamate duplicate
-  const [cache, setCache] = useState<{[key: string]: Booking[]}>({});
+  // Cache per prenotazioni e statistiche separate
+  const [bookingsCache, setBookingsCache] = useState<{[key: string]: Booking[]}>({});
+  const [statsCache, setStatsCache] = useState<{[key: string]: Stats}>({});
 
   // Funzione per ottenere la data di oggi in formato sicuro
   const getTodayString = () => {
@@ -47,11 +49,17 @@ export default function PannelloPrenotazioni() {
   useEffect(() => {
     console.log('🔄 Effect triggered - selectedDate:', selectedDate, 'filterStatus:', filterStatus);
     
-    // Controlla se abbiamo già i dati in cache
-    const cacheKey = `${selectedDate}-${filterStatus}`;
-    if (cache[cacheKey]) {
-      console.log('💾 Using cached data for:', cacheKey);
-      setBookings(cache[cacheKey]);
+    // Controlla se abbiamo già le prenotazioni in cache
+    const bookingsCacheKey = `${selectedDate}-${filterStatus}`;
+    const statsCacheKey = selectedDate; // Le stats dipendono solo dalla data
+    
+    const hasBookingsCache = bookingsCache[bookingsCacheKey];
+    const hasStatsCache = statsCache[statsCacheKey];
+    
+    if (hasBookingsCache && hasStatsCache) {
+      console.log('💾 Using cached data for:', bookingsCacheKey, statsCacheKey);
+      setBookings(hasBookingsCache);
+      setStats(hasStatsCache);
       setLoading(false);
       return;
     }
@@ -60,11 +68,15 @@ export default function PannelloPrenotazioni() {
     setLoading(true);
     
     // Debounce di 500ms per evitare rate limiting
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       console.log('⏱️ Debounce completed, fetching data...');
       setIsDebouncing(false);
-      fetchBookings();
-      fetchStats();
+      
+      // Fetch entrambi in parallelo per velocizzare il caricamento
+      await Promise.all([
+        !hasBookingsCache ? fetchBookings() : Promise.resolve(),
+        !hasStatsCache ? fetchStats() : Promise.resolve()
+      ]);
     }, 500);
 
     // Cleanup del timeout se l'effect viene richiamato prima del debounce
@@ -73,8 +85,7 @@ export default function PannelloPrenotazioni() {
       clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, filterStatus]);
-  const fetchBookings = async (retryCount = 0) => {
+  }, [selectedDate, filterStatus]);  const fetchBookings = async (retryCount = 0) => {
     try {
       setLoading(true);
       console.log('📡 Fetching bookings for date:', selectedDate, 'status:', filterStatus);
@@ -97,17 +108,18 @@ export default function PannelloPrenotazioni() {
           'Pragma': 'no-cache'
         }
       });
-        if (response.ok) {
+
+      if (response.ok) {
         const data = await response.json();
         console.log('📊 API Response:', data);
         const fetchedBookings = data.bookings || [];
         console.log(`✅ Found ${fetchedBookings.length} bookings for ${selectedDate}`);
         
-        // Salva in cache
-        const cacheKey = `${selectedDate}-${filterStatus}`;
-        setCache(prev => ({
+        // Salva in cache delle prenotazioni
+        const bookingsCacheKey = `${selectedDate}-${filterStatus}`;
+        setBookingsCache(prev => ({
           ...prev,
-          [cacheKey]: fetchedBookings
+          [bookingsCacheKey]: fetchedBookings
         }));
         
         setBookings(fetchedBookings);
@@ -126,18 +138,32 @@ export default function PannelloPrenotazioni() {
         }
       }
     } catch (error) {
-      console.error('❌ Error fetching bookings:', error);    } finally {
+      console.error('❌ Error fetching bookings:', error);
+    } finally {
       if (retryCount === 0 || retryCount >= 3) { // Solo alla fine del primo tentativo o quando finiscono i retry
         setLoading(false);
       }
     }
-  };
-
-  const fetchStats = async () => {
+  };  const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/stats');
+      console.log('📊 Fetching stats for date:', selectedDate);
+      const response = await fetch(`/api/admin/stats?date=${selectedDate}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (response.ok) {
         const data = await response.json();
+        console.log('📈 Stats received:', data);
+        
+        // Salva in cache delle statistiche
+        const statsCacheKey = selectedDate;
+        setStatsCache(prev => ({
+          ...prev,
+          [statsCacheKey]: data
+        }));
+        
         setStats(data);
       }
     } catch (error) {
@@ -155,12 +181,12 @@ export default function PannelloPrenotazioni() {
           id: bookingId,
           status: newStatus
         }),
-      });
-
-      if (response.ok) {
+      });      if (response.ok) {
         // Invalida la cache per forzare il refresh
-        setCache({});
+        setBookingsCache({});
+        setStatsCache({});
         fetchBookings(); // Ricarica le prenotazioni
+        fetchStats(); // Ricarica le statistiche
       } else {
         console.error(`Failed to update booking status: ${response.status} ${response.statusText}`);
         
@@ -189,12 +215,12 @@ export default function PannelloPrenotazioni() {
     try {
       const response = await fetch(`/api/bookings?id=${bookingId}`, {
         method: 'DELETE',
-      });
-
-      if (response.ok) {
+      });      if (response.ok) {
         // Invalida la cache per forzare il refresh
-        setCache({});
+        setBookingsCache({});
+        setStatsCache({});
         fetchBookings(); // Ricarica le prenotazioni
+        fetchStats(); // Ricarica le statistiche
       } else {
         console.error(`Failed to delete booking: ${response.status} ${response.statusText}`);
         
@@ -255,8 +281,7 @@ export default function PannelloPrenotazioni() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Statistiche */}
+    <div className="space-y-6">      {/* Statistiche */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-lg shadow">
@@ -268,12 +293,16 @@ export default function PannelloPrenotazioni() {
             <div className="text-gray-600">Prenotazioni Oggi</div>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-2xl font-bold text-green-600">€{stats.weeklyRevenue}</div>
-            <div className="text-gray-600">Ricavi Settimana</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.selectedDateBookings}</div>
+            <div className="text-gray-600">
+              Prenotazioni {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM', { locale: it })}
+            </div>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-lg font-bold text-blue-600">{stats.popularService}</div>
-            <div className="text-gray-600">Servizio Popolare</div>
+            <div className="text-2xl font-bold text-green-600">€{stats.dailyRevenue.toFixed(2)}</div>
+            <div className="text-gray-600">
+              Ricavi {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM', { locale: it })}
+            </div>
           </div>
         </div>
       )}
@@ -353,9 +382,7 @@ export default function PannelloPrenotazioni() {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Lista prenotazioni */}
+      </div>      {/* Lista prenotazioni */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {bookings.length === 0 ? (
           <div className="p-12 text-center">
@@ -383,6 +410,9 @@ export default function PannelloPrenotazioni() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Data & Ora
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Note Aggiuntive
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -421,6 +451,17 @@ export default function PannelloPrenotazioni() {
                         {format(parseISO(booking.booking_date), 'dd/MM/yyyy', { locale: it })}
                       </div>
                       <div className="text-sm text-gray-500">{booking.booking_time}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 max-w-xs">
+                        {booking.notes ? (
+                          <div className="bg-blue-50 p-2 rounded text-xs border-l-4 border-blue-400">
+                            {booking.notes}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 italic">Nessuna nota</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(booking.status)}
@@ -462,8 +503,7 @@ export default function PannelloPrenotazioni() {
                         )}
                       </div>
                     </td>
-                  </tr>
-                ))}
+                  </tr>                ))}
               </tbody>
             </table>
           </div>

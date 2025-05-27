@@ -30,6 +30,10 @@ export default function BookingForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookingResponse, setBookingResponse] = useState<any>(null);
+  
+  // Add debouncing state and cache for rate limiting protection
+  const [isDebouncing, setIsDebouncing] = useState(false);
+  const [slotsCache, setSlotsCache] = useState<{[key: string]: {time: string, available: boolean}[]}>({});
 
   // Load services and barbers from API
   useEffect(() => {
@@ -84,25 +88,56 @@ export default function BookingForm() {
     }
     // Reset selected services when barber changes or displayed services list changes
     setFormData(prev => ({ ...prev, selectedServices: [] }));
-  }, [formData.selectedBarber, allServices]);
-
-  // Update available slots when date or barber changes
+  }, [formData.selectedBarber, allServices]);  // Update available slots when date or barber changes with debouncing
   useEffect(() => {
     const fetchSlots = async () => {
       if (formData.selectedDate && formData.selectedBarber) {
-        setLoading(true);
-        try {
-          const slots = await BookingService.getAvailableSlots(formData.selectedDate, formData.selectedBarber.id);
-          setAvailableSlots(slots);
-        } catch (err: any) {
-          setError('Errore nel caricamento degli orari disponibili');
-          setAvailableSlots([]);
-        } finally {
+        // Check cache first
+        const cacheKey = `${formData.selectedDate}-${formData.selectedBarber.id}`;
+        if (slotsCache[cacheKey]) {
+          console.log('💾 Using cached slots for:', cacheKey);
+          setAvailableSlots(slotsCache[cacheKey]);
           setLoading(false);
+          return;
         }
+        
+        setIsDebouncing(true);
+        setLoading(true);
+        
+        // Debounce API calls by 300ms to prevent rate limiting
+        const timeoutId = setTimeout(async () => {
+          console.log('⏱️ Fetching slots after debounce...');
+          setIsDebouncing(false);
+          
+          try {
+            if (formData.selectedBarber) { // Additional null check
+              const slots = await BookingService.getAvailableSlots(formData.selectedDate, formData.selectedBarber.id);
+              setAvailableSlots(slots);
+              
+              // Cache the results
+              setSlotsCache(prev => ({
+                ...prev,
+                [cacheKey]: slots
+              }));
+            }
+          } catch (err: any) {
+            console.error('Error fetching slots:', err);
+            setError('Errore nel caricamento degli orari disponibili');
+            setAvailableSlots([]);
+          } finally {
+            setLoading(false);
+          }
+        }, 300);
+
+        // Cleanup timeout on dependency change
+        return () => {
+          console.log('🧹 Cleaning up slots timeout');
+          clearTimeout(timeoutId);
+        };
       }
     };
     fetchSlots();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.selectedDate, formData.selectedBarber]);
 
   // Helper function to generate date buttons for the next 2 months (60 days)
@@ -117,11 +152,14 @@ export default function BookingForm() {
       
       const dayNames = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
       const monthNames = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC'];
-      
-      // Domenica chiuso
+        // Domenica chiuso
       const isSunday = date.getDay() === 0;
       const isToday = i === 0;
-      const isNextWeek = i >= 7 && i < 14;
+      
+      // Calculate proper week boundaries based on today's date
+      const todayDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysUntilNextWeek = 7 - todayDayOfWeek; // Days until next Monday
+      const isNextWeek = i >= daysUntilNextWeek && i < (daysUntilNextWeek + 7);
       const isNextMonth = i >= 30;
       
       // Fix timezone issue by manually formatting the date instead of using toISOString()
@@ -181,24 +219,11 @@ export default function BookingForm() {
       return { ...prev, selectedServices: newServices };
     });
   };
-
   // Handle date selection and generate time slots
   const handleDateChange = async (date: string) => {
     setFormData(prev => ({ ...prev, selectedDate: date, selectedTime: '' }));
     setError(null);
-    
-    if (date && formData.selectedBarber) {
-      setLoading(true);
-      try {
-        const slots = await BookingService.getAvailableSlots(date, formData.selectedBarber.id);
-        setAvailableSlots(slots);
-      } catch (err: any) {
-        setError('Errore nel caricamento degli orari disponibili');
-        setAvailableSlots([]);
-      } finally {
-        setLoading(false);
-      }
-    }
+    // Note: Slot fetching is now handled by useEffect with debouncing
   };
 
   // Handle time selection
@@ -584,10 +609,17 @@ export default function BookingForm() {
                     📅 Data selezionata: {formatSelectedDate(formData.selectedDate)}
                   </p>
                 </div>
-              )}
-            </div>
+              )}            </div>
 
-            {formData.selectedDate && availableSlots.length > 0 && (
+            {/* Loading/Debouncing indicator */}
+            {isDebouncing && formData.selectedDate && formData.selectedBarber && (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-500 mx-auto"></div>
+                <p className="text-sm text-gray-600 mt-2">Caricamento orari...</p>
+              </div>
+            )}
+
+            {formData.selectedDate && availableSlots.length > 0 && !isDebouncing && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Orari disponibili
@@ -630,9 +662,7 @@ export default function BookingForm() {
                   </div>
                 </div>
               </div>
-            )}
-
-            {formData.selectedDate && availableSlots.length === 0 && !loading && (
+            )}            {formData.selectedDate && availableSlots.length === 0 && !loading && !isDebouncing && (
               <div className="text-center py-8 text-gray-500">
                 <p>❌ Spiacenti, la data selezionata non è disponibile.</p>
                 <p className="text-sm">Siamo chiusi la domenica.</p>
