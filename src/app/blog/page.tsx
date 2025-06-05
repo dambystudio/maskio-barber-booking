@@ -137,7 +137,7 @@ export default function Page() {
   };
 
   return (
-    <main className="min-h-screen bg-white py-24">
+    <main className="min-h-screen bg-black py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div 
@@ -147,7 +147,7 @@ export default function Page() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.h1 
-            className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-8"
+            className="text-4xl font-bold tracking-tight text-white sm:text-5xl mb-8"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -155,7 +155,7 @@ export default function Page() {
             Il Nostro Blog
           </motion.h1>
           <motion.p 
-            className="text-lg text-gray-600 max-w-3xl mx-auto"
+            className="text-lg text-gray-300 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -175,11 +175,10 @@ export default function Page() {
           {categories.map((category, index) => (
             <motion.button
               key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+              onClick={() => setSelectedCategory(category)}              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
                 selectedCategory === category
-                  ? 'bg-black text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-yellow-400 text-black shadow-lg'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -202,7 +201,7 @@ export default function Page() {
           {filteredPosts.map((post, index) => (
             <motion.article
               key={post.id}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer"
+              className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg overflow-hidden cursor-pointer"
               variants={itemVariants}
               initial="rest"
               whileHover="hover"
@@ -331,7 +330,7 @@ export default function Page() {
                   </motion.div>
 
                   <motion.h3 
-                    className="text-xl font-bold text-gray-900 mb-3 line-clamp-2"
+                    className="text-xl font-bold text-white mb-3 line-clamp-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.1 + index * 0.1 }}
@@ -340,7 +339,7 @@ export default function Page() {
                   </motion.h3>
 
                   <motion.p 
-                    className="text-gray-600 text-sm leading-relaxed line-clamp-3"
+                    className="text-gray-300 text-sm leading-relaxed line-clamp-3"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.2 + index * 0.1 }}
@@ -349,13 +348,13 @@ export default function Page() {
                   </motion.p>
 
                   <motion.div 
-                    className="mt-4 pt-4 border-t border-gray-100"
+                    className="mt-4 pt-4 border-t border-gray-700"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1.3 + index * 0.1 }}
                   >
                     <motion.button 
-                      className="text-black font-medium hover:text-gray-700 transition-colors duration-200 flex items-center group"
+                      className="text-yellow-400 font-medium hover:text-yellow-300 transition-colors duration-200 flex items-center group"
                       whileHover={{ x: 5 }}
                     >
                       Leggi di più
@@ -384,11 +383,10 @@ export default function Page() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-          >
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          >            <h3 className="text-xl font-semibold text-white mb-2">
               Nessun articolo trovato
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-300">
               Prova a selezionare una categoria diversa
             </p>
           </motion.div>
@@ -396,7 +394,7 @@ export default function Page() {
 
         {/* Newsletter Signup */}
         <motion.div 
-          className="mt-20 bg-gradient-to-r from-gray-900 to-gray-700 rounded-2xl p-8 lg:p-12 text-center"
+          className="mt-20 bg-gradient-to-r from-black to-gray-900 border border-gray-800 rounded-2xl p-8 lg:p-12 text-center"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.5 }}

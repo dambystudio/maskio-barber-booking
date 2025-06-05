@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { format, parseISO, addDays, isToday } from 'date-fns';
+import { format, parseISO, addDays, isToday, getDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 interface Booking {
@@ -43,9 +43,118 @@ export default function PannelloPrenotazioni() {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  };  const [selectedDate, setSelectedDate] = useState(getTodayString());
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  
+  // State per giorni di chiusura
+  const [closedDays, setClosedDays] = useState<Set<number>>(new Set([0])); // Domenica chiusa di default
+  const [closedDates, setClosedDates] = useState<Set<string>>(new Set()); // Date specifiche chiuse (YYYY-MM-DD)
+  const [showClosureSettings, setShowClosureSettings] = useState(false);
+  const [newClosureDate, setNewClosureDate] = useState('');
+  const [newClosureEndDate, setNewClosureEndDate] = useState('');
+  const [newClosureReason, setNewClosureReason] = useState('');
+
+  // Nomi dei giorni della settimana
+  const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+
+  // Carica i giorni di chiusura dal localStorage
+  useEffect(() => {
+    const savedClosedDays = localStorage.getItem('maskio-closed-days');
+    if (savedClosedDays) {
+      try {
+        const parsed = JSON.parse(savedClosedDays);
+        setClosedDays(new Set(parsed));
+      } catch (error) {
+        console.error('Error parsing closed days from localStorage:', error);
+      }
+    }
+
+    const savedClosedDates = localStorage.getItem('maskio-closed-dates');
+    if (savedClosedDates) {
+      try {
+        const parsed = JSON.parse(savedClosedDates);
+        setClosedDates(new Set(parsed));
+      } catch (error) {
+        console.error('Error parsing closed dates from localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Salva i giorni di chiusura nel localStorage quando cambiano
+  useEffect(() => {
+    localStorage.setItem('maskio-closed-days', JSON.stringify(Array.from(closedDays)));
+  }, [closedDays]);
+
+  // Salva le date di chiusura nel localStorage quando cambiano
+  useEffect(() => {
+    localStorage.setItem('maskio-closed-dates', JSON.stringify(Array.from(closedDates)));
+  }, [closedDates]);
+
+  // Funzione per toggle dei giorni di chiusura
+  const toggleClosedDay = (dayIndex: number) => {
+    setClosedDays(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dayIndex)) {
+        newSet.delete(dayIndex);
+      } else {
+        newSet.add(dayIndex);
+      }
+      return newSet;
+    });
   };
-  const [selectedDate, setSelectedDate] = useState(getTodayString());
-  const [filterStatus, setFilterStatus] = useState<string>('all');  // Debounce per evitare troppe chiamate API consecutive
+
+  // Funzione per aggiungere date specifiche di chiusura
+  const addClosureDates = () => {
+    if (!newClosureDate) return;
+
+    if (newClosureEndDate && newClosureEndDate < newClosureDate) {
+      alert('La data di fine deve essere successiva alla data di inizio');
+      return;
+    }
+
+    const newDates = new Set(closedDates);
+    
+    if (newClosureEndDate) {
+      // Aggiunge un intervallo di date
+      const startDate = new Date(newClosureDate + 'T00:00:00');
+      const endDate = new Date(newClosureEndDate + 'T00:00:00');
+      
+      let currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        const dateStr = format(currentDate, 'yyyy-MM-dd');
+        newDates.add(dateStr);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    } else {
+      // Aggiunge una singola data
+      newDates.add(newClosureDate);
+    }
+
+    setClosedDates(newDates);
+    setNewClosureDate('');
+    setNewClosureEndDate('');
+    setNewClosureReason('');
+  };
+
+  // Funzione per rimuovere una data di chiusura
+  const removeClosureDate = (dateStr: string) => {
+    const newDates = new Set(closedDates);
+    newDates.delete(dateStr);
+    setClosedDates(newDates);
+  };
+
+  // Controlla se una data è chiusa (sia per giorno della settimana che per data specifica)
+  const isDateClosed = (dateString: string) => {
+    // Controlla se è una data specifica chiusa
+    if (closedDates.has(dateString)) {
+      return true;
+    }
+    
+    // Controlla se è un giorno della settimana chiuso
+    const date = new Date(dateString + 'T00:00:00');
+    const dayOfWeek = getDay(date);
+    return closedDays.has(dayOfWeek);
+  };// Debounce per evitare troppe chiamate API consecutive
   useEffect(() => {
     console.log('🔄 Effect triggered - selectedDate:', selectedDate, 'filterStatus:', filterStatus);
     
@@ -206,16 +315,11 @@ export default function PannelloPrenotazioni() {
       console.error('Error updating booking status:', error);
       alert('Errore di rete nell\'aggiornamento dello stato');
     }
-  };
-  const deleteBooking = async (bookingId: string) => {
-    if (!confirm('Sei sicuro di voler eliminare definitivamente questa prenotazione?')) {
-      return;
-    }
-
+  };  const deleteBooking = async (bookingId: string) => {
     try {
       const response = await fetch(`/api/bookings?id=${bookingId}`, {
         method: 'DELETE',
-      });      if (response.ok) {
+      });if (response.ok) {
         // Invalida la cache per forzare il refresh
         setBookingsCache({});
         setStatsCache({});
@@ -255,12 +359,11 @@ export default function PannelloPrenotazioni() {
   };
 
   const datesList = generateDates();
-
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      confirmed: { bg: 'bg-green-100', text: 'text-green-800', label: 'Confermata' },
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'In Attesa' },
-      cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: 'Annullata' }
+      confirmed: { bg: 'bg-green-900/50', text: 'text-green-300', label: 'Confermata' },
+      pending: { bg: 'bg-yellow-900/50', text: 'text-yellow-300', label: 'In Attesa' },
+      cancelled: { bg: 'bg-red-900/50', text: 'text-red-300', label: 'Annullata' }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -279,62 +382,243 @@ export default function PannelloPrenotazioni() {
       </div>
     );
   }
-
   return (
     <div className="space-y-6">      {/* Statistiche */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-2xl font-bold text-gray-900">{stats.totalBookings}</div>
-            <div className="text-gray-600">Prenotazioni Totali</div>
+          <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
+            <div className="text-2xl font-bold text-white">{stats.totalBookings}</div>
+            <div className="text-gray-300">Prenotazioni Totali</div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-2xl font-bold text-amber-600">{stats.todayBookings}</div>
-            <div className="text-gray-600">Prenotazioni Oggi</div>
+          <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
+            <div className="text-2xl font-bold text-amber-400">{stats.todayBookings}</div>
+            <div className="text-gray-300">Prenotazioni Oggi</div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-2xl font-bold text-blue-600">{stats.selectedDateBookings}</div>
-            <div className="text-gray-600">
+          <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
+            <div className="text-2xl font-bold text-blue-400">{stats.selectedDateBookings}</div>
+            <div className="text-gray-300">
               Prenotazioni {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM', { locale: it })}
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-2xl font-bold text-green-600">€{stats.dailyRevenue.toFixed(2)}</div>
-            <div className="text-gray-600">
+          <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
+            <div className="text-2xl font-bold text-green-400">€{stats.dailyRevenue.toFixed(2)}</div>
+            <div className="text-gray-300">
               Ricavi {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM', { locale: it })}
             </div>
           </div>
+        </div>      )}      {/* Gestione Giorni di Chiusura */}
+      <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-white">🗓️ Gestione Chiusure</h2>
+          <button
+            type="button"
+            onClick={() => setShowClosureSettings(!showClosureSettings)}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+              showClosureSettings
+                ? 'bg-amber-600 text-white hover:bg-amber-700'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            {showClosureSettings ? '🔼 Nascondi' : '🔽 Configura'}
+          </button>
         </div>
-      )}
+        
+        {showClosureSettings && (
+          <div className="space-y-8 border-t pt-6">            {/* Chiusure Ricorrenti - Giorni della Settimana */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                🔄 Chiusure Ricorrenti
+              </h3>
+              <p className="text-sm text-gray-300 mb-4">
+                Seleziona i giorni della settimana in cui vuoi essere sempre chiuso.
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                {dayNames.map((dayName, index) => {
+                  const isClosed = closedDays.has(index);
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => toggleClosedDay(index)}
+                      className={`p-4 rounded-xl border-2 transition-all duration-200 text-center ${
+                        isClosed
+                          ? 'border-red-300 bg-red-50 text-red-800 shadow-lg transform scale-105'
+                          : 'border-green-200 bg-green-50 text-green-800 hover:border-green-300 hover:bg-green-100'
+                      }`}
+                    >
+                      <div className="text-2xl mb-2">
+                        {isClosed ? '🔒' : '🟢'}
+                      </div>
+                      <div className="font-semibold text-sm">
+                        {dayName}
+                      </div>
+                      <div className="text-xs mt-1">
+                        {isClosed ? 'CHIUSO' : 'Aperto'}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>            {/* Chiusure Specifiche - Date */}
+            <div className="border-t border-gray-700 pt-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                📅 Chiusure Specifiche
+              </h3>
+              <p className="text-sm text-gray-300 mb-6">
+                Aggiungi date specifiche di chiusura (es. 2 Giugno, ferie estive, ecc.)
+              </p>
 
-      {/* Filtri */}
-      <div className="bg-white p-6 rounded-lg shadow">
+              {/* Form per aggiungere nuove chiusure */}
+              <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl mb-6">
+                <div className="grid md:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label htmlFor="newClosureDate" className="block text-sm font-medium text-gray-300 mb-2">
+                      Data Inizio *
+                    </label>
+                    <input
+                      type="date"
+                      id="newClosureDate"
+                      value={newClosureDate}
+                      onChange={(e) => setNewClosureDate(e.target.value)}
+                      min={getTodayString()}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="newClosureEndDate" className="block text-sm font-medium text-gray-300 mb-2">
+                      Data Fine (opzionale)
+                    </label>
+                    <input
+                      type="date"
+                      id="newClosureEndDate"
+                      value={newClosureEndDate}
+                      onChange={(e) => setNewClosureEndDate(e.target.value)}
+                      min={newClosureDate || getTodayString()}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="Per intervallo di date"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Lascia vuoto per una singola data</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="newClosureReason" className="block text-sm font-medium text-gray-300 mb-2">
+                      Motivo (opzionale)
+                    </label>
+                    <input
+                      type="text"
+                      id="newClosureReason"
+                      value={newClosureReason}
+                      onChange={(e) => setNewClosureReason(e.target.value)}
+                      placeholder="Es. Festa nazionale, ferie"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={addClosureDates}
+                      disabled={!newClosureDate}
+                      className="w-full px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:bg-gray-600 disabled:cursor-not-allowed font-medium transition-colors"
+                    >
+                      ➕ Aggiungi
+                    </button>
+                  </div>
+                </div>
+              </div>              {/* Lista date chiuse */}
+              {closedDates.size > 0 && (
+                <div>
+                  <h4 className="font-medium text-white mb-3">Date Attualmente Chiuse:</h4>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {Array.from(closedDates)
+                      .sort()
+                      .map((dateStr) => (
+                        <div
+                          key={dateStr}
+                          className="flex items-center justify-between p-3 bg-red-900/50 border border-red-500 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="text-red-400">🔒</div>
+                            <div>
+                              <div className="font-medium text-red-300">
+                                {format(parseISO(dateStr + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}
+                              </div>
+                              <div className="text-xs text-red-400">
+                                {format(parseISO(dateStr + 'T00:00:00'), 'EEEE', { locale: it })}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeClosureDate(dateStr)}
+                            className="text-red-400 hover:text-red-300 hover:bg-red-800 p-1 rounded transition-colors"
+                            title="Rimuovi questa chiusura"
+                          >
+                            ❌
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+              <div className="bg-blue-900/50 border border-blue-500 rounded-lg p-4 mt-6">
+              <div className="flex items-start gap-3">
+                <div className="text-blue-400 text-xl">💡</div>
+                <div>
+                  <h4 className="font-semibold text-blue-300 mb-1">Come funziona:</h4>
+                  <ul className="text-sm text-blue-200 space-y-1">
+                    <li>• <strong>Chiusure Ricorrenti:</strong> Si applicano ogni settimana (es. sempre chiuso la domenica)</li>
+                    <li>• <strong>Chiusure Specifiche:</strong> Per date particolari (es. 2 Giugno, vacanze estive)</li>
+                    <li>• I giorni chiusi non accetteranno nuove prenotazioni</li>
+                    <li>• Le prenotazioni esistenti in quei giorni rimarranno valide</li>
+                    <li>• Le impostazioni vengono salvate automaticamente</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>      {/* Filtri */}
+      <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
         <div className="flex flex-col gap-4">
-          <h2 className="text-xl font-bold text-gray-900">Gestione Prenotazioni</h2>
+          <h2 className="text-xl font-bold text-white">Gestione Prenotazioni</h2>
           
           {/* Selezione data orizzontale */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-gray-300 mb-3">
               Seleziona Data
             </label>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              {datesList.map((date) => {
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">{datesList.map((date) => {
                 const dateStr = format(date, 'yyyy-MM-dd');
                 const isSelected = selectedDate === dateStr;
                 const isDateToday = isToday(date);
+                const isClosedDay = isDateClosed(dateStr);
                 
                 return (
                   <button
                     key={dateStr}
-                    onClick={() => setSelectedDate(dateStr)}
-                    className={`flex-shrink-0 px-4 py-3 rounded-lg border-2 transition-all duration-200 min-w-[100px] ${
+                    type="button"
+                    onClick={() => setSelectedDate(dateStr)}                    className={`flex-shrink-0 px-4 py-3 rounded-lg border-2 transition-all duration-200 min-w-[100px] relative ${
                       isSelected
-                        ? 'border-amber-500 bg-amber-50 text-amber-900 shadow-md'
+                        ? isClosedDay
+                          ? 'border-red-500 bg-red-900/50 text-red-300 shadow-md'
+                          : 'border-amber-500 bg-amber-900/50 text-amber-300 shadow-md'
+                        : isClosedDay
+                        ? 'border-red-500 bg-red-900/30 text-red-400 hover:border-red-400'
                         : isDateToday
-                        ? 'border-blue-300 bg-blue-50 text-blue-900 hover:border-blue-400'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-blue-500 bg-blue-900/50 text-blue-300 hover:border-blue-400'
+                        : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500 hover:bg-gray-700'
                     }`}
                   >
+                    {isClosedDay && (
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">🔒</span>
+                      </div>
+                    )}
                     <div className="text-center">
                       <div className="text-sm font-medium">
                         {format(date, 'EEE', { locale: it }).toUpperCase()}
@@ -344,122 +628,124 @@ export default function PannelloPrenotazioni() {
                       </div>
                       <div className="text-xs">
                         {format(date, 'MMM', { locale: it })}
-                      </div>
+                      </div>                      {isClosedDay && (
+                        <div className="text-xs mt-1 font-semibold text-red-400">
+                          CHIUSO
+                        </div>
+                      )}
                     </div>
                   </button>
                 );
               })}
             </div>
-          </div>
-
-          {/* Filtro Status */}
+          </div>          {/* Filtro Status */}
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-1">
                 Filtra per Status
               </label>
               <select
                 id="status"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
+                className="px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-md focus:ring-amber-500 focus:border-amber-500"
               >
                 <option value="all">Tutte le prenotazioni</option>
                 <option value="pending">In Attesa</option>
                 <option value="confirmed">Confermate</option>
                 <option value="cancelled">Annullate</option>
               </select>
-            </div>
-              {/* Reset filtri */}
+            </div>              {/* Reset filtri */}
             <button
+              type="button"
               onClick={() => {
                 setSelectedDate(getTodayString());
                 setFilterStatus('all');
               }}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-4 py-2 text-sm text-gray-300 hover:text-white border border-gray-600 rounded-md hover:bg-gray-700"
             >
               Reset Filtri
             </button>
           </div>
         </div>
       </div>      {/* Lista prenotazioni */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-gray-900 border border-gray-800 rounded-lg shadow overflow-hidden">
         {bookings.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="text-gray-500 text-lg">
+            <div className="text-gray-400 text-lg">
               Nessuna prenotazione trovata per il {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}
               {filterStatus !== 'all' && ` con status "${filterStatus}"`}
             </div>
-            <div className="text-gray-400 text-sm mt-2">
+            <div className="text-gray-500 text-sm mt-2">
               Prova a selezionare un altro giorno o cambiare il filtro status
             </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Cliente
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Servizio
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Barbiere
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Data & Ora
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Note Aggiuntive
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Azioni
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-gray-900 divide-y divide-gray-700">
                 {bookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-gray-50">
+                  <tr key={booking.id} className="hover:bg-gray-800">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-white">
                           {booking.customer_name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-400">
                           {booking.customer_phone}
                         </div>
                         {booking.customer_email && (
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-400">
                             {booking.customer_email}
                           </div>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{booking.service_name}</div>
+                      <div className="text-sm text-white">{booking.service_name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{booking.barber_name}</div>
+                      <div className="text-sm text-white">{booking.barber_name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-white">
                         {format(parseISO(booking.booking_date), 'dd/MM/yyyy', { locale: it })}
                       </div>
-                      <div className="text-sm text-gray-500">{booking.booking_time}</div>
+                      <div className="text-sm text-gray-400">{booking.booking_time}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs">
+                      <div className="text-sm text-white max-w-xs">
                         {booking.notes ? (
-                          <div className="bg-blue-50 p-2 rounded text-xs border-l-4 border-blue-400">
+                          <div className="bg-blue-900/50 border border-blue-500 p-2 rounded text-xs border-l-4 border-l-blue-400">
                             {booking.notes}
                           </div>
                         ) : (
-                          <span className="text-gray-400 italic">Nessuna nota</span>
+                          <span className="text-gray-500 italic">Nessuna nota</span>
                         )}
                       </div>
                     </td>
@@ -467,35 +753,36 @@ export default function PannelloPrenotazioni() {
                       {getStatusBadge(booking.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex gap-2 flex-wrap">
-                        {booking.status === 'pending' && (
+                      <div className="flex gap-2 flex-wrap">                        {booking.status === 'pending' && (
                           <>
                             <button
+                              type="button"
                               onClick={() => updateBookingStatus(booking.id, 'confirmed')}
-                              className="text-green-600 hover:text-green-900 px-2 py-1 border border-green-300 rounded hover:bg-green-50"
+                              className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50"
                             >
                               Conferma
                             </button>
                             <button
+                              type="button"
                               onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                              className="text-red-600 hover:text-red-900 px-2 py-1 border border-red-300 rounded hover:bg-red-50"
+                              className="text-red-400 hover:text-red-300 px-2 py-1 border border-red-500 rounded hover:bg-red-900/50"
                             >
                               Annulla
                             </button>
                           </>
-                        )}
-                        {booking.status === 'confirmed' && (
+                        )}                        {booking.status === 'confirmed' && (
                           <button
+                            type="button"
                             onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                            className="text-red-600 hover:text-red-900 px-2 py-1 border border-red-300 rounded hover:bg-red-50"
+                            className="text-red-400 hover:text-red-300 px-2 py-1 border border-red-500 rounded hover:bg-red-900/50"
                           >
                             Annulla
                           </button>
-                        )}
-                        {booking.status === 'cancelled' && (
+                        )}                        {booking.status === 'cancelled' && (
                           <button
+                            type="button"
                             onClick={() => deleteBooking(booking.id)}
-                            className="text-red-700 hover:text-red-900 px-2 py-1 bg-red-100 border border-red-400 rounded hover:bg-red-200 font-medium"
+                            className="text-red-300 hover:text-red-200 px-2 py-1 bg-red-900/50 border border-red-500 rounded hover:bg-red-800/70 font-medium"
                             title="Elimina definitivamente questa prenotazione"
                           >
                             🗑️ Elimina

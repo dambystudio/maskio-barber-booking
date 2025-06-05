@@ -5,15 +5,14 @@ export const fabioSpecificServices: Service[] = [
   { id: 'taglio', name: 'Taglio', description: 'Taglio di capelli personalizzato', duration: 30, price: 18 },
   { id: 'barba', name: 'Barba', description: 'Modellatura e contorno barba', duration: 15, price: 10 },
   { id: 'taglio-e-barba', name: 'Taglio e Barba', description: 'Taglio capelli e sistemazione barba', duration: 40, price: 23 },
-  { id: 'skincare', name: 'Skincare', description: 'Trattamento cura viso', duration: 45, price: 30 },
-  { id: 'trattamento-barba', name: 'Trattamento Barba', description: 'Pulizia barba, modellatura, contorno e acconciatura', duration: 40, price: 25 }
+  { id: 'altri-servizi', name: 'Altri servizi', description: 'colore o altri servizi', duration: 30, price: 0 }
 ];
 
 export const micheleSpecificServices: Service[] = [
   { id: 'taglio', name: 'Taglio', description: 'Taglio di capelli personalizzato', duration: 30, price: 18 },
   { id: 'barba', name: 'Barba', description: 'Modellatura e contorno barba', duration: 15, price: 10 },
   { id: 'taglio-e-barba', name: 'Taglio e Barba', description: 'Taglio capelli e sistemazione barba', duration: 40, price: 23 },
-  { id: 'skincare', name: 'Skincare', description: 'Trattamento cura viso', duration: 45, price: 30 }
+  { id: 'altri-servizi', name: 'Altri servizi', description: 'colore o altri servizi', duration: 30, price: 0 }
 ];
 
 export const barbersFromData: Barber[] = [
@@ -21,16 +20,16 @@ export const barbersFromData: Barber[] = [
     id: 'fabio', // Questo ID deve corrispondere a quello nel database se si fa matching
     name: 'Fabio',
     image: '/barbers/fabio.jpg',
-    specialties: ['Tagli classici', 'Skin Care', 'Trattamenti barba'],
-    experience: '8 anni di esperienza',
+    specialties: ['Tagli moderni', 'Tagli classici', 'Barba'],
+    experience: 'Proprietario',
     availableServices: fabioSpecificServices // Assegnazione per la pagina /servizi
   },
   {
     id: 'michele', // Questo ID deve corrispondere a quello nel database se si fa matching
     name: 'Michele',
     image: '/barbers/michele.jpg',
-    specialties: ['Tagli moderni', 'Barba', 'Skin Care'],
-    experience: '6 anni di esperienza',
+    specialties: ['Tagli moderni', 'Tagli classici', 'Barba'],
+    experience: 'Apprendista',
     availableServices: micheleSpecificServices // Assegnazione per la pagina /servizi
   }
 ];

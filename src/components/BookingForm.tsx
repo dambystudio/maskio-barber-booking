@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Service, Barber, BookingFormData } from '../types/booking';
 import { BookingService, validateBookingData } from '../services/bookingService';
-import { fabioSpecificServices, micheleSpecificServices } from '../data/booking'; // Import specific services
+import { fabioSpecificServices, micheleSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
 
 const steps = ['Barbiere', 'Servizi', 'Data e Ora', 'Dati Personali', 'Conferma'];
 
@@ -78,18 +78,24 @@ export default function BookingForm() {
         const barbersResponse = await fetch('/api/barbers');
         if (!barbersResponse.ok) throw new Error('Failed to fetch barbers');
         const barbersData = await barbersResponse.json();
-        
-        const updatedBarbers = barbersData.map((barber: any) => ({
-          ...barber,
-          specialties: typeof barber.specialties === 'string' 
-            ? JSON.parse(barber.specialties) 
-            : barber.specialties || [],
-          image: barber.image || '/placeholder-barber.jpg',
-          // Assign the hardcoded specific services for now, until API provides this
-          // IMPORTANT: This uses barber.name for matching, ensure names are consistent.
-          // Ideally, match by barber.id if the IDs from API match those in booking.ts
-          availableServices: barber.name === 'Fabio' ? fabioSpecificServices : barber.name === 'Michele' ? micheleSpecificServices : servicesData
-        }));
+          const updatedBarbers = barbersData.map((barber: any) => {
+          // Find matching local barber data to get experience field
+          const localBarberData = barbersFromData.find(local => local.id === barber.id || local.name === barber.name);
+          
+          return {
+            ...barber,
+            specialties: typeof barber.specialties === 'string' 
+              ? JSON.parse(barber.specialties) 
+              : barber.specialties || [],
+            image: barber.image || '/placeholder-barber.jpg',
+            // Add experience from local data
+            experience: localBarberData?.experience,
+            // Assign the hardcoded specific services for now, until API provides this
+            // IMPORTANT: This uses barber.name for matching, ensure names are consistent.
+            // Ideally, match by barber.id if the IDs from API match those in booking.ts
+            availableServices: barber.name === 'Fabio' ? fabioSpecificServices : barber.name === 'Michele' ? micheleSpecificServices : servicesData
+          };
+        });
         setBarbers(updatedBarbers);
 
       } catch (err: any) {
@@ -257,9 +263,15 @@ export default function BookingForm() {
       selectedTime: '' // Reset time as well
     }));
   };
-
   // Handle service selection (multiple services allowed)
   const handleServiceToggle = (service: Service) => {
+    // Check if it's the special "altri-servizi" service
+    if (service.id === 'altri-servizi') {
+      // For "altri-servizi", show a message instead of allowing booking
+      alert('Per questo servizio contatta direttamente Maskio al numero: +39 334 123 4567');
+      return;
+    }
+    
     setFormData(prev => {
       const isSelected = prev.selectedServices.some(s => s.id === service.id);
       const newServices = isSelected
@@ -367,15 +379,14 @@ export default function BookingForm() {
     }
   };
 
-  const stepLabels = ['Barbiere', 'Servizi', 'Data e Ora', 'Info Cliente'];
-  return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+  const stepLabels = ['Barbiere', 'Servizi', 'Data e Ora', 'Info Cliente'];  return (
+    <div className="max-w-4xl mx-auto bg-black rounded-lg shadow-lg p-8 border border-gray-800">
       {/* Error Message */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700"
+          className="mb-6 p-4 bg-red-900/50 border-l-4 border-red-500 text-red-300"
         >
           <p className="font-medium">⚠️ {error}</p>
         </motion.div>
@@ -385,23 +396,22 @@ export default function BookingForm() {
       {barbers.length === 0 && !error && (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Caricamento barbieri e servizi...</p>
+          <p className="mt-4 text-gray-300">Caricamento barbieri e servizi...</p>
         </div>
       )}
 
       {/* Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg">
+          <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
-            <p className="mt-4 text-center">Caricamento...</p>
+            <p className="mt-4 text-center text-white">Caricamento...</p>
           </div>        </div>
       )}
 
       {/* Main Content - Only show when data is loaded */}
       {barbers.length > 0 && (
-        <>
-          {/* Progress Bar */}
+        <>          {/* Progress Bar */}
           <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           {[1, 2, 3, 4].map((step) => (
@@ -412,20 +422,20 @@ export default function BookingForm() {
                   ? 'bg-green-500 text-white'
                   : step === currentStep
                   ? 'bg-yellow-400 text-black'
-                  : 'bg-gray-200 text-gray-500'
+                  : 'bg-gray-700 text-gray-400'
               }`}
             >
               {step < currentStep ? '✓' : step}
             </div>
           ))}
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-800 rounded-full h-2">
           <div
             className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
             style={{ width: `${(currentStep / 4) * 100}%` }}
           />
         </div>
-        <div className="flex justify-between text-sm text-gray-600 mt-2">
+        <div className="flex justify-between text-sm text-gray-400 mt-2">
           {stepLabels.map((label, index) => (
             <span key={index} className={currentStep === index + 1 ? 'font-semibold text-yellow-600' : ''}>
               {label}
@@ -441,8 +451,7 @@ export default function BookingForm() {
           initial="hidden"
           animate="visible"
           className="space-y-6"
-        >
-          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6">
+        >          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-white">
             Scegli il tuo barbiere
           </motion.h2>
           
@@ -454,8 +463,8 @@ export default function BookingForm() {
                 onClick={() => handleBarberChange(barber.id)}
                 className={`p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                   formData.selectedBarber?.id === barber.id
-                    ? 'border-yellow-400 bg-yellow-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-yellow-400 bg-yellow-400/10'
+                    : 'border-gray-700 hover:border-gray-600 bg-gray-900/50'
                 }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -469,15 +478,15 @@ export default function BookingForm() {
                     className="rounded-full object-cover"
                   />
                   <div>
-                    <h3 className="text-xl font-semibold">{barber.name}</h3>
+                    <h3 className="text-xl font-semibold text-white">{barber.name}</h3>
                     {barber.experience && (
-                      <p className="text-gray-600">{barber.experience}</p>
+                      <p className="text-gray-300">{barber.experience}</p>
                     )}
                     <div className="mt-2">
                       {barber.specialties.map((specialty, index) => (
                         <span
                           key={index}
-                          className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded mr-1 mb-1"
+                          className="inline-block bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded mr-1 mb-1"
                         >
                           {specialty}
                         </span>
@@ -498,37 +507,47 @@ export default function BookingForm() {
           initial="hidden"
           animate="visible"
           className="space-y-6"
-        >
-          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6">
+        >          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-white">
             Scegli i servizi di {formData.selectedBarber.name}
-          </motion.h2>
-          
-          <div className="grid md:grid-cols-2 gap-4">
+          </motion.h2>                  <div className="grid md:grid-cols-2 gap-4">
             {(formData.selectedBarber.availableServices || displayedServices).map((service: Service) => { // Use displayedServices as fallback, explicitly type service
               const isSelected = formData.selectedServices.some(s => s.id === service.id);
+              const isSpecialService = service.id === 'altri-servizi';
+              
               return (
                 <motion.div
                   key={service.id}
                   variants={fadeInUp}
                   onClick={() => handleServiceToggle(service)}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                    isSelected
-                    ? 'border-yellow-400 bg-yellow-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                  className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                    isSpecialService
+                    ? 'border-blue-400 bg-blue-400/10 cursor-pointer hover:bg-blue-400/20'
+                    : isSelected
+                    ? 'border-yellow-400 bg-yellow-400/10 cursor-pointer'
+                    : 'border-gray-700 hover:border-gray-600 bg-gray-900/50 cursor-pointer'
                   }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-semibold">{service.name}</h3>
-                      <p className="text-gray-600 text-sm">{service.description}</p>
-                      <p className="text-gray-500 text-sm mt-1">{service.duration} min</p>
-                    </div>
+                      <h3 className="text-lg font-semibold text-white">{service.name}</h3>
+                      <p className="text-gray-300 text-sm">{service.description}</p>
+                      {isSpecialService && (
+                        <p className="text-blue-400 text-sm font-medium mt-1">
+                          📞 Contattare Maskio
+                        </p>
+                      )}
+                      <p className="text-gray-400 text-sm mt-1">{service.duration} min</p>                    </div>
                     <div className="text-right">
-                      <span className="text-xl font-bold">€{service.price}</span>
+                      <span className="text-xl font-bold text-white">
+                        {isSpecialService ? '-' : `€${service.price}`}
+                      </span>
                     </div>
                   </div>
+                  {isSelected && !isSpecialService && (
+                    <div className="mt-2 text-green-400 text-sm">✓ Selezionato</div>
+                  )}
                 </motion.div>
               );
             })}
@@ -537,17 +556,17 @@ export default function BookingForm() {
           {formData.selectedServices.length > 0 && (
             <motion.div
               variants={fadeInUp}
-              className="bg-gray-50 p-4 rounded-lg"
+              className="bg-gray-900 p-4 rounded-lg border border-gray-700"
             >
-              <h3 className="font-semibold mb-2">Riepilogo servizi selezionati:</h3>
+              <h3 className="font-semibold mb-2 text-white">Riepilogo servizi selezionati:</h3>
               <div className="space-y-2">
                 {formData.selectedServices.map((service) => (
-                  <div key={service.id} className="flex justify-between text-sm">
+                  <div key={service.id} className="flex justify-between text-sm text-gray-300">
                     <span>{service.name}</span>
                     <span>€{service.price} - {service.duration} min</span>
                   </div>
                 ))}
-                <div className="border-t pt-2 font-semibold flex justify-between">
+                <div className="border-t border-gray-700 pt-2 font-semibold flex justify-between text-white">
                   <span>Totale: €{totalPrice} - {totalDuration} min</span>
                 </div>
               </div>
@@ -563,31 +582,29 @@ export default function BookingForm() {
           initial="hidden"
           animate="visible"
           className="space-y-6"
-        >
-          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6">
+        >          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-white">
             Scegli data e orario
           </motion.h2>          <motion.div variants={fadeInUp} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-4">
                 Seleziona la data
               </label>              {/* Date buttons */}
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 max-h-96 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 max-h-96 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
                 {generateDateButtons().map((dateButton) => (<motion.button
                     key={dateButton.date}
                     onClick={() => !dateButton.disabled && handleDateChange(dateButton.date)}
                     disabled={dateButton.disabled}
                     className={`p-3 rounded-lg border-2 transition-all duration-200 min-h-[80px] flex flex-col items-center justify-center relative ${
-                      formData.selectedDate === dateButton.date
-                        ? 'border-yellow-400 bg-yellow-400 text-black shadow-lg'
+                      formData.selectedDate === dateButton.date                        ? 'border-yellow-400 bg-yellow-400 text-black shadow-lg'
                         : dateButton.disabled
-                        ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                        ? 'border-gray-700 bg-gray-800 text-gray-500 cursor-not-allowed'
                         : dateButton.isToday
-                        ? 'border-blue-400 bg-blue-50 hover:border-blue-500 hover:shadow-md'
+                        ? 'border-blue-400 bg-blue-900/30 hover:border-blue-500 hover:shadow-md text-blue-300'
                         : dateButton.isNextWeek
-                        ? 'border-green-300 bg-green-50 hover:border-green-400 hover:shadow-md'
+                        ? 'border-green-400 bg-green-900/30 hover:border-green-400 hover:shadow-md text-green-300'
                         : dateButton.isNextMonth
-                        ? 'border-purple-300 bg-purple-50 hover:border-purple-400 hover:shadow-md'
-                        : 'border-gray-300 hover:border-yellow-400 bg-white hover:shadow-md'
+                        ? 'border-purple-400 bg-purple-900/30 hover:border-purple-400 hover:shadow-md text-purple-300'
+                        : 'border-gray-600 hover:border-yellow-400 bg-gray-900/50 hover:shadow-md text-gray-300'
                     }`}
                     whileHover={!dateButton.disabled ? { scale: 1.05 } : {}}
                     whileTap={!dateButton.disabled ? { scale: 0.95 } : {}}
@@ -596,34 +613,33 @@ export default function BookingForm() {
                       <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full">
                         OGGI
                       </div>
-                    )}
-                    <div className={`text-xs font-medium ${
+                    )}                    <div className={`text-xs font-medium ${
                       formData.selectedDate === dateButton.date ? 'text-black' : 
-                      dateButton.disabled ? 'text-gray-400' : 
-                      dateButton.isToday ? 'text-blue-600' :
-                      dateButton.isNextWeek ? 'text-green-600' :
-                      dateButton.isNextMonth ? 'text-purple-600' :
-                      'text-gray-600'
+                      dateButton.disabled ? 'text-gray-500' : 
+                      dateButton.isToday ? 'text-blue-300' :
+                      dateButton.isNextWeek ? 'text-green-300' :
+                      dateButton.isNextMonth ? 'text-purple-300' :
+                      'text-gray-300'
                     }`}>
                       {dateButton.dayName}
                     </div>
                     <div className={`text-lg font-bold ${
                       formData.selectedDate === dateButton.date ? 'text-black' : 
-                      dateButton.disabled ? 'text-gray-400' : 
-                      dateButton.isToday ? 'text-blue-700' :
-                      dateButton.isNextWeek ? 'text-green-700' :
-                      dateButton.isNextMonth ? 'text-purple-700' :
-                      'text-gray-900'
+                      dateButton.disabled ? 'text-gray-500' : 
+                      dateButton.isToday ? 'text-blue-300' :
+                      dateButton.isNextWeek ? 'text-green-300' :
+                      dateButton.isNextMonth ? 'text-purple-300' :
+                      'text-gray-300'
                     }`}>
                       {dateButton.dayNumber}
                     </div>
                     <div className={`text-xs ${
                       formData.selectedDate === dateButton.date ? 'text-black' : 
-                      dateButton.disabled ? 'text-gray-400' : 
-                      dateButton.isToday ? 'text-blue-500' :
-                      dateButton.isNextWeek ? 'text-green-500' :
-                      dateButton.isNextMonth ? 'text-purple-500' :
-                      'text-gray-500'
+                      dateButton.disabled ? 'text-gray-500' : 
+                      dateButton.isToday ? 'text-blue-300' :
+                      dateButton.isNextWeek ? 'text-green-300' :
+                      dateButton.isNextMonth ? 'text-purple-300' :
+                      'text-gray-300'
                     }`}>
                       {dateButton.monthName}
                     </div>
@@ -631,46 +647,43 @@ export default function BookingForm() {
                       <div className="text-xs text-red-400 mt-1">Chiuso</div>
                     )}
                   </motion.button>
-                ))}              </div>
-                {/* Legend for date colors */}
-              <div className="mt-4 flex flex-wrap gap-4 text-xs">
+                ))}              </div>              {/* Legend for date colors */}
+              <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-300">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-200 border border-blue-400 rounded mr-2"></div>
+                  <div className="w-3 h-3 bg-blue-900/30 border border-blue-400 rounded mr-2"></div>
                   <span>Oggi</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-200 border border-green-400 rounded mr-2"></div>
+                  <div className="w-3 h-3 bg-green-900/30 border border-green-400 rounded mr-2"></div>
                   <span>Prossima settimana</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-purple-200 border border-purple-400 rounded mr-2"></div>
+                  <div className="w-3 h-3 bg-purple-900/30 border border-purple-400 rounded mr-2"></div>
                   <span>Prossimo mese</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-gray-200 border border-gray-400 rounded mr-2"></div>
+                  <div className="w-3 h-3 bg-gray-800 border border-gray-600 rounded mr-2"></div>
                   <span>Giorni di chiusura</span>
                 </div>
               </div>
               
               {formData.selectedDate && (
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 font-medium">
+                <div className="mt-4 p-3 bg-yellow-400/10 border border-yellow-400/30 rounded-lg">
+                  <p className="text-yellow-300 font-medium">
                     📅 Data selezionata: {formatSelectedDate(formData.selectedDate)}
                   </p>
                 </div>
-              )}            </div>
-
-            {/* Loading/Debouncing indicator */}
+              )}</div>            {/* Loading/Debouncing indicator */}
             {isDebouncing && formData.selectedDate && formData.selectedBarber && (
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-500 mx-auto"></div>
-                <p className="text-sm text-gray-600 mt-2">Caricamento orari...</p>
+                <p className="text-sm text-gray-300 mt-2">Caricamento orari...</p>
               </div>
             )}
 
             {formData.selectedDate && availableSlots.length > 0 && !isDebouncing && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Orari disponibili
                 </label>
                 <div className="grid grid-cols-3 md:grid-cols-4 gap-3">                  {availableSlots.map((slot) => (
@@ -682,37 +695,37 @@ export default function BookingForm() {
                         formData.selectedTime === slot.time
                           ? 'border-yellow-400 bg-yellow-400 text-black shadow-md'
                           : slot.available
-                          ? 'border-gray-300 hover:border-yellow-400 bg-white hover:shadow-sm'
-                          : 'border-red-200 bg-red-100 text-red-400 cursor-not-allowed opacity-75'
+                          ? 'border-gray-600 hover:border-yellow-400 bg-gray-900/50 hover:shadow-sm text-gray-300'
+                          : 'border-red-600 bg-red-900/50 text-red-400 cursor-not-allowed opacity-75'
                       }`}
                     >
                       <span className={!slot.available ? 'line-through' : ''}>{slot.time}</span>
                     </button>
                   ))}
-                </div>                <div className="mt-2 text-sm text-gray-600">
-                  <p className="font-semibold text-blue-600">🗓️ Esteso! Ora puoi prenotare fino a 2 mesi in anticipo</p>
+                </div>                <div className="mt-2 text-sm text-gray-300">
+                  <p className="font-semibold text-blue-400">🗓️ Esteso! Ora puoi prenotare fino a 2 mesi in anticipo</p>
                   <p>📅 Orari: 9:00-12:30 e 15:00-17:30 (Domenica chiuso)</p>                  <div className="flex flex-wrap gap-4 text-xs mt-2">
                     <div className="flex items-center">
                       <div className="w-4 h-4 bg-yellow-400 border border-yellow-500 rounded mr-2"></div>
                       <span>Selezionato</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-4 h-4 bg-white border border-gray-300 rounded mr-2"></div>
+                      <div className="w-4 h-4 bg-gray-900/50 border border-gray-600 rounded mr-2"></div>
                       <span>Disponibile</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-4 h-4 bg-red-100 border border-red-200 rounded mr-2 relative">
+                      <div className="w-4 h-4 bg-red-900/50 border border-red-600 rounded mr-2 relative">
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-red-500 text-xs font-bold">X</span>
+                          <span className="text-red-400 text-xs font-bold">X</span>
                         </div>
                       </div>
-                      <span className="text-red-500">Occupato</span>
+                      <span className="text-red-400">Occupato</span>
                     </div>
                   </div>
                 </div>
               </div>
             )}            {formData.selectedDate && availableSlots.length === 0 && !loading && !isDebouncing && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-400">
                 <p>❌ Spiacenti, la data selezionata non è disponibile.</p>
                 <p className="text-sm">Siamo chiusi la domenica.</p>
               </div>
@@ -729,14 +742,14 @@ export default function BookingForm() {
           animate="visible"
           className="space-y-6"
         >
-          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-gray-800">
+          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-white">
             Dati Personali e Riepilogo
           </motion.h2>
 
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Customer Info Input Fields */}
-            <motion.div variants={fadeInUp} className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-              <h3 className="text-xl font-semibold mb-6 text-gray-800 flex items-center">
+            <motion.div variants={fadeInUp} className="bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-700">
+              <h3 className="text-xl font-semibold mb-6 text-white flex items-center">
                 <svg className="w-6 h-6 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -745,7 +758,7 @@ export default function BookingForm() {
               
               <div className="space-y-5">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
                     Nome Completo *
                   </label>
                   <input
@@ -756,12 +769,11 @@ export default function BookingForm() {
                     onChange={handleCustomerInfoChange}
                     required
                     placeholder="Es. Mario Rossi"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-white placeholder-gray-400 bg-gray-800"
                   />
-                </div>
-                
+                </div>                
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                     Email *
                   </label>
                   <input
@@ -772,12 +784,12 @@ export default function BookingForm() {
                     onChange={handleCustomerInfoChange}
                     required
                     placeholder="mario.rossi@email.com"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-white placeholder-gray-400 bg-gray-800"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
                     Telefono *
                   </label>
                   <input
@@ -788,12 +800,12 @@ export default function BookingForm() {
                     onChange={handleCustomerInfoChange}
                     required
                     placeholder="+39 123 456 7890"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-gray-900 placeholder-gray-400"
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-white placeholder-gray-400 bg-gray-800"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">
                     Note aggiuntive (opzionale)
                   </label>
                   <textarea
@@ -803,42 +815,40 @@ export default function BookingForm() {
                     onChange={handleCustomerInfoChange}
                     rows={3}
                     placeholder="Eventuali richieste speciali o note..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-gray-900 placeholder-gray-400 resize-none"
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-white placeholder-gray-400 resize-none bg-gray-800"
                   ></textarea>
                 </div>
               </div>
-            </motion.div>
-
-            {/* Booking Summary */}
-            <motion.div variants={fadeInUp} className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl shadow-lg border border-yellow-200">
-              <h3 className="text-xl font-semibold mb-6 text-gray-800 flex items-center">
-                <svg className="w-6 h-6 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            </motion.div>            {/* Booking Summary */}
+            <motion.div variants={fadeInUp} className="bg-gradient-to-br from-gray-900 to-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+              <h3 className="text-xl font-semibold mb-6 text-white flex items-center">
+                <svg className="w-6 h-6 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
                 Riepilogo Prenotazione
               </h3>
               
               <div className="space-y-4">
-                <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
-                  <svg className="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center p-3 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
+                  <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <div>
-                    <p className="text-sm text-gray-600">Barbiere</p>
-                    <p className="font-semibold text-gray-800">{formData.selectedBarber?.name}</p>
+                    <p className="text-sm text-gray-400">Barbiere</p>
+                    <p className="font-semibold text-white">{formData.selectedBarber?.name}</p>
                   </div>
                 </div>
 
-                <div className="p-3 bg-white rounded-lg shadow-sm">
+                <div className="p-3 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
                   <div className="flex items-center mb-2">
-                    <svg className="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8" />
                     </svg>
-                    <p className="text-sm text-gray-600">Servizi</p>
+                    <p className="text-sm text-gray-400">Servizi</p>
                   </div>
                   <ul className="space-y-1 ml-8">
                     {formData.selectedServices.map(s => (
-                      <li key={s.id} className="text-sm text-gray-800 flex justify-between">
+                      <li key={s.id} className="text-sm text-white flex justify-between">
                         <span>{s.name}</span>
                         <span className="font-medium">€{s.price}</span>
                       </li>
@@ -846,35 +856,35 @@ export default function BookingForm() {
                   </ul>
                 </div>
 
-                <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
-                  <svg className="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center p-3 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
+                  <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <div>
-                    <p className="text-sm text-gray-600">Data e Ora</p>
-                    <p className="font-semibold text-gray-800">{formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
+                    <p className="text-sm text-gray-400">Data e Ora</p>
+                    <p className="font-semibold text-white">{formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
                   </div>
                 </div>
 
-                <div className="border-t pt-4 mt-4">
-                  <div className="flex justify-between items-center p-3 bg-yellow-200 rounded-lg">
+                <div className="border-t border-gray-700 pt-4 mt-4">
+                  <div className="flex justify-between items-center p-3 bg-yellow-400/20 rounded-lg border border-yellow-400/30">
                     <div className="flex items-center">
-                      <svg className="w-5 h-5 mr-3 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 mr-3 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="font-semibold text-yellow-800">Durata Totale</span>
+                      <span className="font-semibold text-yellow-300">Durata Totale</span>
                     </div>
-                    <span className="font-bold text-yellow-800">{totalDuration} min</span>
+                    <span className="font-bold text-yellow-300">{totalDuration} min</span>
                   </div>
                   
-                  <div className="flex justify-between items-center p-3 bg-green-200 rounded-lg mt-2">
+                  <div className="flex justify-between items-center p-3 bg-green-400/20 rounded-lg mt-2 border border-green-400/30">
                     <div className="flex items-center">
-                      <svg className="w-5 h-5 mr-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 mr-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                       </svg>
-                      <span className="font-semibold text-green-800">Prezzo Totale</span>
+                      <span className="font-semibold text-green-300">Prezzo Totale</span>
                     </div>
-                    <span className="font-bold text-green-800 text-lg">€{totalPrice}</span>
+                    <span className="font-bold text-green-300 text-lg">€{totalPrice}</span>
                   </div>
                 </div>
               </div>

@@ -46,12 +46,11 @@ export default function BookingsList() {
       }
     }
   };
-
   return (
     <div className="max-w-6xl mx-auto p-8">      <motion.h1 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-3xl font-bold text-center mb-8"
+        className="text-3xl font-bold text-center mb-8 text-white"
       >
         📋 Prenotazioni Attive
       </motion.h1>
@@ -60,7 +59,7 @@ export default function BookingsList() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 text-center"
+          className="mb-6 p-4 bg-red-900/50 border-l-4 border-red-400 text-red-300 text-center"
         >
           <p className="font-medium">⚠️ {error}</p>
         </motion.div>
@@ -74,7 +73,7 @@ export default function BookingsList() {
           className="text-center py-12"
         >
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-          <p className="text-gray-500 text-lg">Caricamento prenotazioni...</p>
+          <p className="text-gray-400 text-lg">Caricamento prenotazioni...</p>
         </motion.div>
       ) : bookings.length === 0 ? (
         <motion.div 
@@ -83,7 +82,7 @@ export default function BookingsList() {
           animate="visible"
           className="text-center py-12"
         >
-          <p className="text-gray-500 text-lg">Nessuna prenotazione presente</p>
+          <p className="text-gray-400 text-lg">Nessuna prenotazione presente</p>
         </motion.div>
       ) : (
         <motion.div
@@ -96,56 +95,56 @@ export default function BookingsList() {
             <motion.div
               key={booking.id}
               variants={fadeInUp}
-              className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-yellow-400"
+              className="bg-gray-900 border border-gray-800 rounded-lg shadow-lg p-6 border-l-4 border-l-yellow-400"
             >
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-semibold">{booking.customerInfo.name}</h3>
-                <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                <h3 className="text-lg font-semibold text-white">{booking.customerInfo.name}</h3>
+                <span className="text-sm bg-green-900/50 text-green-300 px-2 py-1 rounded">
                   Confermata
                 </span>
               </div>
               
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Barbiere:</span>
-                  <span className="font-medium capitalize">{booking.barberId}</span>
+                  <span className="text-gray-400">Barbiere:</span>
+                  <span className="font-medium capitalize text-white">{booking.barberId}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Data:</span>
-                  <span className="font-medium">
+                  <span className="text-gray-400">Data:</span>
+                  <span className="font-medium text-white">
                     {new Date(booking.date).toLocaleDateString('it-IT')}
                   </span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Ora:</span>
-                  <span className="font-medium">{booking.time}</span>
+                  <span className="text-gray-400">Ora:</span>
+                  <span className="font-medium text-white">{booking.time}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Durata:</span>
-                  <span className="font-medium">{booking.duration} min</span>
+                  <span className="text-gray-400">Durata:</span>
+                  <span className="font-medium text-white">{booking.duration} min</span>
                 </div>
                 
-                <div className="border-t pt-2 mt-3">
-                  <span className="text-gray-600 text-xs">Servizi:</span>
+                <div className="border-t border-gray-700 pt-2 mt-3">
+                  <span className="text-gray-400 text-xs">Servizi:</span>
                   {booking.services.map((service, index) => (
                     <div key={index} className="flex justify-between text-xs mt-1">
-                      <span>{service.name}</span>
-                      <span>€{service.price}</span>
+                      <span className="text-gray-300">{service.name}</span>
+                      <span className="text-white">€{service.price}</span>
                     </div>
                   ))}
                 </div>
                 
-                <div className="border-t pt-2 mt-2">
+                <div className="border-t border-gray-700 pt-2 mt-2">
                   <div className="flex justify-between font-semibold">
-                    <span>Totale:</span>
-                    <span>€{booking.services.reduce((total, service) => total + service.price, 0)}</span>
+                    <span className="text-gray-300">Totale:</span>
+                    <span className="text-yellow-400">€{booking.services.reduce((total, service) => total + service.price, 0)}</span>
                   </div>
                 </div>
                 
-                <div className="border-t pt-2 mt-3 text-xs text-gray-500">
+                <div className="border-t border-gray-700 pt-2 mt-3 text-xs text-gray-400">
                   <p>Tel: {booking.customerInfo.phone}</p>
                   <p>Email: {booking.customerInfo.email}</p>
                 </div>
@@ -161,10 +160,10 @@ export default function BookingsList() {
         transition={{ delay: 0.5 }}
         className="mt-8 text-center"
       >
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-400">
           Totale prenotazioni: {bookings.length}
         </p>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-gray-500 mt-1">
           Aggiornamento automatico ogni 2 secondi
         </p>
       </motion.div>

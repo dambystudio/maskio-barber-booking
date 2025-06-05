@@ -38,19 +38,23 @@ class SecurityManager {
     
     return isMobileUserAgent || (hasTouchScreen && (isSmallScreen || isMobileViewport));
   }
-  
-  private isZoomEvent(): boolean {
+    private isZoomEvent(): boolean {
     if (typeof window === 'undefined') return false;
     
-    // Check if it's a zoom event by comparing visual viewport
+    // Migliore rilevamento degli eventi di zoom che evita falsi positivi
+    // Questo è importante per permettere agli utenti di zoomare senza attivare le misure di sicurezza
+    
+    // Controllo del viewport visuale (più preciso)
     if ('visualViewport' in window && window.visualViewport) {
       const zoomLevel = window.innerWidth / window.visualViewport.width;
-      return zoomLevel > 1.1; // Zoom detected if scale > 110%
+      // Aumentiamo la soglia per essere più permissivi
+      return zoomLevel > 1.2; // Zoom rilevato se la scala è > 120%
     }
     
-    // Fallback: check devicePixelRatio changes
+    // Fallback: controllo tramite devicePixelRatio
+    // Siamo più permissivi per consentire piccole variazioni
     const currentZoom = window.devicePixelRatio || 1;
-    return currentZoom !== 1;
+    return currentZoom > 1.2 || currentZoom < 0.8; // Permetti variazioni tra 0.8 e 1.2
   }
 
   public static getInstance(): SecurityManager {
@@ -82,29 +86,30 @@ class SecurityManager {
     // Performance monitoring (detect debugging)
     this.monitorPerformance();
   }
-
   private setupAntiDebugging(): void {
-    // Detect debugger
+    // Mantenendo alcune misure anti-debugging ma solo per rilevare
+    // l'uso attivo degli strumenti di sviluppo, non durante lo zoom o altre operazioni legittime
+    if (typeof window === 'undefined') return;
+    
+    // Rilevamento attivazione debugger più leggero
     const detectDebugger = () => {
-      const start = performance.now();
-      debugger;
-      const end = performance.now();
-      
-      if (end - start > 100) {
-        this.debugDetected = true;
-        this.handleSecurityBreach('debugger');
+      try {
+        const start = performance.now();
+        debugger;
+        const end = performance.now();
+        
+        // Aumentiamo significativamente la soglia per evitare falsi positivi
+        if (end - start > 300) {
+          this.debugDetected = true;
+          this.handleSecurityBreach('debugger');
+        }
+      } catch (e) {
+        // Ignoriamo gli errori
       }
     };
 
-    // Run detection every 2 seconds
-    setInterval(detectDebugger, 2000);
-
-    // Infinite debugger loop
-    setInterval(() => {
-      if (this.debugDetected) {
-        debugger;
-      }
-    }, 1000);
+    // Riduciamo la frequenza per migliorare le prestazioni
+    setInterval(detectDebugger, 5000);
   }
   private disableConsole(): void {
     if (typeof window !== 'undefined') {
@@ -122,80 +127,22 @@ class SecurityManager {
       // Store original console for internal use
       (window as any).__originalConsole = originalConsole;
     }
-  }
-  private detectDevTools(): void {
+  }  private detectDevTools(): void {
     if (typeof window === 'undefined') return;
 
-    // Method 1: Window size detection (enhanced for mobile)
-    let devtools = {
-      open: false,
-      orientation: null as string | null
-    };
+    // Solo il rilevamento di F12 e scorciatoie per gli strumenti di sviluppo
+    // Questo metodo non utilizza più il rilevamento basato su dimensioni della finestra
+    // che può interferire con lo zoom e altre funzionalità legittime
+    
+    // Rimuovere tutti i rilevamenti che possono essere attivati da azioni legittime come lo zoom
+    // Mantenere solo il rilevamento di F12 e scorciatoie da tastiera specifiche che appaiono in disableKeyboardShortcuts
 
-    setInterval(() => {
-      // Skip detection if mobile device or zoom event
-      if (this.isMobileDevice() || this.isZoomEvent()) {
-        return;
-      }
-      
-      const heightDiff = window.outerHeight - window.innerHeight;
-      const widthDiff = window.outerWidth - window.innerWidth;
-      
-      // More conservative thresholds and additional checks
-      if ((heightDiff > 250 || widthDiff > 250) && 
-          !this.isZoomEvent() && 
-          !this.isMobileDevice()) {
-        if (!devtools.open) {
-          devtools.open = true;
-          this.devToolsOpen = true;
-          this.handleSecurityBreach('devtools_size');
-        }
-      } else {
-        devtools.open = false;
-        this.devToolsOpen = false;
-      }
-    }, 1000); // Increased interval to 1 second
-
-    // Method 2: toString modification detection
-    let element = new Image();
-    Object.defineProperty(element, 'id', {
-      get: () => {
-        // Only trigger on desktop
-        if (!this.isMobileDevice()) {
-          this.handleSecurityBreach('devtools_element');
-        }
-        return 'devtools_detected';
-      }
-    });
-
-    // Method 3: Performance timing (mobile-safe)
-    setInterval(() => {
-      // Skip on mobile devices
-      if (this.isMobileDevice()) {
-        return;
-      }
-      
-      const start = performance.now();
-      // Use original console if available to avoid recursion
-      if (typeof window !== 'undefined' && (window as any).__originalConsole) {
-        (window as any).__originalConsole.clear();
-      }
-      const end = performance.now();
-      
-      if (end - start > 2) { // Increased threshold for mobile compatibility
-        this.handleSecurityBreach('devtools_performance');
-      }
-    }, 5000); // Increased interval to 5 seconds
+    // Non utilizziamo più toString modification e performance timing
+    // in quanto possono causare falsi positivi e limitare funzionalità legittime
   }
-
   private disableContextMenu(): void {
-    if (typeof document !== 'undefined') {
-      document.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        this.handleSecurityBreach('context_menu');
-        return false;
-      });
-    }
+    // Non blocchiamo più il menu contestuale in quanto è una funzionalità normale del browser
+    // e non è direttamente correlata all'ispezione degli elementi
   }
 
   private disableKeyboardShortcuts(): void {
@@ -216,64 +163,31 @@ class SecurityManager {
       });
     }
   }
-
   private protectSourceCode(): void {
-    if (typeof document !== 'undefined') {
-      // Disable text selection
-      document.addEventListener('selectstart', (e) => {
-        e.preventDefault();
-        return false;
-      });
-
-      // Disable drag
-      document.addEventListener('dragstart', (e) => {
-        e.preventDefault();
-        return false;
-      });
-
-      // Disable print
-      window.addEventListener('beforeprint', (e) => {
-        e.preventDefault();
-        this.handleSecurityBreach('print_attempt');
-        return false;
-      });
-    }
+    // Non blocchiamo più la selezione di testo, il trascinamento o la stampa
+    // in quanto sono funzionalità normali del browser che migliorano l'esperienza utente
+    // e non sono direttamente correlate all'ispezione degli elementi
   }
-
   private monitorPerformance(): void {
-    let lastTime = performance.now();
-    
-    const monitor = () => {
-      const currentTime = performance.now();
-      const timeDiff = currentTime - lastTime;
-      
-      // If execution is too slow, debugging might be active
-      if (timeDiff > 200) {
-        this.handleSecurityBreach('performance_anomaly');
-      }
-      
-      lastTime = currentTime;
-      requestAnimationFrame(monitor);
-    };
-    
-    requestAnimationFrame(monitor);
+    // Non monitoriamo più le anomalie di performance in quanto possono essere causate
+    // da molti fattori legittimi come dispositivi lenti, altre schede attive,
+    // batteria scarica, ecc. e non sono indicative solo dell'uso degli strumenti di sviluppo
   }  private handleSecurityBreach(type: string): void {
-    // Double-check: never trigger on mobile devices or during zoom
+    // Verificare che si tratti di un'attività legata all'ispezione degli elementi
+    // e non di altre operazioni legittime come lo zoom
     if (this.isMobileDevice() || this.isZoomEvent()) {
       return;
     }
     
-    // Use original console if available to avoid recursion
-    if (typeof window !== 'undefined' && (window as any).__originalConsole) {
-      (window as any).__originalConsole.clear();
-    }
-    
-    // Redirect to blank page only on desktop
+    // Reindirizzare a about:blank solo per violazioni specifiche legate all'ispezione
     if (typeof window !== 'undefined' && !this.isMobileDevice()) {
-      window.location.replace('about:blank');
+      // Reindirizzare solo se la violazione è legata a F12 o scorciatoie da tastiera per gli strumenti di sviluppo
+      if (type === 'keyboard_shortcut' || type === 'debugger') {
+        window.location.replace('about:blank');
+      }
     }
     
-    // Optional: Send analytics about the breach
+    // Opzionale: registrare l'evento di sicurezza
     this.logSecurityEvent(type);
   }
 

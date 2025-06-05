@@ -2,18 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Scrollbar personalizzata per la selezione delle date */
+/* Dark mode global styles */
+body {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Scrollbar personalizzata per il dark mode */
+
+/* Nascondi blocchi di codice per impostazione predefinita */
+pre, code {
+  display: none; /* Saranno mostrati solo quando gli strumenti di sviluppo sono aperti */
+}
 .scrollbar-thin {
   scrollbar-width: thin;
 }
 
 .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
-  background-color: #d1d5db;
+  background-color: #6b7280;
   border-radius: 6px;
 }
 
 .scrollbar-track-gray-100::-webkit-scrollbar-track {
-  background-color: #f3f4f6;
+  background-color: #000000;
 }
 
 ::-webkit-scrollbar {
@@ -21,12 +32,12 @@
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #f3f4f6;
+  background-color: #000000;
   border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #d1d5db;
+  background-color: #6b7280;
   border-radius: 6px;
 }
 

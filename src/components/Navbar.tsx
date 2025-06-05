@@ -39,29 +39,27 @@ export default function Navbar() {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);  return (
-    <>
-      <header className="fixed inset-x-0 top-0 z-[80] bg-black/80 backdrop-blur-md shadow-lg border-b border-gray-900/30">
+  }, []);  return (    <>      <header className="fixed inset-x-0 top-0 z-[80] bg-black/90 backdrop-blur-md shadow-none">
       {/* Desktop Navbar */}
-      <div className="mx-auto">        <div className="flex items-center justify-between p-4">          {/* Logo e testo mobile */}
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3">
-              <Image
-                src="/LogoSimboloNome_Bianco(1).png"
-                alt="Maskio Barber Concept"
-                width={180}
-                height={45}
-                className="h-10 w-auto"
-                priority              />
-            </Link>
-            
+      <div className="mx-auto">
+        <div className="flex items-center justify-between p-3">{/* Reduced padding from p-4 to p-3 */}{/* Logo */}          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/LogoSimboloNome_Bianco(1).png"
+              alt="Maskio Barber Concept"
+              width={180}
+              height={45}
+              className="h-6 w-auto my-1.5" /* Further reduced height and kept vertical margin */
+              priority
+            />
+          </Link>
             {/* Testo visibile solo da mobile */}
-            <div className="lg:hidden text-center">
-              <span className="text-white text-lg font-semibold">
-                Maskio Barber Concept
-              </span>
-            </div>
-          </div>{/* Desktop Navigation */}
+          <div className="lg:hidden text-center mx-auto">
+            <span className="text-white text-lg font-semibold tracking-wide">
+              Maskio Barber Concept
+            </span>
+          </div>
+          
+          {/* Desktop Navigation */}
           <div className="hidden lg:flex lg:items-center lg:gap-8">
             {navigation.map((item) => (
               <Link
@@ -84,11 +82,10 @@ export default function Navbar() {
             <BookingButton size="sm" className="ml-4">
               Prenota
             </BookingButton>
-          </div>          {/* Mobile menu button */}
-          <motion.button
+          </div>          {/* Mobile menu button */}          <motion.button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden text-white"
+            className="lg:hidden text-white flex items-center justify-center"
             whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.05 }}
           >
@@ -96,7 +93,7 @@ export default function Navbar() {
               <XMarkIcon className="h-6 w-6" />
             ) : (
               <Bars3Icon className="h-6 w-6" />
-            )}          </motion.button>
+            )}</motion.button>
         </div>
       </div>
       </header>
@@ -193,10 +190,9 @@ export default function Navbar() {
                     </div>
                 </nav>
                 </div>
-                
-                {/* Mobile Booking Button - Fixed at bottom */}
-                <div className="px-6 pb-6 border-t border-gray-900">
-                  <div className="pt-4" onClick={() => setMobileMenuOpen(false)}>
+                  {/* Mobile Booking Button - Fixed at bottom */}
+                <div className="px-6 pb-4 border-t border-gray-900 mt-2">
+                  <div className="pt-3" onClick={() => setMobileMenuOpen(false)}>
                     <BookingButton className="w-full">
                       Prenota Ora
                     </BookingButton>

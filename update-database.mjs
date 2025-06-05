@@ -17,8 +17,7 @@ async function updateDatabase() {
     
     // Create services with the IDs expected by BookingForm
     console.log('📋 Creating services with correct IDs...');
-    
-    const services = [
+      const services = [
       {
         id: 'taglio',
         name: 'Taglio',
@@ -39,20 +38,12 @@ async function updateDatabase() {
         description: 'Taglio capelli e sistemazione barba',
         price: '23.00',
         duration: 40
-      },
-      {
-        id: 'skincare',
-        name: 'Skincare',
-        description: 'Trattamento cura viso',
-        price: '30.00',
-        duration: 45
-      },
-      {
-        id: 'trattamento-barba',
-        name: 'Trattamento Barba',
-        description: 'Pulizia barba, modellatura, contorno e acconciatura',
-        price: '25.00',
-        duration: 40
+      },      {
+        id: 'altri-servizi',
+        name: 'Altri servizi',
+        description: 'colore o altri servizi',
+        price: '0.00',
+        duration: 30
       }
     ];
 
@@ -65,16 +56,13 @@ async function updateDatabase() {
     }
 
     // Create barbers with the IDs expected by BookingForm
-    console.log('👨‍💼 Creating barbers with correct IDs...');
-    
-    const barbers = [
+    console.log('👨‍💼 Creating barbers with correct IDs...');    const barbers = [
       {
         id: 'fabio',
         name: 'Fabio',
         email: 'fabio@maskiobarber.com',
         phone: '+39 123 456 7890',
-        specialties: JSON.stringify(['Tagli classici', 'Skin Care', 'Trattamenti barba']),
-        experience: '8 anni di esperienza',
+        specialties: JSON.stringify(['Tagli moderni', 'Tagli classici', 'Barba']),
         isActive: true
       },
       {
@@ -82,8 +70,7 @@ async function updateDatabase() {
         name: 'Michele',
         email: 'michele@maskiobarber.com',
         phone: '+39 123 456 7891',
-        specialties: JSON.stringify(['Tagli moderni', 'Barba', 'Skin Care']),
-        experience: '6 anni di esperienza',
+        specialties: JSON.stringify(['Tagli moderni', 'Tagli classici', 'Barba']),
         isActive: true
       }
     ];

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /pannello-prenotazioni/
+Disallow: /auth/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://maskio-barber-booking.vercel.app/sitemap.xml

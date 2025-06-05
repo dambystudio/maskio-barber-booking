@@ -94,11 +94,10 @@ export default function BookingReminderEmail({
 
             {/* Location */}
             <Section style={locationSection}>
-              <Heading style={h3}>📍 Dove Trovarci</Heading>
-              <Text style={locationText}>
+              <Heading style={h3}>📍 Dove Trovarci</Heading>              <Text style={locationText}>
                 <strong>Maskio Barber Concept</strong><br />
-                Via Example 123<br />
-                00100 Roma, RM<br />
+                Via Sant'Agata 24<br />
+                71013 San Giovanni Rotondo (FG)<br />
                 📞 +39 123 456 7890
               </Text>
               

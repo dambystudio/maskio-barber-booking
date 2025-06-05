@@ -26,11 +26,11 @@ const cardHover = {
 
 export default function Page() {
   return (
-    <main className="min-h-screen bg-white py-24">
+    <main className="min-h-screen bg-black py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <motion.h1 
-            className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-8"
+            className="text-4xl font-bold tracking-tight text-white sm:text-5xl mb-8"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -42,44 +42,42 @@ export default function Page() {
             variants={staggerContainer}
             initial="initial"
             animate="animate"
-          >
-            {/* Phone */}
+          >            {/* Phone */}
             <motion.a 
               href="tel:+393123456789"
-              className="bg-gray-50 p-6 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors duration-200 block"
+              className="bg-gray-900 border border-gray-800 p-6 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors duration-200 block"
               variants={fadeInUp}
               {...cardHover}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">📞 Telefono</h3>
-              <p className="text-gray-600">+39 312 345 6789</p>
-              <p className="text-sm text-blue-600 mt-2">Tocca per chiamare</p>
+              <h3 className="text-lg font-semibold text-white mb-2">📞 Telefono</h3>
+              <p className="text-gray-300">+39 312 345 6789</p>
+              <p className="text-sm text-yellow-400 mt-2">Tocca per chiamare</p>
             </motion.a>
 
             {/* Email */}
             <motion.a 
               href="mailto:info@maskiobarber.com"
-              className="bg-gray-50 p-6 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors duration-200 block"
+              className="bg-gray-900 border border-gray-800 p-6 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors duration-200 block"
               variants={fadeInUp}
               {...cardHover}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">✉️ Email</h3>
-              <p className="text-gray-600">info@maskiobarber.com</p>
-              <p className="text-sm text-blue-600 mt-2">Tocca per scrivere</p>
+              <h3 className="text-lg font-semibold text-white mb-2">✉️ Email</h3>
+              <p className="text-gray-300">info@maskiobarber.com</p>
+              <p className="text-sm text-yellow-400 mt-2">Tocca per scrivere</p>
             </motion.a>
 
-            {/* Address */}
-            <motion.a 
-              href="https://maps.google.com/?q=Via+Roma+123+Milano"
+            {/* Address */}            <motion.a 
+              href="https://maps.google.com/?q=Via+Sant'Agata+24+San+Giovanni+Rotondo+FG"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gray-50 p-6 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors duration-200 block"
+              className="bg-gray-900 border border-gray-800 p-6 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors duration-200 block"
               variants={fadeInUp}
               {...cardHover}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">📍 Indirizzo</h3>
-              <p className="text-gray-600">Via Roma, 123<br />Milano, MI 20121</p>
-              <p className="text-sm text-blue-600 mt-2">Tocca per navigare</p>
-            </motion.a>          </motion.div>
+              <h3 className="text-lg font-semibold text-white mb-2">📍 Indirizzo</h3>
+              <p className="text-gray-300">Via Sant'Agata, 24<br />San Giovanni Rotondo (FG) 71013</p>
+              <p className="text-sm text-yellow-400 mt-2">Tocca per navigare</p>
+            </motion.a></motion.div>
 
           {/* Quick Actions */}
           <motion.div 
@@ -122,9 +120,8 @@ export default function Page() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          >
-            <motion.h2 
-              className="text-2xl font-semibold text-gray-900 mb-6"
+          >            <motion.h2 
+              className="text-2xl font-semibold text-white mb-6"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.6 }}
@@ -132,32 +129,31 @@ export default function Page() {
               Orari di Apertura
             </motion.h2>
             <motion.div 
-              className="max-w-2xl mx-auto bg-gray-50 p-6 rounded-lg"
+              className="max-w-2xl mx-auto bg-gray-900 border border-gray-800 p-6 rounded-lg"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
               whileHover={{ 
                 scale: 1.02,
-                boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
                 transition: { duration: 0.3 }
               }}
             >
-              <div className="grid grid-cols-2 gap-4">
-                <motion.div
+              <div className="grid grid-cols-2 gap-4">                <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 1.0 }}
                 >
-                  <h3 className="font-medium text-gray-900">Lunedì - Venerdì</h3>
-                  <p className="text-gray-600">09:00 - 19:00</p>
+                  <h3 className="font-medium text-white">Lunedì - Venerdì</h3>
+                  <p className="text-gray-300">09:00 - 12:30 | 15:00 - 17:30</p>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 1.1 }}
                 >
-                  <h3 className="font-medium text-gray-900">Sabato</h3>
-                  <p className="text-gray-600">09:00 - 18:00</p>
+                  <h3 className="font-medium text-white">Sabato</h3>
+                  <p className="text-gray-300">09:00 - 12:30</p>
                 </motion.div>
                 <motion.div 
                   className="col-span-2"
@@ -165,10 +161,10 @@ export default function Page() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 1.2 }}
                 >
-                  <h3 className="font-medium text-gray-900">Domenica</h3>
-                  <p className="text-gray-600">Chiuso</p>
+                  <h3 className="font-medium text-white">Domenica</h3>
+                  <p className="text-gray-300">Chiuso</p>
                 </motion.div>
-              </div>            </motion.div>
+              </div></motion.div>
           </motion.div>
 
           {/* Call to Action */}

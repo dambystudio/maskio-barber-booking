@@ -35,7 +35,7 @@ const imageHover = {
 
 export default function ChiSiamo() {
   return (
-    <main className="relative min-h-screen pt-24 pb-16">
+    <main className="relative min-h-screen pt-24 pb-16 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -44,15 +44,14 @@ export default function ChiSiamo() {
           className="text-center mb-16"
         >
           <motion.h1 
-            className="text-4xl md:text-5xl font-bold mb-6"
+            className="text-4xl md:text-5xl font-bold mb-6 text-white"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          >
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}          >
             Chi Siamo
           </motion.h1>
           <motion.p 
-            className="text-xl text-gray-600 max-w-3xl mx-auto"
+            className="text-xl text-gray-300 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
@@ -85,9 +84,8 @@ export default function ChiSiamo() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
             className="space-y-6"
-          >
-            <motion.h2 
-              className="text-3xl font-semibold"
+          >            <motion.h2 
+              className="text-3xl font-semibold text-white"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
@@ -95,7 +93,7 @@ export default function ChiSiamo() {
               La Nostra Storia
             </motion.h2>
             <motion.p 
-              className="text-gray-600"
+              className="text-gray-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.7 }}
@@ -103,10 +101,9 @@ export default function ChiSiamo() {
               Maskio Barber Concept nasce dalla passione per l&apos;arte del barbiere
               e dalla volontà di creare un ambiente dove tradizione e modernità si
               fondono perfettamente. Il nostro obiettivo è offrire non solo un
-              servizio, ma un&apos;esperienza completa di grooming maschile.
-            </motion.p>
+              servizio, ma un&apos;esperienza completa di grooming maschile.            </motion.p>
             <motion.p 
-              className="text-gray-600"
+              className="text-gray-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.8 }}
@@ -123,57 +120,56 @@ export default function ChiSiamo() {
           initial="initial"
           animate="animate"
           className="grid md:grid-cols-3 gap-8"
-        >
-          <motion.div 
-            className="text-center p-6 rounded-lg bg-gray-50 cursor-pointer"
+        >          <motion.div 
+            className="text-center p-6 rounded-lg bg-gray-900 border border-gray-800 cursor-pointer"
             variants={fadeInUp}
             {...cardHover}
           >
             <motion.h3 
-              className="text-xl font-semibold mb-4"
+              className="text-xl font-semibold mb-4 text-white"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 1.0 }}
             >
               Esperienza
             </motion.h3>
-            <p className="text-gray-600">
+            <p className="text-gray-300">
               Anni di esperienza nel settore e formazione continua per essere
               sempre aggiornati sulle ultime tendenze.
             </p>
           </motion.div>
           <motion.div 
-            className="text-center p-6 rounded-lg bg-gray-50 cursor-pointer"
+            className="text-center p-6 rounded-lg bg-gray-900 border border-gray-800 cursor-pointer"
             variants={fadeInUp}
             {...cardHover}
           >
             <motion.h3 
-              className="text-xl font-semibold mb-4"
+              className="text-xl font-semibold mb-4 text-white"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 1.1 }}
             >
               Qualità
             </motion.h3>
-            <p className="text-gray-600">
+            <p className="text-gray-300">
               Utilizziamo solo prodotti di alta qualità per garantire i migliori
               risultati ai nostri clienti.
             </p>
           </motion.div>
           <motion.div 
-            className="text-center p-6 rounded-lg bg-gray-50 cursor-pointer"
+            className="text-center p-6 rounded-lg bg-gray-900 border border-gray-800 cursor-pointer"
             variants={fadeInUp}
             {...cardHover}
           >
             <motion.h3 
-              className="text-xl font-semibold mb-4"
+              className="text-xl font-semibold mb-4 text-white"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 1.2 }}
             >
               Stile
             </motion.h3>
-            <p className="text-gray-600">
+            <p className="text-gray-300">
               Un ambiente moderno e accogliente dove rilassarsi e prendersi
               cura del proprio look.
             </p>

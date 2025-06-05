@@ -50,8 +50,29 @@ function generateAllTimeSlots(dateString: string): string[] {
   if (dayOfWeek === 0) {
     return slots;
   }
+  // Saturday has same hours as weekdays (9:00-12:30, 15:00-17:30)
+  if (dayOfWeek === 6) {
+    // Morning slots 9:00-12:30
+    for (let hour = 9; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 12 && minute > 30) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+    
+    // Afternoon slots 15:00-17:30
+    for (let hour = 15; hour <= 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 17 && minute > 30) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+    return slots;
+  }
 
-  // Morning slots: 9:00-12:30 (including 12:30)
+  // Weekdays: Morning slots 9:00-12:30
   for (let hour = 9; hour <= 12; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
       // Stop at 12:30 for the last morning slot
@@ -61,7 +82,7 @@ function generateAllTimeSlots(dateString: string): string[] {
     }
   }
   
-  // Afternoon slots: 15:00-17:30 (including 17:30)
+  // Weekdays: Afternoon slots 15:00-17:30
   for (let hour = 15; hour <= 17; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
       // Stop at 17:30 for the last afternoon slot

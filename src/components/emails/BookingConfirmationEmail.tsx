@@ -84,7 +84,7 @@ export function BookingConfirmationEmail(data: BookingEmailData) {
             <p style="color: #4b5563; margin: 0; line-height: 1.6;">
               <strong>Telefono:</strong> +39 123 456 7890<br>
               <strong>Email:</strong> info@maskiobarber.com<br>
-              <strong>Indirizzo:</strong> Via Roma 123, Milano
+              <strong>Indirizzo:</strong> Via Sant'Agata 24, San Giovanni Rotondo (FG)
             </p>
           </div>
 
@@ -195,7 +195,7 @@ export function BookingReminderEmail(data: BookingEmailData) {
         <!-- Footer -->
         <div style="background: #f3f4f6; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
           <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 14px;">
-            Maskio Barber - Via Roma 123, Milano 💈
+            Maskio Barber - Via Sant'Agata 24, San Giovanni Rotondo (FG) 💈
           </p>
           <p style="color: #9ca3af; margin: 0; font-size: 12px;">
             ID Prenotazione: #${data.bookingId}

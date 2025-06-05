@@ -45,8 +45,7 @@ async function recreateDatabase() {
         created_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
     `;
-    
-    // Barbers table with custom VARCHAR IDs
+      // Barbers table with custom VARCHAR IDs
     await sql`
       CREATE TABLE barbers (
         id VARCHAR(50) PRIMARY KEY,
@@ -55,6 +54,7 @@ async function recreateDatabase() {
         email VARCHAR(255),
         phone VARCHAR(20),
         specialties TEXT,
+        experience TEXT,
         is_active BOOLEAN DEFAULT true NOT NULL,
         created_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
@@ -100,8 +100,7 @@ async function recreateDatabase() {
     
     // Now populate with correct data
     console.log('📋 Creating services with correct IDs...');
-    
-    const services = [
+      const services = [
       {
         id: 'taglio',
         name: 'Taglio',
@@ -122,20 +121,12 @@ async function recreateDatabase() {
         description: 'Taglio capelli e sistemazione barba',
         price: '23.00',
         duration: 40
-      },
-      {
-        id: 'skincare',
-        name: 'Skincare',
-        description: 'Trattamento cura viso',
-        price: '30.00',
-        duration: 45
-      },
-      {
-        id: 'trattamento-barba',
-        name: 'Trattamento Barba',
-        description: 'Pulizia barba, modellatura, contorno e acconciatura',
-        price: '25.00',
-        duration: 40
+      },      {
+        id: 'altri-servizi',
+        name: 'Altri servizi',
+        description: 'colore o altri servizi',
+        price: '0.00',
+        duration: 30
       }
     ];
 
@@ -148,22 +139,20 @@ async function recreateDatabase() {
     }
 
     // Create barbers with the IDs expected by BookingForm
-    console.log('👨‍💼 Creating barbers with correct IDs...');
-    
-    const barbers = [
+    console.log('👨‍💼 Creating barbers with correct IDs...');    const barbers = [
       {
         id: 'fabio',
         name: 'Fabio',
         email: 'fabio@maskiobarber.com',
         phone: '+39 123 456 7890',
-        specialties: JSON.stringify(['Tagli classici', 'Skin Care', 'Trattamenti barba'])
+        specialties: JSON.stringify(['Tagli moderni', 'Tagli classici', 'Barba'])
       },
       {
         id: 'michele',
         name: 'Michele',
         email: 'michele@maskiobarber.com',
         phone: '+39 123 456 7891',
-        specialties: JSON.stringify(['Tagli moderni', 'Barba', 'Skin Care'])
+        specialties: JSON.stringify(['Tagli moderni', 'Tagli classici', 'Barba'])
       }
     ];
 
@@ -173,14 +162,18 @@ async function recreateDatabase() {
         VALUES (${barber.id}, ${barber.name}, ${barber.email}, ${barber.phone}, ${barber.specialties}, true)
       `;
       console.log(`✅ Barber created: ${barber.name} (ID: ${barber.id})`);
-    }
-
-    // Create default schedules for both barbers
+    }    // Create default schedules for both barbers
     console.log('📅 Setting up default schedules...');
+      // Orari corretti: mattina 09:00-12:30, pomeriggio 15:00-17:30
+    const weekdayTimeSlots = [
+      "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+      "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
+    ];
     
-    const defaultTimeSlots = [
-      "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-      "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"
+    // Sabato ha gli stessi orari dei giorni feriali (mattina + pomeriggio)
+    const saturdayTimeSlots = [
+      "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+      "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
     ];
 
     // Set schedules for the next 30 days
@@ -188,14 +181,17 @@ async function recreateDatabase() {
       const date = new Date();
       date.setDate(date.getDate() + i);
       const dateString = date.toISOString().split('T')[0];
-      
-      // Skip Sundays (day 0)
+        // Skip Sundays (day 0)
       if (date.getDay() === 0) continue;
+
+      // Determine time slots based on day
+      const isSaturday = date.getDay() === 6;
+      const timeSlots = isSaturday ? saturdayTimeSlots : weekdayTimeSlots;
 
       for (const barber of barbers) {
         await sql`
           INSERT INTO barber_schedules (barber_id, date, day_off, available_slots, unavailable_slots)
-          VALUES (${barber.id}, ${dateString}, false, ${JSON.stringify(defaultTimeSlots)}, ${JSON.stringify([])})
+          VALUES (${barber.id}, ${dateString}, false, ${JSON.stringify(timeSlots)}, ${JSON.stringify([])})
         `;
       }
     }

@@ -26,77 +26,73 @@ export default function SecurityProvider({ children }: SecurityProviderProps) {
     SecurityManager.getInstance();
     
     // Additional runtime protections (only in production and NOT mobile)
-    if (!isDevelopment && !isMobile) {
+    if (!isDevelopment && !isMobile) {      // Rimuoviamo tutte le protezioni che interferiscono con l'esperienza utente normale
       const protectPage = () => {
-        // Disable right-click
-        document.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          return false;
-        });
-
-        // Disable text selection
-        document.addEventListener('selectstart', (e) => {
-          e.preventDefault();
-          return false;
-        });
-
-        // Disable drag and drop
-        document.addEventListener('dragstart', (e) => {
-          e.preventDefault();
-          return false;
-        });
-
-        // Clear console periodically
+        // NON disabilitiamo più il click destro (contextmenu)
+        // NON disabilitiamo più la selezione del testo
+        // NON disabilitiamo più drag and drop
+                
+        // Manteniamo alcune protezioni di base per la console
         const clearConsole = () => {
           if (typeof console.clear === 'function') {
             console.clear();
           }
         };
         
-        setInterval(clearConsole, 1000);
+        // Riduciamo la frequenza per migliorare le prestazioni
+        setInterval(clearConsole, 5000);
 
-        // Obfuscate error messages
+        // Manteniamo l'obfuscamento dei messaggi di errore
         window.addEventListener('error', (e) => {
           e.preventDefault();
           e.stopPropagation();
           return false;
         });
-
-        // Prevent unhandled promise rejections from showing
-        window.addEventListener('unhandledrejection', (e) => {
-          e.preventDefault();
-          return false;
-        });
       };
 
-      protectPage();
-
-      // Anti-inspection measures
+      protectPage();      // Protezione solo per F12 e ispezione elementi
       const antiInspection = () => {
-        let devtools = false;
-        
-        // Detect dev tools by measuring timing
-        setInterval(() => {
-          const start = +new Date();
-          debugger;
-          const end = +new Date();
-          
-          if (end - start > 100) {
-            devtools = true;
-            // Redirect or disable functionality
+        // Rilevamento degli strumenti di sviluppo tramite F12 e scorciatoie da tastiera
+        document.addEventListener('keydown', (e) => {
+          // Rileva solo F12 e combinazioni specifiche per gli strumenti di sviluppo
+          if (
+            e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+            (e.ctrlKey && e.key === 'U')
+          ) {
+            e.preventDefault();
+            // Reindirizza solo in questi casi specifici
             window.location.replace('about:blank');
+            return false;
           }
-        }, 1000);
-
-        // Detect if window is being inspected
-        let widthThreshold = window.outerWidth - window.innerWidth > 200;
-        let heightThreshold = window.outerHeight - window.innerHeight > 200;
+        });
         
+        // Sostituiamo il rilevamento basato su debugger con uno più leggero
+        // e lo facciamo eseguire meno frequentemente
+        let detectCount = 0;
         setInterval(() => {
-          if (widthThreshold || heightThreshold) {
-            window.location.replace('about:blank');
+          try {
+            detectCount++;
+            
+            // Eseguiamo il controllo solo ogni 5 volte per ridurre l'impatto
+            if (detectCount % 5 !== 0) return;
+            
+            const start = +new Date();
+            debugger;
+            const end = +new Date();
+            
+            // Aumentiamo significativamente la soglia per evitare falsi positivi
+            if (end - start > 300) {
+              // Reindirizza in caso di debugger attivo
+              window.location.replace('about:blank');
+            }
+          } catch (e) {
+            // Ignoriamo gli errori
           }
-        }, 500);
+        }, 3000);
+                
+        // NON controlliamo più le dimensioni della finestra 
+        // perché interferisce con lo zoom e altre funzionalità normali
       };
 
       antiInspection();
