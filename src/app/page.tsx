@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import BookingButton from '../components/BookingButton';
+import ReviewsSection from '../components/ReviewsSection';
 
 export default function Home() {  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
@@ -127,49 +128,53 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
         repeatType: "reverse"
       }
     }
-  };
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Floating Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">        <motion.div
+  };  return (
+    <div className="min-h-screen bg-black">
+      {/* Floating Background Elements - Versione migliorata con elementi più sottili ed eleganti */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <motion.div
           initial="hidden"
-          className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-amber-200/20 to-amber-400/20 rounded-full blur-xl"
+          className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-br from-amber-200/10 to-amber-400/10 rounded-full blur-3xl"
           animate={{
-            y: [-10, 10, -10],
-            x: [-5, 5, -5],
-            scale: [1, 1.1, 1],
+            y: [-15, 15, -15],
+            x: [-8, 8, -8],
+            scale: [1, 1.05, 1],
           }}
           transition={{
-            duration: 8,
+            duration: 12,
             ease: "easeInOut",
             repeat: Infinity,
             repeatType: "reverse"
           }}
-        />        <motion.div
+        />
+        
+        <motion.div
           initial="hidden"
-          className="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-br from-amber-300/15 to-orange-400/15 rounded-full blur-xl"
+          className="absolute bottom-20 right-10 w-80 h-80 bg-gradient-to-br from-amber-300/8 to-orange-400/8 rounded-full blur-3xl"
           animate={{
-            y: [10, -10, 10],
-            x: [5, -5, 5],
-            scale: [1.1, 1, 1.1],
+            y: [12, -12, 12],
+            x: [6, -6, 6],
+            scale: [1.1, 1.02, 1.1],
           }}
           transition={{
-            duration: 10,
+            duration: 15,
             ease: "easeInOut",
             repeat: Infinity,
             repeatType: "reverse",
             delay: 2
           }}
-        />        <motion.div
+        />
+        
+        <motion.div
           initial="hidden"
-          className="absolute top-1/2 left-1/4 w-24 h-24 bg-gradient-to-br from-blue-200/10 to-blue-400/10 rounded-full blur-xl"
+          className="absolute top-1/2 left-1/4 w-48 h-48 bg-gradient-to-br from-gray-400/5 to-gray-600/5 rounded-full blur-3xl"
           animate={{
-            y: [15, -15, 15],
-            x: [-8, 8, -8],
-            scale: [0.8, 1.2, 0.8],
+            y: [18, -18, 18],
+            x: [-10, 10, -10],
+            scale: [0.9, 1.1, 0.9],
           }}
           transition={{
-            duration: 12,
+            duration: 18,
             ease: "easeInOut",
             repeat: Infinity,
             repeatType: "reverse",
@@ -178,141 +183,284 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
         />
       </div>
 
-      {/* Hero Section */}
+      {/* Hero Section - Design più lussuoso */}
       <div className="relative h-screen">
-        {/* Hero Image with Parallax */}
+        {/* Hero Image con overlay più raffinato */}
         <motion.div 
           className="absolute inset-0 z-0"
-          initial={{ scale: 1.1 }}
+          initial={{ scale: 1.08 }}
           animate={{ scale: 1 }}
-          transition={{ duration: 1.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           <Image
             src="/sediaOro.jpg"
             alt="Maskio Barber Concept"
             fill
-            className="object-cover brightness-[0.3]"
+            className="object-cover brightness-[0.25] filter contrast-125 saturate-[1.05]"
             priority
           />
           
-          {/* Animated Overlay */}
+          {/* Overlay con gradiente più sofisticato */}
           <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-amber-900/30"
+            className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/70 to-amber-950/30"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 2, ease: "easeOut" }}
+            transition={{ duration: 2.2, ease: "easeOut" }}
           />
           
-          {/* Floating Decorative Elements */}
-          <motion.div
-            className="absolute top-20 right-20 w-4 h-4 bg-amber-400 rounded-full opacity-70"
-            animate={{
-              y: [-20, 20, -20],
-              x: [-10, 10, -10],
-              scale: [1, 1.5, 1],
-              opacity: [0.7, 1, 0.7]
-            }}
-            transition={{
-              duration: 6,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-          />
-          <motion.div
-            className="absolute bottom-32 left-16 w-3 h-3 bg-amber-300 rounded-full opacity-60"
-            animate={{
-              y: [15, -15, 15],
-              x: [8, -8, 8],
-              scale: [1.2, 0.8, 1.2],
-              opacity: [0.6, 1, 0.6]
-            }}
-            transition={{
-              duration: 8,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: 2
-            }}
-          />
-        </motion.div>        {/* Hero Content */}
+          {/* Elementi decorativi più eleganti */}
+          <div className="absolute inset-0">
+            {/* Pattern overlay sottile */}
+            <motion.div 
+              className="absolute inset-0 bg-[url('/subtle-pattern.png')] bg-repeat opacity-[0.035]"
+              animate={{
+                opacity: [0.035, 0.045, 0.035]
+              }}
+              transition={{
+                duration: 8,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            />
+            
+            {/* Linee decorative dorate */}
+            <motion.div 
+              className="absolute top-[10%] left-[5%] w-[2px] h-32 bg-gradient-to-b from-transparent via-amber-500/40 to-transparent"
+              animate={{
+                height: [128, 160, 128],
+                opacity: [0.4, 0.6, 0.4]
+              }}
+              transition={{
+                duration: 7,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            />
+            
+            <motion.div 
+              className="absolute bottom-[15%] right-[8%] w-[2px] h-40 bg-gradient-to-b from-transparent via-amber-500/40 to-transparent"
+              animate={{
+                height: [160, 128, 160],
+                opacity: [0.4, 0.6, 0.4]
+              }}
+              transition={{
+                duration: 8,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "reverse",
+                delay: 1.5
+              }}
+            />
+            
+            {/* Cerchi decorativi più raffinati */}
+            <motion.div
+              className="absolute top-28 right-28 w-3 h-3 border-2 border-amber-400/40 rounded-full"
+              animate={{
+                y: [-15, 15, -15],
+                x: [-8, 8, -8],
+                opacity: [0.4, 0.7, 0.4]
+              }}
+              transition={{
+                duration: 10,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            />
+            
+            <motion.div
+              className="absolute bottom-36 left-24 w-2 h-2 border border-amber-300/50 rounded-full"
+              animate={{
+                y: [10, -10, 10],
+                x: [5, -5, 5],
+                opacity: [0.5, 0.8, 0.5]
+              }}
+              transition={{
+                duration: 12,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "reverse",
+                delay: 2
+              }}
+            />
+            
+            {/* Decorative scissors icon */}
+            <motion.div
+              className="absolute top-[30%] right-[15%] text-amber-500/30 text-2xl"
+              animate={{
+                rotate: [0, 45, 0],
+                opacity: [0.3, 0.5, 0.3]
+              }}
+              transition={{
+                duration: 15,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              ✂️
+            </motion.div>
+            
+            {/* Decorative razor icon */}
+            <motion.div
+              className="absolute bottom-[25%] left-[12%] text-amber-500/30 text-xl"
+              animate={{
+                rotate: [0, -30, 0],
+                opacity: [0.3, 0.6, 0.3]
+              }}
+              transition={{
+                duration: 18,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              🪒
+            </motion.div>
+          </div>
+        </motion.div>
+        
+        {/* Hero Content - Layout più elegante */}
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
-            className="space-y-8"
-          >            <motion.h1 
+            className="space-y-12"
+          >
+            {/* Logo con decorazione sofisticata */}
+            <motion.div
               variants={fadeInUp}
-              className="text-4xl md:text-6xl font-bold tracking-tight"
+              className="flex flex-col items-center"
             >
-              Maskio Barber
-              <motion.span 
-                className="block text-amber-400 mt-2"
-                animate={{ 
-                  textShadow: [
-                    "0 0 0px rgba(245, 158, 11, 0)",
-                    "0 0 30px rgba(245, 158, 11, 0.8)",
-                    "0 0 0px rgba(245, 158, 11, 0)"
-                  ]
-                }}
-                transition={{
-                  duration: 4,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
+              <motion.div 
+                className="relative"
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.3 }}
               >
-                Concept
-              </motion.span>
-            </motion.h1>
+                <motion.div
+                  className="absolute -inset-2 rounded-full opacity-25 blur-md"
+                  animate={{
+                    background: [
+                      "radial-gradient(circle, rgba(251,191,36,0.4) 0%, transparent 70%)",
+                      "radial-gradient(circle, rgba(251,191,36,0.2) 0%, transparent 70%)",
+                      "radial-gradient(circle, rgba(251,191,36,0.4) 0%, transparent 70%)"
+                    ]
+                  }}
+                  transition={{
+                    duration: 4,
+                    ease: "easeInOut", 
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                ></motion.div>
+                <Image
+                  src="/LogoSimboloNome_Bianco(1).png"
+                  alt="Maskio Barber Concept"
+                  width={280}
+                  height={27}
+                  className="mb-2 relative z-10"
+                  priority
+                />
+              </motion.div>
+              
+              {/* Linea decorativa elegante sotto il logo */}
+              <motion.div 
+                className="h-[1px] w-32 bg-gradient-to-r from-transparent via-amber-400/70 to-transparent mt-6"
+                variants={scaleIn}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.5, duration: 1.2 }}
+              />
+            </motion.div>
             
             <motion.p 
               variants={fadeInUp}
-              className="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed text-gray-200"
+              className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed text-gray-100/95 font-light tracking-wider"
             >
               Una nuova concezione del barbiere, dove tradizione e innovazione si incontrano per creare il tuo{" "}
               <motion.span 
-                className="text-amber-300 font-semibold"
+                className="text-amber-300 font-normal italic relative"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
               >
                 stile perfetto
+                <motion.span 
+                  className="absolute bottom-0 left-0 w-full h-[1px] bg-amber-400/50"
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  transition={{ duration: 1, delay: 1.2 }}
+                />
               </motion.span>
             </motion.p>
 
+            {/* Pulsanti con design più raffinato */}
             <motion.div
               variants={fadeInUp}
-              className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-4"
-            >              <motion.div
+              className="flex flex-col sm:flex-row gap-8 justify-center items-center pt-6"
+            >
+              <motion.div
                 whileHover={{
-                  scale: 1.05,
-                  rotateZ: 1
+                  scale: 1.04,
+                  y: -4
                 }}
                 whileTap={{ scale: 0.98 }}
+                className="relative"
               >
-                <BookingButton size="lg" className="text-lg bg-amber-500 hover:bg-amber-600 border-0 shadow-lg">
-                  Prenota Subito
+                {/* Glow effect behind primary button */}
+                <motion.div 
+                  className="absolute -inset-1 rounded-xl bg-amber-500/20 blur-md -z-10"
+                  animate={{
+                    opacity: [0.2, 0.4, 0.2]
+                  }}
+                  transition={{
+                    duration: 2,
+                    ease: "easeInOut",
+                    repeat: Infinity
+                  }}
+                />
+                <BookingButton size="lg" className="text-base bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 border-0 shadow-lg px-10 py-5 uppercase tracking-wider font-medium">
+                  <span className="relative">
+                    Prenota Subito
+                    <motion.span
+                      className="absolute bottom-0 left-0 w-full h-[1px] bg-white/30"
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </span>
                 </BookingButton>
               </motion.div>
               
-              <Link href="/servizi">                <motion.button 
-                  className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 hover:bg-white hover:text-black"
+              <Link href="/servizi">
+                <motion.button 
+                  className="border border-white/40 text-white px-10 py-5 rounded-lg font-medium text-base transition-all duration-300 hover:border-amber-300/70 hover:text-amber-100 uppercase tracking-wider bg-black/30 backdrop-blur-sm"
                   whileHover={{
-                    boxShadow: "0 15px 35px rgba(255, 255, 255, 0.2)",
-                    y: -3,
-                    scale: 1.05
+                    boxShadow: "0 10px 30px rgba(251, 191, 36, 0.1)",
+                    borderColor: "rgba(251, 191, 36, 0.4)",
+                    y: -4
                   }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Scopri i Servizi
+                  <span className="relative">
+                    Scopri i Servizi
+                    <motion.span
+                      className="absolute bottom-0 left-0 w-full h-[1px] bg-amber-400/30"
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </span>
                 </motion.button>
               </Link>
             </motion.div>
-          </motion.div>        </div>
-      </div>{/* About Section with Enhanced Animations */}
+          </motion.div>
+        </div>
+      </div>      {/* About Section with Enhanced Animations */}
       <motion.section 
-        className="py-20 bg-gradient-to-br from-gray-50 to-amber-50/20 relative overflow-hidden"
+        className="py-20 bg-gradient-to-br from-black to-gray-900 relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
@@ -341,10 +489,9 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
             variants={staggerContainer}
           >
             <motion.div variants={fadeInLeft} className="space-y-8">
-              <motion.div className="space-y-6">
-                <motion.h2 
+              <motion.div className="space-y-6">                <motion.h2 
                   variants={fadeInUp}
-                  className="text-4xl md:text-5xl font-bold text-gray-900"
+                  className="text-4xl md:text-5xl font-bold text-white"
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.3 }}
                 >
@@ -368,10 +515,9 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                     Barbiere Moderno
                   </motion.span>
                 </motion.h2>
-                
-                <motion.p 
+                  <motion.p 
                   variants={fadeInUp}
-                  className="text-lg text-gray-600 leading-relaxed"
+                  className="text-lg text-gray-300 leading-relaxed"
                 >
                   Maskio Barber Concept rappresenta l'eccellenza nella cura dell'uomo. 
                   Il nostro team di professionisti esperti combina tecniche tradizionali con le ultime 
@@ -380,7 +526,7 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                 
                 <motion.p 
                   variants={fadeInUp}
-                  className="text-lg text-gray-600 leading-relaxed"
+                  className="text-lg text-gray-300 leading-relaxed"
                 >
                   Ogni taglio, ogni rasatura, ogni trattamento è pensato per esaltare la tua personalità 
                   e farti sentire al meglio. Perché per noi, ogni cliente è unico.
@@ -389,11 +535,11 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
 
               <motion.div variants={fadeInUp}>
                 <Link href="/chi-siamo">                  <motion.button 
-                    className="bg-gradient-to-r from-gray-900 to-gray-700 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300"
+                    className="bg-gradient-to-r from-black to-gray-800 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300"
                     whileHover={{
                       boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)",
                       y: -3,
-                      background: "linear-gradient(135deg, #374151 0%, #1f2937 100%)",
+                      background: "linear-gradient(135deg, #000000 0%, #1f2937 100%)",
                       scale: 1.05
                     }}
                     whileTap={{ scale: 0.98 }}
@@ -492,7 +638,7 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
         </div>
       </motion.section>      {/* Services Preview with Advanced Animations */}
       <motion.section 
-        className="py-20 bg-gradient-to-br from-white via-gray-50/30 to-amber-50/20 relative overflow-hidden"
+        className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-amber-900/20 relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
@@ -548,13 +694,12 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
           />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">          <motion.div 
             className="text-center mb-16"
             variants={fadeInUp}
           >
             <motion.h2 
-              className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
+              className="text-4xl md:text-5xl font-bold text-white mb-4"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
             >
@@ -579,7 +724,7 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
               </motion.span>
             </motion.h2>
             <motion.p 
-              className="text-lg text-gray-600 max-w-3xl mx-auto"
+              className="text-lg text-gray-300 max-w-3xl mx-auto"
               variants={fadeInUp}
             >
               Dalla consulenza personalizzata ai trattamenti più avanzati, 
@@ -738,7 +883,7 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
         </div>
       </motion.section>      {/* Why Choose Us with Advanced Animations */}
       <motion.section 
-        className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white relative overflow-hidden"
+        className="py-20 bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
@@ -791,27 +936,6 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
               repeat: Infinity,
               repeatType: "reverse",
               delay: 1
-            }}
-          />
-
-          {/* Gradient Overlay Animation */}
-          <motion.div
-            className="absolute inset-0 opacity-10"
-            style={{
-              background: "radial-gradient(circle at 30% 20%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 70% 80%, #fbbf24 0%, transparent 50%)"
-            }}
-            animate={{
-              background: [
-                "radial-gradient(circle at 30% 20%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 70% 80%, #fbbf24 0%, transparent 50%)",
-                "radial-gradient(circle at 70% 30%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 30% 70%, #fbbf24 0%, transparent 50%)",
-                "radial-gradient(circle at 30% 20%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 70% 80%, #fbbf24 0%, transparent 50%)"
-              ]
-            }}
-            transition={{
-              duration: 15,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse"
             }}
           />
         </div>
@@ -998,7 +1122,7 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
         </div>
       </motion.section>      {/* Gallery Preview with Advanced 3D Effects */}
       <motion.section 
-        className="py-20 bg-gradient-to-br from-white via-gray-50/30 to-amber-50/20 relative overflow-hidden"
+        className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-amber-900/20 relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
@@ -1039,13 +1163,12 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
           />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">          <motion.div 
             className="text-center mb-16"
             variants={fadeInUp}
           >
             <motion.h2 
-              className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
+              className="text-4xl md:text-5xl font-bold text-white mb-4"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
             >
@@ -1070,7 +1193,7 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
               </motion.span>
             </motion.h2>
             <motion.p 
-              className="text-lg text-gray-600 max-w-3xl mx-auto"
+              className="text-lg text-gray-300 max-w-3xl mx-auto"
               variants={fadeInUp}
             >
               Scopri alcune delle nostre creazioni e lasciati ispirare per il tuo prossimo look
@@ -1205,16 +1328,15 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
           <motion.div 
             className="text-center mt-12"
             variants={fadeInUp}
-          >
-            <Link href="/blog">
-              <motion.button                className="bg-gradient-to-r from-gray-900 to-black text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 relative overflow-hidden group"
+          >            <Link href="/blog">
+              <motion.button                className="bg-gradient-to-r from-black to-gray-900 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 relative overflow-hidden group"
                 variants={magneticHover}
                 initial="rest"
                 whileTap="tap"
                 whileHover={{
                   boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
                   y: -3,
-                  background: "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
+                  background: "linear-gradient(135deg, #000000 0%, #111827 100%)"
                 }}
               >
                 <motion.span
@@ -1224,13 +1346,17 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                   transition={{ duration: 0.6, ease: "easeInOut" }}
                 />
                 <span className="relative z-10">Vedi Tutte le Gallerie</span>
-              </motion.button>
-            </Link>
+              </motion.button>            </Link>
           </motion.div>
         </div>
-      </motion.section>      {/* CTA Section with Advanced Animations */}
+      </motion.section>
+
+      {/* Reviews Section */}
+      <ReviewsSection />
+
+      {/* CTA Section with Advanced Animations */}
       <motion.section 
-        className="py-20 bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white relative overflow-hidden"
+        className="py-20 bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
@@ -1373,7 +1499,7 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                   }}
                 >
                   <motion.span
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
                     initial={{ x: "-100%" }}
                     whileHover={{ x: "100%" }}
                     transition={{ duration: 0.6, ease: "easeInOut" }}
