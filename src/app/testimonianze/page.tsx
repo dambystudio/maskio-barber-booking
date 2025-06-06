@@ -19,13 +19,15 @@ interface GoogleReview {
 }
 
 // Recensioni di esempio (da sostituire con quelle reali di Google)
+// Using static timestamps to avoid hydration mismatch
+const baseTimestamp = 1733481600000; // Fixed timestamp (Dec 6, 2024)
 const mockReviews: GoogleReview[] = [
   {
     id: '1',
     author_name: 'Marco Rossi',
     rating: 5,
     text: 'Esperienza fantastica! Il taglio è stato perfetto e il servizio impeccabile. Consigliatissimo!',
-    time: Date.now() - 86400000 * 7,
+    time: baseTimestamp - 86400000 * 7,
     relative_time_description: '1 settimana fa',
     profile_photo_url: '/api/placeholder/40/40'
   },
@@ -34,7 +36,7 @@ const mockReviews: GoogleReview[] = [
     author_name: 'Luca Bianchi',
     rating: 5,
     text: 'Professionalità e cortesia al top. Finalmente ho trovato il mio barbiere di fiducia!',
-    time: Date.now() - 86400000 * 14,
+    time: baseTimestamp - 86400000 * 14,
     relative_time_description: '2 settimane fa',
     profile_photo_url: '/api/placeholder/40/40'
   },
@@ -43,7 +45,7 @@ const mockReviews: GoogleReview[] = [
     author_name: 'Andrea Verdi',
     rating: 5,
     text: 'Ambiente moderno e accogliente. Il personale è molto preparato e attento ai dettagli.',
-    time: Date.now() - 86400000 * 21,
+    time: baseTimestamp - 86400000 * 21,
     relative_time_description: '3 settimane fa',
     profile_photo_url: '/api/placeholder/40/40'
   },
@@ -52,7 +54,7 @@ const mockReviews: GoogleReview[] = [
     author_name: 'Giuseppe Neri',
     rating: 4,
     text: 'Ottimo servizio, prezzi giusti e risultato eccellente. Tornerò sicuramente!',
-    time: Date.now() - 86400000 * 30,
+    time: baseTimestamp - 86400000 * 30,
     relative_time_description: '1 mese fa',
     profile_photo_url: '/api/placeholder/40/40'
   },
@@ -61,7 +63,7 @@ const mockReviews: GoogleReview[] = [
     author_name: 'Francesco Blu',
     rating: 5,
     text: 'Taglio perfetto e rasatura impeccabile. Consigliatissimo a tutti!',
-    time: Date.now() - 86400000 * 45,
+    time: baseTimestamp - 86400000 * 45,
     relative_time_description: '1 mese fa',
     profile_photo_url: '/api/placeholder/40/40'
   },
@@ -70,7 +72,7 @@ const mockReviews: GoogleReview[] = [
     author_name: 'Davide Gialli',
     rating: 5,
     text: 'Esperienza top! Ambiente elegante e personale super professionale.',
-    time: Date.now() - 86400000 * 60,
+    time: baseTimestamp - 86400000 * 60,
     relative_time_description: '2 mesi fa',
     profile_photo_url: '/api/placeholder/40/40'
   }

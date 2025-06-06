@@ -6,6 +6,9 @@
 body {
   background-color: #000000;
   color: #ffffff;
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
 /* Scrollbar personalizzata per il dark mode */

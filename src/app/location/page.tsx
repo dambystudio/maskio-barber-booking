@@ -543,8 +543,8 @@ export default function Page() {
                 </motion.span>
               </motion.div>              <h3 className="text-xl font-bold text-white mb-4 text-center">Orari</h3>
               <div className="space-y-2 text-gray-300 text-center">
-                <p>Lun - Ven: 9:00 - 12:30 | 15:00 - 17:30</p>
-                <p>Sabato: 9:00 - 12:30</p>
+                <p>Lun - Sab: 9:00 - 13:00 | 15:00 - 18:00</p>
+                <p>Giovedì: Chiuso</p>
                 <p>Domenica: Chiuso</p>
               </div>
             </motion.div>
@@ -587,7 +587,7 @@ export default function Page() {
               </motion.div>
               <h3 className="text-xl font-bold text-white mb-4 text-center">Contatti</h3>
               <div className="space-y-2 text-gray-300 text-center">
-                <p>Tel: +39 02 1234 5678</p>
+                <p>Tel: +39 333 123 4567</p>
                 <p>Email: info@maskio.it</p>
                 <p>WhatsApp: +39 333 123 4567</p>
               </div>

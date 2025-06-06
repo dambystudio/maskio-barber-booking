@@ -58,13 +58,12 @@ export default function SignIn() {
         className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"
       >
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Image
-            src="/logo.jpg"
+        <div className="text-center mb-8">          <Image
+            src="/LogoSimboloNome_Bianco(1).png"
             alt="Maskio Barber"
-            width={80}
-            height={80}
-            className="mx-auto rounded-full mb-4"
+            width={160}
+            height={40}
+            className="mx-auto mb-4"
           />
           <h1 className="text-2xl font-bold text-gray-800">Accedi</h1>
           <p className="text-gray-600">Accedi al tuo account</p>

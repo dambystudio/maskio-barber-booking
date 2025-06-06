@@ -8,19 +8,19 @@ interface SecurityProviderProps {
 }
 
 export default function SecurityProvider({ children }: SecurityProviderProps) {
-  useEffect(() => {    // Check if we're in development mode
+  useEffect(() => {
+    // Skip all security initialization during SSR
+    if (typeof window === 'undefined') return;
+    
+    // Check if we're in development mode
     const isDevelopment = process.env.NODE_ENV === 'development' || 
-                         typeof window !== 'undefined' && (
-                           window.location.hostname === 'localhost' ||
-                           window.location.hostname === '127.0.0.1'
-                         );
+                         (window.location.hostname === 'localhost' ||
+                          window.location.hostname === '127.0.0.1');
     
     // Check if we're on mobile device
-    const isMobile = typeof window !== 'undefined' && (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-      (window.innerWidth <= 768) ||
-      ('ontouchstart' in window)
-    );
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                     (window.innerWidth <= 768) ||
+                     ('ontouchstart' in window);
     
     // Initialize security protections
     SecurityManager.getInstance();

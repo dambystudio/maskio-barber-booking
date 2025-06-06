@@ -55,39 +55,43 @@ export default function PannelloPrenotazioni() {
   const [newClosureReason, setNewClosureReason] = useState('');
 
   // Nomi dei giorni della settimana
-  const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
-
-  // Carica i giorni di chiusura dal localStorage
+  const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];  // Carica i giorni di chiusura dal localStorage
   useEffect(() => {
-    const savedClosedDays = localStorage.getItem('maskio-closed-days');
-    if (savedClosedDays) {
-      try {
-        const parsed = JSON.parse(savedClosedDays);
-        setClosedDays(new Set(parsed));
-      } catch (error) {
-        console.error('Error parsing closed days from localStorage:', error);
+    if (typeof window !== 'undefined') {
+      const savedClosedDays = localStorage.getItem('maskio-closed-days');
+      if (savedClosedDays) {
+        try {
+          const parsed = JSON.parse(savedClosedDays);
+          setClosedDays(new Set(parsed));
+        } catch (error) {
+          console.error('Error parsing closed days from localStorage:', error);
+        }
       }
-    }
 
-    const savedClosedDates = localStorage.getItem('maskio-closed-dates');
-    if (savedClosedDates) {
-      try {
-        const parsed = JSON.parse(savedClosedDates);
-        setClosedDates(new Set(parsed));
-      } catch (error) {
-        console.error('Error parsing closed dates from localStorage:', error);
+      const savedClosedDates = localStorage.getItem('maskio-closed-dates');
+      if (savedClosedDates) {
+        try {
+          const parsed = JSON.parse(savedClosedDates);
+          setClosedDates(new Set(parsed));
+        } catch (error) {
+          console.error('Error parsing closed dates from localStorage:', error);
+        }
       }
     }
   }, []);
 
   // Salva i giorni di chiusura nel localStorage quando cambiano
   useEffect(() => {
-    localStorage.setItem('maskio-closed-days', JSON.stringify(Array.from(closedDays)));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('maskio-closed-days', JSON.stringify(Array.from(closedDays)));
+    }
   }, [closedDays]);
 
   // Salva le date di chiusura nel localStorage quando cambiano
   useEffect(() => {
-    localStorage.setItem('maskio-closed-dates', JSON.stringify(Array.from(closedDates)));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('maskio-closed-dates', JSON.stringify(Array.from(closedDates)));
+    }
   }, [closedDates]);
 
   // Funzione per toggle dei giorni di chiusura
@@ -204,8 +208,7 @@ export default function PannelloPrenotazioni() {
       params.append('date', selectedDate);
       if (filterStatus !== 'all') {
         params.append('status', filterStatus);
-      }
-      // Aggiungi timestamp per cache busting
+      }      // Aggiungi timestamp per cache busting
       params.append('_t', Date.now().toString());
       
       const url = `/api/bookings?${params.toString()}`;

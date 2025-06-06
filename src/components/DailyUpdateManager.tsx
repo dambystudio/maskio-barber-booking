@@ -44,10 +44,11 @@ export default function DailyUpdateManager() {
           scheduleNextUpdate();
         });
       }, timeUntilMidnight);
-    };
-
-    // Check if we should run initial update (if it's been more than 23 hours since last check)
+    };    // Check if we should run initial update (if it's been more than 23 hours since last check)
     const checkForInitialUpdate = async () => {
+      // Only run on client side
+      if (typeof window === 'undefined') return;
+      
       try {
         const lastUpdateKey = 'maskio-last-daily-update';
         const lastUpdate = localStorage.getItem(lastUpdateKey);

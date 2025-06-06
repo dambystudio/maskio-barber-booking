@@ -7,12 +7,12 @@ export default function PannelloLayout({
   children,
 }: {
   children: React.ReactNode;
-}) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+}) {  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
   // Credenziali per il pannello prenotazioni
@@ -22,21 +22,27 @@ export default function PannelloLayout({
   };
 
   useEffect(() => {
-    // Controlla se è già autenticato
-    const authStatus = sessionStorage.getItem('pannello_auth');
-    if (authStatus === 'authenticated') {
-      setIsAuthenticated(true);
+    // Imposta che siamo lato client
+    setIsClient(true);
+    
+    // Controlla se è già autenticato solo lato client
+    if (typeof window !== 'undefined') {
+      const authStatus = sessionStorage.getItem('pannello_auth');
+      if (authStatus === 'authenticated') {
+        setIsAuthenticated(true);
+      }
     }
     setLoading(false);
   }, []);
-
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       setIsAuthenticated(true);
-      sessionStorage.setItem('pannello_auth', 'authenticated');
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('pannello_auth', 'authenticated');
+      }
     } else {
       setError('Credenziali non valide');
     }
@@ -44,7 +50,9 @@ export default function PannelloLayout({
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    sessionStorage.removeItem('pannello_auth');
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('pannello_auth');
+    }
     setUsername('');
     setPassword('');
   };

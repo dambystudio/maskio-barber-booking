@@ -5,15 +5,18 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BookingButton from './BookingButton';
+import RotatingPhrases from './RotatingPhrases';
 import { 
   Bars3Icon, 
   XMarkIcon,
   HomeIcon,
   UserGroupIcon,
   ScissorsIcon,
-  ShoppingBagIcon,  NewspaperIcon,
+  ShoppingBagIcon,  
+  NewspaperIcon,
   MapPinIcon,
-  StarIcon
+  StarIcon,
+  PhoneIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
@@ -23,6 +26,7 @@ const navigation = [
   { name: 'Prodotti', href: '/prodotti', icon: ShoppingBagIcon },
   { name: 'Blog', href: '/blog', icon: NewspaperIcon },
   { name: 'Location', href: '/location', icon: MapPinIcon },
+  { name: 'Contatti', href: '/contatti', icon: PhoneIcon },
   { name: 'Cosa dicono di noi', href: '/testimonianze', icon: StarIcon },
 ];
 
@@ -39,70 +43,70 @@ export default function Navbar() {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);  return (    <>      <header className="fixed inset-x-0 top-0 z-[80] bg-black/90 backdrop-blur-md shadow-none">
-      {/* Desktop Navbar */}
-      <div className="mx-auto">
-        <div className="flex items-center justify-between p-3">{/* Reduced padding from p-4 to p-3 */}{/* Logo */}          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/LogoSimboloNome_Bianco(1).png"
-              alt="Maskio Barber Concept"
-              width={180}
-              height={45}
-              className="h-6 w-auto my-1.5" /* Further reduced height and kept vertical margin */
-              priority
-            />
-          </Link>
-            {/* Testo visibile solo da mobile */}
-          <div className="lg:hidden text-center mx-auto">
-            <span className="text-white text-lg font-semibold tracking-wide">
-              Maskio Barber Concept
-            </span>
-          </div>
-          
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex lg:items-center lg:gap-8">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-sm font-medium text-white hover:text-amber-400 transition-colors duration-200"
-              >
-                {item.name}
-              </Link>
-            ))}
-              {/* Lavora con noi Link */}
-            <Link
-              href="/lavora-con-noi"
-              className="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors duration-200"
-              title="Opportunità di lavoro"
-            >
-              Lavora con noi
-            </Link>
+  }, []);
+  
+  return (
+    <>
+      <header className="fixed inset-x-0 top-0 z-[100] bg-black/90 backdrop-blur-md shadow-none">
+        <div className="mx-auto">
+          <div className="flex items-center justify-between p-2 py-4 relative">
+            {/* Left side with rotating phrases (visible on desktop) */}
+            <div className="hidden lg:block w-56">
+              <RotatingPhrases />
+            </div>
             
-            <BookingButton size="sm" className="ml-4">
-              Prenota
-            </BookingButton>
-          </div>          {/* Mobile menu button */}          <motion.button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden text-white flex items-center justify-center"
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            {mobileMenuOpen ? (
-              <XMarkIcon className="h-6 w-6" />
-            ) : (
-              <Bars3Icon className="h-6 w-6" />
-            )}</motion.button>
+            {/* Empty space for mobile (to keep logo centered) */}
+            <div className="w-6 lg:hidden"></div>
+            
+            {/* Logo al centro sia per mobile che desktop */}            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+              <Link href="/" className="flex items-center">
+                <Image
+                  src="/LogoSimboloNome_BiancoOrizzontale_BUONO.png"
+                  alt="Maskio Barber Concept"
+                  width={400}
+                  height={100}
+                  className="h-20 w-auto"
+                  priority
+                  quality={85}
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                />
+              </Link>
+            </div>
+            
+            {/* Right side with booking button (desktop) and menu button */}
+            <div className="flex items-center space-x-3">
+              {/* Desktop booking button (visible only on desktop) */}
+              <div className="hidden lg:block">
+                <BookingButton className="px-4 py-2 text-sm">
+                  Prenota
+                </BookingButton>
+              </div>
+              
+              {/* Menu button */}
+              <motion.button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-white flex items-center justify-center z-10"
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
+              >
+                {mobileMenuOpen ? (
+                  <XMarkIcon className="h-7 w-7" />
+                ) : (
+                  <Bars3Icon className="h-7 w-7" />
+                )}
+              </motion.button>
+            </div>
+          </div>
         </div>
-      </div>
       </header>
-
-      {/* Mobile menu - OUTSIDE header */}
-      <AnimatePresence>
+      
+      {/* Navigation menu (both mobile and desktop) - OUTSIDE header but with proper z-index */}      <AnimatePresence>
         {mobileMenuOpen && (
-          <>            {/* Overlay - semi-transparent, shows content but darkened */}
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] lg:hidden" />
+          <>
+            {/* Overlay - semi-transparent, shows content but darkened */}
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90]" />
             
             {/* Click handler overlay */}
             <motion.div
@@ -110,11 +114,11 @@ export default function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 z-[65] lg:hidden"
+              className="fixed inset-0 z-[95]"
               onClick={() => setMobileMenuOpen(false)}
             />
-
-            {/* Menu panel */}
+            
+            {/* Menu panel - increased z-index and added top padding */}
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -124,39 +128,10 @@ export default function Navbar() {
                 damping: 30,
                 stiffness: 300
               }}
-              className="fixed inset-y-0 right-0 w-72 bg-black shadow-xl z-[70] border-l border-gray-800"
+              className="fixed inset-y-0 right-0 w-72 bg-black shadow-xl z-[99] border-l border-gray-800"
             >
-              <div className="flex flex-col h-screen">{/* Header */}
-                <motion.div 
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="px-6 pt-6 pb-4 border-b border-gray-900"
-                >
-                  <div className="flex items-center justify-between">                    <Link
-                      href="/"
-                      className="flex items-center gap-2"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Image
-                        src="/LogoSimboloNome_Bianco(1).png"
-                        alt="Maskio Barber Concept"
-                        width={140}
-                        height={35}
-                        className="h-8 w-auto"
-                      />
-                    </Link>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      type="button"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-gray-500 hover:text-white transition-colors"
-                    >
-                      <XMarkIcon className="h-6 w-6" />
-                    </motion.button>
-                  </div>
-                </motion.div>                {/* Navigation items */}
+              <div className="flex flex-col h-full pt-24">
+                {/* Navigation items */}
                 <div className="flex-1 px-6 py-6">
                   <nav className="space-y-1">
                     {navigation.map((item) => {
@@ -175,7 +150,7 @@ export default function Navbar() {
                       );
                     })}
                     
-                    {/* Lavora con noi Link Mobile */}
+                    {/* Lavora con noi Link */}
                     <div>
                       <Link
                         href="/lavora-con-noi"
@@ -188,19 +163,21 @@ export default function Navbar() {
                         Lavora con noi
                       </Link>
                     </div>
-                </nav>
+                  </nav>
                 </div>
-                  {/* Mobile Booking Button - Fixed at bottom */}
-                <div className="px-6 pb-4 border-t border-gray-900 mt-2">
-                  <div className="pt-3" onClick={() => setMobileMenuOpen(false)}>
-                    <BookingButton className="w-full">
-                      Prenota Ora
+                
+                {/* Booking Button - Fixed at bottom */}
+                <div className="px-6 pb-6 border-t border-gray-900 mt-2">
+                  <div className="pt-4" onClick={() => setMobileMenuOpen(false)}>
+                    <BookingButton className="w-full block text-base font-semibold">
+                      Prenota
                     </BookingButton>
                   </div>
-                </div>{/* Footer */}
+                </div>
               </div>
             </motion.div>
-          </>        )}
+          </>
+        )}
       </AnimatePresence>
     </>
   );

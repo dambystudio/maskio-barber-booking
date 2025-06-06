@@ -2,8 +2,12 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import SecurityProvider from '../components/SecurityProvider';
 import DailyUpdateManager from '../components/DailyUpdateManager';
+// Importazione URL per metadataBase
+import { URL } from 'url';
+import JsonLdScript from '../components/JsonLdScript';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -39,88 +43,51 @@ export const metadata: Metadata = {
     images: ['/twitter-image.jpg'], // Sostituisci con il percorso della tua immagine
     creator: '@maskiobarber', // Sostituisci con il vostro handle Twitter
   },
-    // Canonical URL per prevenire contenuti duplicati
+  // Canonical URL per prevenire contenuti duplicati
   alternates: {
     canonical: 'https://maskio-barber-booking.vercel.app',
   },
   
+  // Security and caching headers
   other: {
     'X-Frame-Options': 'DENY',
-    'X-Content-Type-Options': 'nosniff'
-  }
+    'X-Content-Type-Options': 'nosniff',
+    'X-XSS-Protection': '1; mode=block',
+    'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  },
+    // Base URL per i metadati
+  metadataBase: new URL('https://maskio-barber-booking.vercel.app')
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
-  return (
+}>) {  return (
     <html lang="it">      <head>
-        {/* Viewport meta tag for responsive design */}
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        {/* Additional security meta tags */}
-        <meta httpEquiv="X-Frame-Options" content="DENY" />
-        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-        <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
-        <meta httpEquiv="Strict-Transport-Security" content="max-age=63072000; includeSubDomains; preload" />
-        <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
-        <meta httpEquiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()" />
-          {/* Prevent caching of sensitive pages */}
-        <meta httpEquiv="Cache-Control" content="no-store, no-cache, must-revalidate, proxy-revalidate" />
-        <meta httpEquiv="Pragma" content="no-cache" />
-        <meta httpEquiv="Expires" content="0" />
-        
-        {/* Schema.org structured data per il business locale */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",              "@type": "HairSalon",
-              "name": "Maskio Barber Concept",
-              "image": "https://maskio-barber-booking.vercel.app/logo.png",
-              "url": "https://maskio-barber-booking.vercel.app",
-              "telephone": "+39 02 1234567",
-              "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "Via Sant'Agata 24",
-                "addressLocality": "San Giovanni Rotondo",
-                "postalCode": "71013",
-                "addressCountry": "IT"
-              },
-              "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": "41.7089",
-                "longitude": "15.7181"
-              },
-              "openingHoursSpecification": [
-                {
-                  "@type": "OpeningHoursSpecification",
-                  "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Friday"],
-                  "opens": "09:00",
-                  "closes": "13:00"
-                },
-                {
-                  "@type": "OpeningHoursSpecification",
-                  "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Friday"],
-                  "opens": "15:00",
-                  "closes": "18:00"
-                }
-              ],
-              "priceRange": "$$"
-            })
-          }}
-        />
-      </head>      <body className={inter.className}>
-        <SecurityProvider>
-          <DailyUpdateManager />          <Navbar />
-          <main className="min-h-screen pt-[58px]">
+        <link rel="preload" as="image" href="/sediaOro.jpg" />
+        <link rel="preload" as="image" href="/LogoSimboloNome_BiancoOrizzontale_BUONO.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+      </head>
+      <body className={inter.className}><SecurityProvider>
+          <DailyUpdateManager />
+          <Navbar />          <main className="min-h-screen pt-[70px]"> {/* Aumentato da 58px a 70px per adattarsi alla navbar più grande */}
             {children}
           </main>
+          <Footer />
         </SecurityProvider>
         {/* Script per nascondere i blocchi di codice se non è attiva l'ispezione */}
         <script src="/js/dev-tools-detector.js" defer></script>
-      </body>
-    </html>
+        {/* Schema.org JSON-LD script */}
+        <JsonLdScript />
+      </body></html>
   );
 }

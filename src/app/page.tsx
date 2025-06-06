@@ -7,7 +7,8 @@ import { useState } from 'react';
 import BookingButton from '../components/BookingButton';
 import ReviewsSection from '../components/ReviewsSection';
 
-export default function Home() {  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+export default function Home() {
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
 
   // Professional Animation Variants
@@ -130,21 +131,20 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
     }
   };  return (
     <div className="min-h-screen bg-black">      {/* Enhanced Luxury Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">        {/* Primary golden glow - reduced intensity */}
-        <motion.div
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">        {/* Primary golden glow - reduced intensity */}        <motion.div
           initial="hidden"
           className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-amber-300/5 to-amber-600/4 rounded-full blur-3xl"
           animate={{
-            y: [-15, 15, -15],
-            x: [-8, 8, -8],
-            scale: [1, 1.08, 1],
-            opacity: [0.5, 0.6, 0.5]
+            y: [-15, -7, 0, 7, 15, 7, 0, -7, -15],
+            x: [-8, -4, 0, 4, 8, 4, 0, -4, -8],
+            scale: [1, 1.03, 1.05, 1.07, 1.08, 1.07, 1.05, 1.03, 1],
+            opacity: [0.5, 0.53, 0.56, 0.58, 0.6, 0.58, 0.56, 0.53, 0.5]
           }}
           transition={{
             duration: 12,
             ease: "easeInOut",
             repeat: Infinity,
-            repeatType: "reverse"
+            repeatType: "loop"
           }}
         />
           {/* Secondary warm accent - reduced intensity */}
@@ -203,13 +203,16 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
           initial={{ scale: 1.08 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >
-          <Image
+        >          <Image
             src="/sediaOro.jpg"
             alt="Maskio Barber Concept"
             fill
             className="object-cover brightness-[0.25] filter contrast-125 saturate-[1.05]"
             priority
+            quality={80}
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R7Ss5tMb7JNPnzHqp4rhhyS2Vw6BX2YZnaxnqpnpB"
+            sizes="100vw"
           />
             {/* Overlay con gradiente più sofisticato e lussuoso */}
           <motion.div
@@ -433,16 +436,22 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                   animate={{
                     background: [
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.15) 0%, rgba(251,191,36,0.05) 40%, transparent 80%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.13) 0%, rgba(251,191,36,0.045) 40%, transparent 80%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.04) 40%, transparent 80%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.035) 40%, transparent 80%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.09) 0%, rgba(251,191,36,0.03) 40%, transparent 80%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.07) 0%, rgba(251,191,36,0.025) 40%, transparent 80%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.05) 0%, rgba(251,191,36,0.02) 40%, transparent 80%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.07) 0%, rgba(251,191,36,0.025) 40%, transparent 80%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.09) 0%, rgba(251,191,36,0.03) 40%, transparent 80%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.035) 40%, transparent 80%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.04) 40%, transparent 80%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.13) 0%, rgba(251,191,36,0.045) 40%, transparent 80%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.15) 0%, rgba(251,191,36,0.05) 40%, transparent 80%)"
                     ]
                   }}
                   transition={{
-                    duration: 8,
+                    duration: 12,
                     ease: "easeInOut", 
                     repeat: Infinity,
                     repeatType: "loop"
@@ -452,38 +461,57 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                   animate={{
                     background: [
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.03) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.09) 0%, rgba(251,191,36,0.028) 30%, transparent 70%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.025) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.07) 0%, rgba(251,191,36,0.022) 30%, transparent 70%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.06) 0%, rgba(251,191,36,0.02) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.03) 0%, rgba(251,191,36,0.01) 30%, transparent 70%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.05) 0%, rgba(251,191,36,0.015) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.07) 0%, rgba(251,191,36,0.02) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.04) 0%, rgba(251,191,36,0.013) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.03) 0%, rgba(251,191,36,0.01) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.04) 0%, rgba(251,191,36,0.013) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.05) 0%, rgba(251,191,36,0.015) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.06) 0%, rgba(251,191,36,0.02) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.07) 0%, rgba(251,191,36,0.022) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.025) 30%, transparent 70%)",
+                      "radial-gradient(ellipse at center, rgba(251,191,36,0.09) 0%, rgba(251,191,36,0.028) 30%, transparent 70%)",
                       "radial-gradient(ellipse at center, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.03) 30%, transparent 70%)"
                     ]
                   }}
                   transition={{
-                    duration: 7,
+                    duration: 10,
                     ease: "easeInOut", 
                     repeat: Infinity,
                     repeatType: "loop",
                     delay: 0.5
                   }}
                 ></motion.div>
-                  {/* Enhanced shimmer effect - more subtle */}
-                <motion.div
+                  {/* Enhanced shimmer effect - more subtle */}                <motion.div
                   className="absolute -inset-1 rounded-full opacity-35 blur-sm"
                   animate={{
                     background: [
                       "linear-gradient(45deg, rgba(251,191,36,0) 0%, rgba(251,191,36,0.3) 50%, rgba(251,191,36,0) 100%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0) 0%, rgba(251,191,36,0) 50%, rgba(251,191,36,0.3) 100%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0.3) 0%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 100%)"
+                      "linear-gradient(45deg, rgba(251,191,36,0) 10%, rgba(251,191,36,0.25) 50%, rgba(251,191,36,0) 90%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0) 20%, rgba(251,191,36,0.2) 50%, rgba(251,191,36,0) 80%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0) 30%, rgba(251,191,36,0.15) 50%, rgba(251,191,36,0) 70%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0) 40%, rgba(251,191,36,0.1) 50%, rgba(251,191,36,0) 60%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0) 45%, rgba(251,191,36,0) 50%, rgba(251,191,36,0.1) 60%, rgba(251,191,36,0) 70%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 50%, rgba(251,191,36,0.15) 70%, rgba(251,191,36,0) 80%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0) 60%, rgba(251,191,36,0) 50%, rgba(251,191,36,0.2) 80%, rgba(251,191,36,0) 90%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0) 70%, rgba(251,191,36,0) 50%, rgba(251,191,36,0.25) 90%, rgba(251,191,36,0) 100%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0.3) 0%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 100%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0.25) 10%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 90%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0.2) 20%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 80%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0.15) 30%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 70%)",
+                      "linear-gradient(45deg, rgba(251,191,36,0.1) 40%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 60%)"
                     ],
-                    backgroundSize: ["200% 200%", "200% 200%", "200% 200%"],
-                    backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"]
+                    backgroundSize: ["200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%"],
+                    backgroundPosition: ["0% 0%", "10% 10%", "20% 20%", "30% 30%", "40% 40%", "50% 50%", "60% 60%", "70% 70%", "80% 80%", "90% 90%", "100% 100%", "80% 80%", "60% 60%", "40% 40%", "20% 20%", "0% 0%"]
                   }}
                   transition={{
-                    duration: 6,
+                    duration: 8,
                     ease: "easeInOut", 
-                    repeat: Infinity
+                    repeat: Infinity,
+                    repeatType: "loop"
                   }}
                 ></motion.div>                  <Image
                   src="/LogoSimboloNome_Bianco(1).png"
@@ -1023,9 +1051,8 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
               >
                 Servizi
               </motion.span>
-            </motion.h2>
-            <motion.p 
-              className="text-lg text-gray-300 max-w-3xl mx-auto"
+            </motion.h2>            <motion.p 
+              className="text-lg text-gray-200 max-w-3xl mx-auto font-medium"
               variants={fadeInUp}
             >
               Dalla consulenza personalizzata ai trattamenti più avanzati, 
@@ -1036,34 +1063,35 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-8"
             variants={staggerContainer}
-          >
-            {[
-              {
+          >            {[              {
                 title: 'Taglio & Styling',
                 description: 'Tagli personalizzati per esaltare la tua personalità e stile',
                 icon: '✂️',
+                image: '/servizi-taglio.jpg', // Immagine per taglio e styling
                 price: 'da 18€',
-                gradient: 'from-blue-500/10 to-purple-500/10'
+                gradient: 'from-rose-200/20 to-slate-100/25'
               },
               {
-                title: 'Rasatura Tradizionale',
-                description: 'L\'arte della rasatura con rasoio a mano libera',
+                title: 'Taglio Barba',
+                description: 'Taglio barba con rifinitura professionale',
                 icon: '🪒',
+                image: '/servizi-barba.jpg', // Immagine per taglio barba
                 price: 'da 10€',
-                gradient: 'from-amber-500/10 to-orange-500/10'
+                gradient: 'from-amber-100/20 to-gray-100/25'
               },
               {
-                title: 'Trattamenti Barba',
-                description: 'Cura completa per una barba sempre perfetta',
-                icon: '🧔',
-                price: 'da 25€',
-                gradient: 'from-green-500/10 to-teal-500/10'
+                title: 'Altri Servizi',
+                description: 'Colore capelli o servizi su richiesta',
+                icon: '💇‍♂️',
+                image: '/servizi-altri.jpg', // Immagine per altri servizi
+                price: 'Contattare Maskio',
+                gradient: 'from-blue-100/20 to-gray-100/25'
               }
             ].map((service, index) => (
               <motion.div
                 key={index}
                 variants={scaleIn}
-                className={`relative bg-gradient-to-br ${service.gradient} backdrop-blur-sm p-8 rounded-2xl text-center group cursor-pointer overflow-hidden`}
+                className={`relative bg-gradient-to-br ${service.gradient} backdrop-blur-sm p-7 pt-6 pb-9 rounded-2xl text-center group cursor-pointer overflow-hidden`}
                 onMouseEnter={() => setHoveredCard(`service-${index}`)}
                 onMouseLeave={() => setHoveredCard(null)}
                 whileHover={{ 
@@ -1083,46 +1111,50 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                   perspective: "1000px"
                 }}
               >
-                {/* Gradient Background Effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-br from-white/50 via-transparent to-amber-100/20 rounded-2xl"
+                {/* Gradient Background Effect */}                <motion.div
+                  className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/30 to-amber-100/30 rounded-2xl"
                   animate={hoveredCard === `service-${index}` ? {
                     background: [
-                      "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 50%, rgba(245,158,11,0.2) 100%)",
-                      "linear-gradient(225deg, rgba(255,255,255,0.3) 0%, transparent 50%, rgba(245,158,11,0.4) 100%)",
-                      "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 50%, rgba(245,158,11,0.2) 100%)"
+                      "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(245,158,11,0.3) 100%)",
+                      "linear-gradient(225deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 50%, rgba(245,158,11,0.5) 100%)",
+                      "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(245,158,11,0.3) 100%)"
                     ]
                   } : {}}
                   transition={{ duration: 2, ease: "easeInOut" }}
                 />
 
-                {/* Floating Icon */}
-                <motion.div 
-                  className="text-5xl mb-6 relative z-10"
+                {/* Floating Icon */}                {/* Sostituito icona emoji con immagine */}                <motion.div 
+                  className="h-56 w-full mb-8 relative z-10 overflow-hidden rounded-lg"
                   animate={hoveredCard === `service-${index}` ? {
-                    scale: [1, 1.1, 1],
-                    rotate: [0, 5, -5, 0],
+                    scale: [1, 1.05, 1],
                   } : {
                     scale: 1,
-                    rotate: 0
                   }}
                   transition={{ 
                     duration: 2, 
                     ease: "easeInOut",
                     repeat: hoveredCard === `service-${index}` ? Infinity : 0
                   }}
-                >
-                  {service.icon}
-                </motion.div>
-
-                <h3 className="text-xl font-bold text-gray-900 mb-3 relative z-10">{service.title}</h3>
-                <p className="text-gray-600 mb-4 relative z-10">{service.description}</p>
+                >                  <Image 
+                    src={service.image || '/placeholder-service.jpg'}
+                    alt={service.title}
+                    fill
+                    className="object-cover transition-transform duration-700 hover:scale-110"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    loading="lazy"
+                    quality={75}
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R7Ss5tMb7JNPnzHqp4rhhyS2Vw6BX2YZnaxnqpnpB"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/10 opacity-75"></div>
+                </motion.div>                <h3 className="text-xl font-bold text-black mb-4 relative z-10 drop-shadow-sm">{service.title}</h3>
+                <p className="text-gray-900 mb-5 relative z-10 font-medium drop-shadow-sm">{service.description}</p>
                 
                 <motion.div 
-                  className="text-lg font-semibold text-amber-600 mb-4 relative z-10"
+                  className="text-lg font-semibold text-amber-900 mb-4 relative z-10"
                   animate={hoveredCard === `service-${index}` ? {
                     scale: [1, 1.05, 1],
-                    color: ["#d97706", "#f59e0b", "#d97706"]
+                    color: ["#78350f", "#92400e", "#78350f"]
                   } : {}}
                   transition={{ duration: 1.5, ease: "easeInOut" }}
                 >
@@ -1144,11 +1176,10 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                   transition={{ duration: 0.3, ease: "easeOut" }}
                 />
 
-                {/* Animated Border */}
-                <motion.div
+                {/* Animated Border */}                <motion.div
                   className="absolute inset-0 rounded-2xl border-2 border-transparent"
                   animate={hoveredCard === `service-${index}` ? {
-                    borderColor: ["rgba(245, 158, 11, 0)", "rgba(245, 158, 11, 0.3)", "rgba(245, 158, 11, 0)"]
+                    borderColor: ["rgba(180, 83, 9, 0)", "rgba(180, 83, 9, 0.5)", "rgba(180, 83, 9, 0)"]
                   } : {}}
                   transition={{ duration: 2, ease: "easeInOut", repeat: Infinity }}
                 />
@@ -1270,9 +1301,8 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
               >
                 Maskio
               </motion.span>
-            </motion.h2>
-            <motion.p 
-              className="text-lg text-gray-300 max-w-3xl mx-auto"
+            </motion.h2>            <motion.p 
+              className="text-lg text-gray-200 max-w-3xl mx-auto font-medium"
               variants={fadeInUp}
             >
               Non siamo solo un barbiere, siamo i tuoi partner nella cura del tuo stile
@@ -1392,7 +1422,7 @@ export default function Home() {  const [hoveredCard, setHoveredCard] = useState
                   {feature.title}
                 </motion.h3>
                 
-                <p className="text-gray-300 relative z-10 leading-relaxed">{feature.description}</p>
+                <p className="text-gray-200 relative z-10 leading-relaxed font-medium">{feature.description}</p>
 
                 {/* 3D Shadow Effect */}
                 <motion.div

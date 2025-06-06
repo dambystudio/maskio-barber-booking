@@ -451,7 +451,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Chiamaci</h3>
-                  <p className="text-gray-300">+39 123 456 7890</p>
+                  <p className="text-gray-300">+39 331 710 0730</p>
                 </div>
               </div>
             </motion.div>

@@ -327,10 +327,14 @@ export default function Page() {
                     <span>{post.readTime}</span>
                     <span className="mx-2">•</span>
                     <span>{post.author}</span>
-                  </motion.div>
-
-                  <motion.h3 
-                    className="text-xl font-bold text-white mb-3 line-clamp-2"
+                  </motion.div>                  <motion.h3 
+                    className="text-xl font-bold text-white mb-3"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.1 + index * 0.1 }}
@@ -339,7 +343,13 @@ export default function Page() {
                   </motion.h3>
 
                   <motion.p 
-                    className="text-gray-300 text-sm leading-relaxed line-clamp-3"
+                    className="text-gray-300 text-sm leading-relaxed"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.2 + index * 0.1 }}
