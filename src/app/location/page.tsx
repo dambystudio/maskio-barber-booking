@@ -265,10 +265,9 @@ export default function Page() {
                   transformStyle: "preserve-3d",
                   perspective: "1000px"
                 }}
-              >
-                <Image
-                  src="/barbershop-interior.jpg"
-                  alt="Interno del barbershop Maskio"
+              >                <Image
+                  src="/fotoSalone.jpg"
+                  alt="Salone Maskio Barber Concept"
                   width={600}
                   height={400}
                   className="w-full h-[400px] object-cover"
@@ -424,76 +423,411 @@ export default function Page() {
                 ))}
               </motion.div>
             </motion.div>
-          </div>
-        </div>
-      </motion.section>      {/* Location Information Section */}
+          </div>        </div>
+      </motion.section>
+
+      {/* Tools & Equipment Showcase Section */}
       <motion.section
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{ once: true, amount: 0.3 }}
         variants={staggerContainer}
-        className="py-20 bg-gray-900 relative overflow-hidden"
+        className="py-20 bg-gradient-to-br from-black via-gray-900/50 to-black relative overflow-hidden"
       >
-        {/* Animated Background Patterns */}
+        {/* Animated Background Elements */}
         <motion.div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 20%, #374151 0%, transparent 50%),
-                             radial-gradient(circle at 80% 80%, #4b5563 0%, transparent 50%),
-                             radial-gradient(circle at 40% 60%, #374151 0%, transparent 50%)`
+            backgroundImage: `radial-gradient(circle at 25% 25%, #f59e0b 0%, transparent 50%),
+                             radial-gradient(circle at 75% 75%, #fbbf24 0%, transparent 50%)`
           }}
           animate={{
             backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"]
           }}
           transition={{
-            duration: 20,
+            duration: 25,
             ease: "linear",
             repeat: Infinity
           }}
         />
 
-        <div className="max-w-6xl mx-auto px-4 relative z-10">
-          <motion.div variants={fadeInUp} className="text-center mb-16">
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            
+            {/* Tools Image Section */}
+            <motion.div 
+              variants={fadeInLeft}
+              className="relative order-2 lg:order-1"
+              onMouseEnter={() => setHoveredCard('tools')}
+              onMouseLeave={() => setHoveredCard(null)}
+            >
+              <motion.div
+                className="relative overflow-hidden rounded-3xl shadow-2xl"
+                whileHover={{ 
+                  scale: 1.03,
+                  rotateY: 3,
+                  rotateX: 2,
+                }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                style={{
+                  transformStyle: "preserve-3d",
+                  perspective: "1000px"
+                }}
+              >
+                <Image
+                  src="/strumenti.jpg"
+                  alt="Strumenti professionali Maskio Barber"
+                  width={600}
+                  height={500}
+                  className="w-full h-[500px] object-cover"
+                />
+                
+                {/* Dynamic Overlay Effects */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-br from-black/30 via-transparent to-amber-600/20"
+                  animate={hoveredCard === 'tools' ? {
+                    background: [
+                      "linear-gradient(135deg, rgba(0,0,0,0.3) 0%, transparent 50%, rgba(245,158,11,0.2) 100%)",
+                      "linear-gradient(225deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(245,158,11,0.4) 100%)",
+                      "linear-gradient(135deg, rgba(0,0,0,0.3) 0%, transparent 50%, rgba(245,158,11,0.2) 100%)"
+                    ]
+                  } : {}}
+                  transition={{ duration: 2, ease: "easeInOut" }}
+                />
+
+                {/* Floating Elements */}
+                <motion.div
+                  className="absolute top-6 right-6 w-4 h-4 bg-amber-400 rounded-full shadow-lg"
+                  animate={{
+                    scale: [1, 1.8, 1],
+                    opacity: [0.7, 1, 0.7],
+                    boxShadow: [
+                      "0 0 0px rgba(245, 158, 11, 0.5)",
+                      "0 0 20px rgba(245, 158, 11, 0.8)",
+                      "0 0 0px rgba(245, 158, 11, 0.5)"
+                    ]
+                  }}
+                  transition={{
+                    duration: 3,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                />
+                <motion.div
+                  className="absolute bottom-8 left-8 w-3 h-3 bg-amber-300 rounded-full shadow-lg"
+                  animate={{
+                    scale: [1.5, 1, 1.5],
+                    opacity: [1, 0.6, 1],
+                    y: [-2, 2, -2]
+                  }}
+                  transition={{
+                    duration: 4,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    delay: 1.5
+                  }}
+                />
+
+                {/* Premium Badge */}
+                <motion.div
+                  className="absolute top-6 left-6 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-full border border-amber-500/30"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.6 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <span className="text-amber-400 text-sm font-semibold flex items-center gap-2">
+                    <motion.span
+                      animate={{ rotate: [0, 360] }}
+                      transition={{ duration: 2, ease: "linear", repeat: Infinity }}
+                    >
+                      ⭐
+                    </motion.span>
+                    Strumenti Premium
+                  </span>
+                </motion.div>
+              </motion.div>
+
+              {/* Enhanced 3D Shadow */}
+              <motion.div
+                className="absolute inset-0 bg-black/15 rounded-3xl -z-10"
+                animate={hoveredCard === 'tools' ? {
+                  x: 12,
+                  y: 12,
+                  scale: 0.97
+                } : {
+                  x: 6,
+                  y: 6,
+                  scale: 1
+                }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              />
+            </motion.div>
+
+            {/* Content Section */}
+            <motion.div 
+              variants={fadeInRight}
+              className="space-y-8 order-1 lg:order-2"
+            >
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                variants={staggerContainer}
+                viewport={{ once: true }}
+                className="space-y-6"
+              >
+                <motion.h2 
+                  variants={scaleIn}
+                  className="text-4xl md:text-5xl font-bold text-white"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  Strumenti di 
+                  <motion.span 
+                    className="text-amber-500 inline-block"
+                    animate={{ 
+                      textShadow: [
+                        "0 0 0px rgba(245, 158, 11, 0)",
+                        "0 0 30px rgba(245, 158, 11, 0.7)",
+                        "0 0 0px rgba(245, 158, 11, 0)"
+                      ]
+                    }}
+                    transition={{
+                      duration: 4,
+                      ease: "easeInOut",
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  >
+                    {" "}Eccellenza
+                  </motion.span>
+                </motion.h2>
+                
+                <motion.p 
+                  variants={slideInFromBottom}
+                  className="text-lg text-gray-300 leading-relaxed"
+                >
+                  Utilizziamo esclusivamente strumenti professionali delle migliori marche internazionali. 
+                  Ogni forbice, rasoio e accessorio è selezionato per garantire precisione, comfort e risultati impeccabili.
+                </motion.p>
+
+                <motion.p 
+                  variants={slideInFromBottom}
+                  className="text-lg text-gray-300 leading-relaxed"
+                >
+                  La qualità dei nostri strumenti si riflette nella perfezione di ogni taglio, 
+                  nella precisione di ogni rasatura e nella cura di ogni dettaglio.
+                </motion.p>
+              </motion.div>
+
+              {/* Enhanced Features Grid */}
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                variants={staggerContainer}
+                viewport={{ once: true }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+              >
+                {[
+                  { icon: "✂️", title: "Forbici Professionali", desc: "Acciaio giapponese di alta qualità" },
+                  { icon: "🪒", title: "Rasoi di Precisione", desc: "Lame affilate per risultati perfetti" },
+                  { icon: "⚡", title: "Clipper Premium", desc: "Motori potenti e silenziosi" },
+                  { icon: "🎯", title: "Accessori Specializzati", desc: "Ogni strumento per ogni esigenza" }
+                ].map((feature, index) => (
+                  <motion.div
+                    key={index}
+                    variants={slideInFromBottom}
+                    className="bg-gray-900/80 border border-gray-800/50 backdrop-blur-sm p-6 rounded-xl hover:bg-gray-800/80 transition-all duration-300 group"
+                    whileHover={{ 
+                      y: -5, 
+                      scale: 1.02,
+                      boxShadow: "0 15px 35px rgba(0, 0, 0, 0.3)"
+                    }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <motion.div
+                      className="flex items-center gap-4 mb-3"
+                      whileHover={{ x: 5 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <motion.div
+                        className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-amber-500/20 to-amber-600/20 rounded-xl flex items-center justify-center text-xl border border-amber-500/30"
+                        animate={{
+                          background: [
+                            "linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%)",
+                            "linear-gradient(135deg, rgba(217, 119, 6, 0.3) 0%, rgba(245, 158, 11, 0.3) 100%)",
+                            "linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%)"
+                          ]
+                        }}
+                        transition={{
+                          duration: 3,
+                          ease: "easeInOut",
+                          repeat: Infinity,
+                          repeatType: "reverse",
+                          delay: index * 0.5
+                        }}
+                        whileHover={{ 
+                          scale: 1.15, 
+                          rotate: 5,
+                          borderColor: "rgba(245, 158, 11, 0.6)"
+                        }}
+                      >
+                        <motion.span
+                          animate={{ rotate: [0, 3, -3, 0] }}
+                          transition={{
+                            duration: 2,
+                            ease: "easeInOut",
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            delay: index * 0.3
+                          }}
+                        >
+                          {feature.icon}
+                        </motion.span>
+                      </motion.div>
+                      <div>
+                        <h4 className="text-white font-bold text-lg group-hover:text-amber-400 transition-colors duration-300">
+                          {feature.title}
+                        </h4>
+                        <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors duration-300">
+                          {feature.desc}
+                        </p>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.section>      {/* Enhanced Location Information Section */}
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={staggerContainer}
+        className="py-24 bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden"
+      >
+        {/* Enhanced Animated Background Patterns */}
+        <motion.div
+          className="absolute inset-0 opacity-15"
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 20%, #f59e0b 0%, transparent 50%),
+                             radial-gradient(circle at 80% 80%, #fbbf24 0%, transparent 50%),
+                             radial-gradient(circle at 40% 60%, #d97706 0%, transparent 50%)`
+          }}
+          animate={{
+            backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
+            backgroundSize: ["100% 100%", "120% 120%", "100% 100%"]
+          }}
+          transition={{
+            duration: 25,
+            ease: "linear",
+            repeat: Infinity
+          }}
+        />
+
+        {/* Floating Decorative Elements */}
+        <motion.div
+          className="absolute top-20 left-16 w-3 h-3 bg-amber-400/30 rounded-full"
+          animate={{
+            y: [-15, 15, -15],
+            x: [-8, 8, -8],
+            scale: [1, 2, 1],
+            opacity: [0.3, 0.8, 0.3]
+          }}
+          transition={{
+            duration: 8,
+            ease: "easeInOut",
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-24 right-20 w-2 h-2 bg-amber-300/40 rounded-full"
+          animate={{
+            y: [12, -12, 12],
+            x: [6, -6, 6],
+            scale: [1.5, 1, 1.5],
+            opacity: [0.4, 1, 0.4]
+          }}
+          transition={{
+            duration: 10,
+            ease: "easeInOut",
+            repeat: Infinity,
+            repeatType: "reverse",
+            delay: 3
+          }}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <motion.div variants={fadeInUp} className="text-center mb-20">
             <motion.h2 
-              className="text-3xl md:text-4xl font-bold text-white mb-6"
+              className="text-4xl md:text-5xl font-bold text-white mb-6"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
             >
-              Vieni a Trovarci
+              Vieni a{" "}
+              <motion.span 
+                className="text-amber-500 inline-block"
+                animate={{ 
+                  textShadow: [
+                    "0 0 0px rgba(245, 158, 11, 0)",
+                    "0 0 25px rgba(245, 158, 11, 0.6)",
+                    "0 0 0px rgba(245, 158, 11, 0)"
+                  ]
+                }}
+                transition={{
+                  duration: 4,
+                  ease: "easeInOut",
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              >
+                Trovarci
+              </motion.span>
             </motion.h2>
             <motion.p 
               variants={fadeInUp}
-              className="text-xl text-gray-300 max-w-3xl mx-auto"
+              className="text-xl text-gray-200 max-w-4xl mx-auto leading-relaxed"
             >
-              Siamo facilmente raggiungibili nel centro città. Prenota il tuo appuntamento e vieni a scoprire l'eccellenza del nostro servizio.
+              Siamo facilmente raggiungibili nel centro di San Giovanni Rotondo. Prenota il tuo appuntamento 
+              e vieni a scoprire l'eccellenza del nostro servizio in un ambiente moderno e accogliente.
             </motion.p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">            {/* Address Card */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">            {/* Enhanced Address Card */}
             <motion.div
               variants={scaleIn}
-              className="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500"
+              className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-lg border border-gray-700/50 rounded-3xl p-8 shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 group"
               whileHover={{ 
-                y: -10, 
-                scale: 1.02,
-                boxShadow: "0 25px 50px rgba(0, 0, 0, 0.25)"
+                y: -12, 
+                scale: 1.03,
+                boxShadow: "0 30px 60px rgba(245, 158, 11, 0.15)"
               }}
               onMouseEnter={() => setHoveredCard('address')}
               onMouseLeave={() => setHoveredCard(null)}
             >
               <motion.div
-                className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center mb-6 mx-auto"
+                className="w-18 h-18 bg-gradient-to-br from-amber-400 to-amber-600 rounded-3xl flex items-center justify-center mb-8 mx-auto shadow-lg"
                 animate={hoveredCard === 'address' ? {
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, -5, 0]
+                  scale: [1, 1.15, 1],
+                  rotate: [0, 8, -8, 0],
+                  boxShadow: [
+                    "0 0 0px rgba(245, 158, 11, 0.5)",
+                    "0 0 30px rgba(245, 158, 11, 0.8)",
+                    "0 0 0px rgba(245, 158, 11, 0.5)"
+                  ]
                 } : {}}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
               >
                 <motion.span 
-                  className="text-2xl text-white"
-                  animate={{ rotate: [0, 10, -10, 0] }}
+                  className="text-3xl text-white"
+                  animate={{ rotate: [0, 12, -12, 0] }}
                   transition={{
-                    duration: 4,
+                    duration: 5,
                     ease: "easeInOut",
                     repeat: Infinity,
                     repeatType: "reverse"
@@ -502,81 +836,127 @@ export default function Page() {
                   📍
                 </motion.span>
               </motion.div>
-              <h3 className="text-xl font-bold text-white mb-4 text-center">Indirizzo</h3>
-              <p className="text-gray-300 text-center leading-relaxed">
-                Via Sant'Agata, 24<br />
-                71013 San Giovanni Rotondo (FG)<br />
-                Italia
-              </p>
+              <h3 className="text-2xl font-bold text-white mb-6 text-center group-hover:text-amber-400 transition-colors duration-300">
+                Indirizzo
+              </h3>
+              <div className="text-center space-y-2">
+                <p className="text-gray-200 text-lg font-medium">Via Sant'Agata, 24</p>
+                <p className="text-gray-300 text-base">71013 San Giovanni Rotondo (FG)</p>
+                <p className="text-gray-300 text-base">Italia</p>
+              </div>
+              
+              {/* Animated Border */}
+              <motion.div
+                className="absolute inset-0 rounded-3xl border-2 border-transparent"
+                animate={hoveredCard === 'address' ? {
+                  borderColor: ["rgba(245, 158, 11, 0)", "rgba(245, 158, 11, 0.5)", "rgba(245, 158, 11, 0)"]
+                } : {}}
+                transition={{ duration: 2, ease: "easeInOut", repeat: Infinity }}
+              />
             </motion.div>
 
-            {/* Hours Card */}
+            {/* Enhanced Hours Card */}
             <motion.div
               variants={scaleIn}
-              className="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500"
+              className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-lg border border-gray-700/50 rounded-3xl p-8 shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 group"
               whileHover={{ 
-                y: -10, 
-                scale: 1.02,
-                boxShadow: "0 25px 50px rgba(0, 0, 0, 0.25)"
+                y: -12, 
+                scale: 1.03,
+                boxShadow: "0 30px 60px rgba(59, 130, 246, 0.15)"
               }}
               onMouseEnter={() => setHoveredCard('hours')}
               onMouseLeave={() => setHoveredCard(null)}
             >
               <motion.div
-                className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mb-6 mx-auto"
+                className="w-18 h-18 bg-gradient-to-br from-blue-500 to-blue-700 rounded-3xl flex items-center justify-center mb-8 mx-auto shadow-lg"
                 animate={hoveredCard === 'hours' ? {
-                  scale: [1, 1.1, 1],
-                  rotate: [0, -5, 5, 0]
+                  scale: [1, 1.15, 1],
+                  rotate: [0, -8, 8, 0],
+                  boxShadow: [
+                    "0 0 0px rgba(59, 130, 246, 0.5)",
+                    "0 0 30px rgba(59, 130, 246, 0.8)",
+                    "0 0 0px rgba(59, 130, 246, 0.5)"
+                  ]
                 } : {}}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
               >
                 <motion.span 
-                  className="text-2xl text-white"
+                  className="text-3xl text-white"
                   animate={{ rotate: [0, 360] }}
                   transition={{
-                    duration: 8,
+                    duration: 12,
                     ease: "linear",
                     repeat: Infinity
                   }}
                 >
                   🕐
                 </motion.span>
-              </motion.div>              <h3 className="text-xl font-bold text-white mb-4 text-center">Orari</h3>
-              <div className="space-y-2 text-gray-300 text-center">
-                <p>Lun - Sab: 9:00 - 13:00 | 15:00 - 18:00</p>
-                <p>Giovedì: Chiuso</p>
-                <p>Domenica: Chiuso</p>
+              </motion.div>              
+              <h3 className="text-2xl font-bold text-white mb-6 text-center group-hover:text-blue-400 transition-colors duration-300">
+                Orari di Apertura
+              </h3>
+              <div className="space-y-3 text-center">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 font-medium">Lun - Sab:</span>
+                  <span className="text-white font-semibold">9:00 - 13:00</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 font-medium"></span>
+                  <span className="text-white font-semibold">15:00 - 18:00</span>
+                </div>
+                <div className="flex justify-between items-center border-t border-gray-700 pt-3">
+                  <span className="text-gray-300 font-medium">Giovedì:</span>
+                  <span className="text-red-400 font-semibold">Chiuso</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 font-medium">Domenica:</span>
+                  <span className="text-red-400 font-semibold">Chiuso</span>
+                </div>
               </div>
+              
+              {/* Animated Border */}
+              <motion.div
+                className="absolute inset-0 rounded-3xl border-2 border-transparent"
+                animate={hoveredCard === 'hours' ? {
+                  borderColor: ["rgba(59, 130, 246, 0)", "rgba(59, 130, 246, 0.5)", "rgba(59, 130, 246, 0)"]
+                } : {}}
+                transition={{ duration: 2, ease: "easeInOut", repeat: Infinity }}
+              />
             </motion.div>
 
-            {/* Contact Card */}
+            {/* Enhanced Contact Card */}
             <motion.div
               variants={scaleIn}
-              className="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 md:col-span-2 lg:col-span-1"
+              className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-lg border border-gray-700/50 rounded-3xl p-8 shadow-2xl hover:shadow-green-500/10 transition-all duration-500 md:col-span-2 lg:col-span-1 group"
               whileHover={{ 
-                y: -10, 
-                scale: 1.02,
-                boxShadow: "0 25px 50px rgba(0, 0, 0, 0.25)"
+                y: -12, 
+                scale: 1.03,
+                boxShadow: "0 30px 60px rgba(34, 197, 94, 0.15)"
               }}
               onMouseEnter={() => setHoveredCard('contact')}
               onMouseLeave={() => setHoveredCard(null)}
             >
               <motion.div
-                className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-6 mx-auto"
+                className="w-18 h-18 bg-gradient-to-br from-green-500 to-green-700 rounded-3xl flex items-center justify-center mb-8 mx-auto shadow-lg"
                 animate={hoveredCard === 'contact' ? {
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 10, -10, 0]
+                  scale: [1, 1.15, 1],
+                  rotate: [0, 12, -12, 0],
+                  boxShadow: [
+                    "0 0 0px rgba(34, 197, 94, 0.5)",
+                    "0 0 30px rgba(34, 197, 94, 0.8)",
+                    "0 0 0px rgba(34, 197, 94, 0.5)"
+                  ]
                 } : {}}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
               >
                 <motion.span 
-                  className="text-2xl text-white"
+                  className="text-3xl text-white"
                   animate={{ 
-                    scale: [1, 1.2, 1],
+                    scale: [1, 1.3, 1],
                     opacity: [1, 0.8, 1]
                   }}
                   transition={{
-                    duration: 2,
+                    duration: 3,
                     ease: "easeInOut",
                     repeat: Infinity,
                     repeatType: "reverse"
@@ -585,12 +965,41 @@ export default function Page() {
                   📞
                 </motion.span>
               </motion.div>
-              <h3 className="text-xl font-bold text-white mb-4 text-center">Contatti</h3>
-              <div className="space-y-2 text-gray-300 text-center">
-                <p>Tel: +39 333 123 4567</p>
-                <p>Email: info@maskio.it</p>
-                <p>WhatsApp: +39 333 123 4567</p>
+              <h3 className="text-2xl font-bold text-white mb-6 text-center group-hover:text-green-400 transition-colors duration-300">
+                Contatti
+              </h3>
+              <div className="space-y-4 text-center">
+                <motion.div 
+                  className="flex items-center justify-center gap-3 p-3 rounded-xl hover:bg-gray-700/30 transition-colors duration-300"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <span className="text-xl">📱</span>
+                  <span className="text-gray-200 font-medium">+39 333 123 4567</span>
+                </motion.div>
+                <motion.div 
+                  className="flex items-center justify-center gap-3 p-3 rounded-xl hover:bg-gray-700/30 transition-colors duration-300"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <span className="text-xl">✉️</span>
+                  <span className="text-gray-200 font-medium">info@maskio.it</span>
+                </motion.div>
+                <motion.div 
+                  className="flex items-center justify-center gap-3 p-3 rounded-xl hover:bg-gray-700/30 transition-colors duration-300"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <span className="text-xl">💬</span>
+                  <span className="text-gray-200 font-medium">WhatsApp: +39 333 123 4567</span>
+                </motion.div>
               </div>
+              
+              {/* Animated Border */}
+              <motion.div
+                className="absolute inset-0 rounded-3xl border-2 border-transparent"
+                animate={hoveredCard === 'contact' ? {
+                  borderColor: ["rgba(34, 197, 94, 0)", "rgba(34, 197, 94, 0.5)", "rgba(34, 197, 94, 0)"]
+                } : {}}
+                transition={{ duration: 2, ease: "easeInOut", repeat: Infinity }}
+              />
             </motion.div>
           </div>
         </div>

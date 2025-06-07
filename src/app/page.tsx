@@ -183,53 +183,46 @@ export default function Home() {
             delay: 4
           }}
         />
-        
-        {/* Soft vignette effect for depth */}
-        <div className="absolute inset-0 bg-radial-gradient pointer-events-none opacity-70"
+          {/* Soft vignette effect for depth */}
+        <div className="absolute inset-0 bg-radial-gradient pointer-events-none opacity-40"
           style={{
             background: "radial-gradient(circle at center, transparent 30%, black 140%)"
           }}
         />
-        
-        {/* Subtle texture overlay */}
-        <div className="absolute inset-0 bg-[url('/subtle-pattern.png')] opacity-[0.02] mix-blend-soft-light"></div>
+          {/* Subtle texture overlay */}
+        <div className="absolute inset-0 bg-[url('/subtle-pattern.png')] opacity-[0.01] mix-blend-soft-light"></div>
       </div>
 
       {/* Hero Section - Design più lussuoso */}
       <div className="relative h-screen">
-        {/* Hero Image con overlay più raffinato */}
-        <motion.div 
+        {/* Hero Image con overlay più raffinato */}        <motion.div 
           className="absolute inset-0 z-0"
-          initial={{ scale: 1.08 }}
+          initial={{ scale: 1.05 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >          <Image
-            src="/sediaOro.jpg"
-            alt="Maskio Barber Concept"
-            fill
-            className="object-cover brightness-[0.25] filter contrast-125 saturate-[1.05]"
-            priority
-            quality={80}
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R7Ss5tMb7JNPnzHqp4rhhyS2Vw6BX2YZnaxnqpnpB"
-            sizes="100vw"
-          />
-            {/* Overlay con gradiente più sofisticato e lussuoso */}
+        ><video
+            src="/videoLoop.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover brightness-[0.55] filter contrast-110 saturate-[1.02]"
+            preload="auto"
+          />            {/* Overlay con gradiente più sofisticato e lussuoso */}
           <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-black/95 via-gray-900/75 to-amber-950/35"
+            className="absolute inset-0 bg-gradient-to-br from-black/70 via-gray-900/50 to-amber-950/20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 2.2, ease: "easeOut" }}
           />
-          
-          {/* Additional luxury grain texture */}
+            {/* Additional luxury grain texture */}
           <motion.div
-            className="absolute inset-0 mix-blend-soft-light opacity-20"
+            className="absolute inset-0 mix-blend-soft-light opacity-10"
             style={{
               backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")'
             }}
             animate={{
-              opacity: [0.2, 0.25, 0.2]
+              opacity: [0.10, 0.12, 0.10]
             }}
             transition={{
               duration: 8,
