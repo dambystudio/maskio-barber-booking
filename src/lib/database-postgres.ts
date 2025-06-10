@@ -24,9 +24,13 @@ export class DatabaseService {
     const users = await db.select().from(schema.users).where(eq(schema.users.id, userId));
     return users[0] || null;
   }
-  
-  static async getUserByEmail(email: string): Promise<schema.User | null> {
+    static async getUserByEmail(email: string): Promise<schema.User | null> {
     const users = await db.select().from(schema.users).where(eq(schema.users.email, email));
+    return users[0] || null;
+  }
+  
+  static async getUserByPhone(phone: string): Promise<schema.User | null> {
+    const users = await db.select().from(schema.users).where(eq(schema.users.phone, phone));
     return users[0] || null;
   }
   

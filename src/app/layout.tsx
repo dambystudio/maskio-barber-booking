@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SecurityProvider from '../components/SecurityProvider';
 import DailyUpdateManager from '../components/DailyUpdateManager';
+import SessionProvider from '../components/SessionProvider';
 // Importazione URL per metadataBase
 import { URL } from 'url';
 import JsonLdScript from '../components/JsonLdScript';
@@ -69,21 +70,26 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {  return (
-    <html lang="it">      <head>
+    <html lang="it">      
+    <head>
         <link rel="preload" as="image" href="/sediaOro.jpg" />
         <link rel="preload" as="image" href="/LogoSimboloNome_BiancoOrizzontale_BUONO.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-      </head>
-      <body className={inter.className}><SecurityProvider>
-          <DailyUpdateManager />
-          <Navbar />          <main className="min-h-screen pt-[70px]"> {/* Aumentato da 58px a 70px per adattarsi alla navbar più grande */}
-            {children}
-          </main>
-          <Footer />
-        </SecurityProvider>
+      </head>      
+      <body className={inter.className}>
+        <SessionProvider>
+          <SecurityProvider>
+            <DailyUpdateManager />
+            <Navbar />
+            <main className="min-h-screen pt-[70px]"> {/* Aumentato da 58px a 70px per adattarsi alla navbar più grande */}
+              {children}
+            </main>
+            <Footer />
+          </SecurityProvider>
+        </SessionProvider>
         {/* Script per nascondere i blocchi di codice se non è attiva l'ispezione */}
         <script src="/js/dev-tools-detector.js" defer></script>
         {/* Schema.org JSON-LD script */}

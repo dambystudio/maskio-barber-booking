@@ -3,6 +3,7 @@ import { DatabaseService } from '@/lib/database-postgres';
 import { EmailService } from '@/lib/email';
 import { Booking } from '@/lib/schema';
 import { randomUUID } from 'crypto';
+import { auth } from '@/lib/auth';
 
 // Rate limiting per IP
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -40,9 +41,11 @@ export async function GET(request: NextRequest) {  try {
     const url = new URL(request.url);
     const date = url.searchParams.get('date');
     const barberId = url.searchParams.get('barberId');
-    const userId = url.searchParams.get('userId');
+    const userId = url.searchParams.get('userId');    let bookings: Booking[] = [];
 
-    let bookings: Booking[] = [];    if (date) {
+    if (userId) {
+      bookings = await DatabaseService.getBookingsByUser(userId);
+    } else if (date) {
       bookings = await DatabaseService.getBookingsByDate(date);    
     } else if (barberId) {
       bookings = await DatabaseService.getBookingsByBarber(barberId);
@@ -79,7 +82,17 @@ export async function GET(request: NextRequest) {  try {
   }
 }
 
-export async function POST(request: NextRequest) {  try {
+export async function POST(request: NextRequest) {
+  try {
+    // Check authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Devi essere loggato per effettuare una prenotazione' },
+        { status: 401 }
+      );
+    }
+
     // Get IP for rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     if (!checkRateLimit(ip)) {
@@ -87,7 +100,7 @@ export async function POST(request: NextRequest) {  try {
         { error: 'Troppi tentativi. Riprova tra qualche minuto.' },
         { status: 429 }
       );
-    }    const requestData = await request.json();
+    }const requestData = await request.json();
     
     // Fetch services data if we have service IDs
     let servicesData: any[] = [];
@@ -169,19 +182,24 @@ export async function POST(request: NextRequest) {  try {
         { error: 'Questo slot non è più disponibile' },
         { status: 409 }
       );
-    }    // Verifica che il cliente non abbia già una prenotazione nello stesso giorno
-    const customerBookings = barberBookings.filter(
-      booking => booking.customerEmail === bookingData.customerEmail && 
+    }    // Verifica che l'utente non abbia già una prenotazione nello stesso giorno
+    const userBookingsToday = await DatabaseService.getBookingsByUser(session.user.id);
+    const userBookingsOnDate = userBookingsToday.filter(
+      booking => booking.date === bookingData.date && 
                 booking.status !== 'cancelled'
     );
 
-    if (customerBookings.length > 0) {
+    if (userBookingsOnDate.length > 0) {
       return NextResponse.json(
         { error: 'Hai già una prenotazione per questo giorno' },
         { status: 409 }
       );
-    }    // Crea la prenotazione usando il servizio PostgreSQL
-    const newBooking = await DatabaseService.createBooking(bookingData);    // Invia email di conferma al cliente (async, non blocca la risposta)
+    }// Crea la prenotazione usando il servizio PostgreSQL
+    const bookingDataWithUser = {
+      ...bookingData,
+      userId: session.user.id // Associa la prenotazione all'utente loggato
+    };
+    const newBooking = await DatabaseService.createBooking(bookingDataWithUser);// Invia email di conferma al cliente (async, non blocca la risposta)
     EmailService.sendBookingConfirmation({
       customerName: newBooking.customerName,
       customerEmail: newBooking.customerEmail,

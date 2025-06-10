@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSession, signOut } from 'next-auth/react';
 import BookingButton from './BookingButton';
 import RotatingPhrases from './RotatingPhrases';
 import { 
@@ -16,7 +17,9 @@ import {
   NewspaperIcon,
   MapPinIcon,
   StarIcon,
-  PhoneIcon
+  PhoneIcon,
+  UserIcon,
+  ArrowRightStartOnRectangleIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
@@ -31,7 +34,9 @@ const navigation = [
 ];
 
 export default function Navbar() {
+  const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   
   // Chiudi il menu mobile quando si passa al desktop
   useEffect(() => {
@@ -73,15 +78,76 @@ export default function Navbar() {
                 />
               </Link>
             </div>
-            
-            {/* Right side with booking button (desktop) and menu button */}
+              {/* Right side with booking button and user menu */}
             <div className="flex items-center space-x-3">
-              {/* Desktop booking button (visible only on desktop) */}
+              {/* Desktop booking button */}
               <div className="hidden lg:block">
                 <BookingButton className="px-4 py-2 text-sm">
                   Prenota
                 </BookingButton>
               </div>
+              
+              {/* User menu (desktop) */}
+              {session && (
+                <div className="hidden lg:block relative">
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center space-x-2 text-white hover:text-amber-400 transition-colors"
+                  >
+                    <UserIcon className="h-6 w-6" />
+                    <span className="text-sm font-medium">{session.user.name}</span>
+                  </button>
+                  
+                  {/* User dropdown menu */}
+                  <AnimatePresence>
+                    {userMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg"
+                      >
+                        <Link
+                          href="/area-personale"
+                          className="block px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          📊 Area Personale
+                        </Link>
+                        <Link
+                          href="/area-personale/profilo"
+                          className="block px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          👤 Profilo
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            signOut();
+                          }}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors"
+                        >
+                          🚪 Logout
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+              
+              {/* Login button for non-authenticated users */}
+              {!session && status !== 'loading' && (
+                <div className="hidden lg:block">
+                  <Link
+                    href="/auth/signin"
+                    className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-white hover:text-amber-400 transition-colors"
+                  >
+                    <UserIcon className="h-5 w-5" />
+                    <span>Accedi</span>
+                  </Link>
+                </div>
+              )}
               
               {/* Menu button */}
               <motion.button
@@ -161,8 +227,58 @@ export default function Navbar() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6z" />
                         </svg>
                         Lavora con noi
-                      </Link>
-                    </div>
+                      </Link>                    </div>
+
+                    {/* User menu items (mobile) */}
+                    {session && (
+                      <>
+                        <div className="border-t border-gray-700 pt-4 mt-4">
+                          <div className="px-4 py-2 text-sm font-medium text-gray-400">
+                            Ciao, {session.user.name}!
+                          </div>
+                          <Link
+                            href="/area-personale"
+                            className="flex items-center gap-3 px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <UserIcon className="h-5 w-5" />
+                            Area Personale
+                          </Link>
+                          <Link
+                            href="/area-personale/profilo"
+                            className="flex items-center gap-3 px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <UserIcon className="h-5 w-5" />
+                            Profilo
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              signOut();
+                            }}
+                            className="flex items-center gap-3 px-4 py-3 text-base font-medium text-red-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200 w-full text-left"
+                          >
+                            <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+                            Logout
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Login option for non-authenticated users */}
+                    {!session && status !== 'loading' && (
+                      <div className="border-t border-gray-700 pt-4 mt-4">
+                        <Link
+                          href="/auth/signin"
+                          className="flex items-center gap-3 px-4 py-3 text-base font-medium text-amber-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <UserIcon className="h-5 w-5" />
+                          Accedi
+                        </Link>
+                      </div>
+                    )}
                   </nav>
                 </div>
                 

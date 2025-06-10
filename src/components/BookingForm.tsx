@@ -6,23 +6,27 @@ import Image from 'next/image';
 import { Service, Barber, BookingFormData } from '../types/booking';
 import { BookingService, validateBookingData } from '../services/bookingService';
 import { fabioSpecificServices, micheleSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
+import { Session } from 'next-auth';
 
 const steps = ['Barbiere', 'Servizi', 'Data e Ora', 'Dati Personali', 'Conferma'];
 
-export default function BookingForm() {
+interface BookingFormProps {
+  userSession: Session;
+}
+
+export default function BookingForm({ userSession }: BookingFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [allServices, setAllServices] = useState<Service[]>([]); // All services from API
   const [displayedServices, setDisplayedServices] = useState<Service[]>([]); // Services to show based on barber
-  const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [formData, setFormData] = useState<BookingFormData>({
+  const [barbers, setBarbers] = useState<Barber[]>([]);  const [formData, setFormData] = useState<BookingFormData>({
     selectedBarber: null,
     selectedServices: [],
     selectedDate: '',
     selectedTime: '',
     customerInfo: {
-      name: '',
-      email: '',
-      phone: '',
+      name: userSession.user.name || '',
+      email: userSession.user.email || '',
+      phone: '', // Will be loaded from profile
       notes: ''
     }
   });
@@ -57,8 +61,34 @@ export default function BookingForm() {
       } catch (error) {
         console.error('Error parsing closed dates from localStorage:', error);
       }
+    }  }, []);
+
+  // Load user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/user/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({
+            ...prev,
+            customerInfo: {
+              ...prev.customerInfo,
+              name: data.profile.name || userSession.user.name || '',
+              email: data.profile.email || userSession.user.email || '',
+              phone: data.profile.phone || '',
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    if (userSession?.user?.id) {
+      fetchUserProfile();
     }
-  }, []);
+  }, [userSession]);
 
   // Load services and barbers from API
   useEffect(() => {
@@ -337,7 +367,6 @@ export default function BookingForm() {
       setLoading(false);
     }
   };
-
   // Check if current step is valid
   const isStepValid = (step: number) => {
     switch (step) {
@@ -348,7 +377,9 @@ export default function BookingForm() {
       case 3:
         return formData.selectedDate && formData.selectedTime;
       case 4:
-        return formData.customerInfo.name && formData.customerInfo.email && formData.customerInfo.phone;
+        // Step 4 now only requires that customer info is available (pre-populated from session)
+        // Notes are optional, so step 4 is always valid if we reach it
+        return formData.customerInfo.name && formData.customerInfo.email;
       default:
         return false;
     }
@@ -379,7 +410,7 @@ export default function BookingForm() {
     }
   };
 
-  const stepLabels = ['Barbiere', 'Servizi', 'Data e Ora', 'Info Cliente'];  return (
+  const stepLabels = ['Barbiere', 'Servizi', 'Data e Ora', 'Riepilogo'];  return (
     <div className="max-w-4xl mx-auto bg-black rounded-lg shadow-lg p-8 border border-gray-800">
       {/* Error Message */}
       {error && (
@@ -741,155 +772,122 @@ export default function BookingForm() {
           initial="hidden"
           animate="visible"
           className="space-y-6"
-        >
-          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-white">
-            Dati Personali e Riepilogo
+        >          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-white mb-6">
+            Riepilogo e Note Aggiuntive
           </motion.h2>
 
-          <div className="grid lg:grid-cols-2 gap-6">
-            {/* Customer Info Input Fields */}
-            <motion.div variants={fadeInUp} className="bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-700">
-              <h3 className="text-xl font-semibold mb-6 text-white flex items-center">
-                <svg className="w-6 h-6 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                I tuoi dati
-              </h3>
-              
-              <div className="space-y-5">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                    Nome Completo *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    id="name"
-                    value={formData.customerInfo.name}
-                    onChange={handleCustomerInfoChange}
-                    required
-                    placeholder="Es. Mario Rossi"
-                    className="w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-white placeholder-gray-400 bg-gray-800"
-                  />
-                </div>                
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    id="email"
-                    value={formData.customerInfo.email}
-                    onChange={handleCustomerInfoChange}
-                    required
-                    placeholder="mario.rossi@email.com"
-                    className="w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-white placeholder-gray-400 bg-gray-800"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
-                    Telefono *
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    id="phone"
-                    value={formData.customerInfo.phone}
-                    onChange={handleCustomerInfoChange}
-                    required
-                    placeholder="+39 123 456 7890"
-                    className="w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-white placeholder-gray-400 bg-gray-800"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">
-                    Note aggiuntive (opzionale)
-                  </label>
-                  <textarea
-                    name="notes"
-                    id="notes"
-                    value={formData.customerInfo.notes}
-                    onChange={handleCustomerInfoChange}
-                    rows={3}
-                    placeholder="Eventuali richieste speciali o note..."
-                    className="w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-white placeholder-gray-400 resize-none bg-gray-800"
-                  ></textarea>
-                </div>
-              </div>
-            </motion.div>            {/* Booking Summary */}
-            <motion.div variants={fadeInUp} className="bg-gradient-to-br from-gray-900 to-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-              <h3 className="text-xl font-semibold mb-6 text-white flex items-center">
-                <svg className="w-6 h-6 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                Riepilogo Prenotazione
-              </h3>
-              
+          {/* Booking Summary */}
+          <motion.div variants={fadeInUp} className="bg-gradient-to-r from-gray-800 to-gray-900 p-6 rounded-lg border border-gray-700">
+            <h3 className="text-xl font-semibold text-yellow-400 mb-4 flex items-center">
+              📋 Resoconto della Prenotazione
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column - Service Details */}
               <div className="space-y-4">
-                <div className="flex items-center p-3 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
-                  <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <div>
-                    <p className="text-sm text-gray-400">Barbiere</p>
-                    <p className="font-semibold text-white">{formData.selectedBarber?.name}</p>
-                  </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-300 mb-1">👨‍💼 Barbiere</h4>
+                  <p className="text-white font-semibold">{formData.selectedBarber?.name}</p>
                 </div>
-
-                <div className="p-3 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
-                  <div className="flex items-center mb-2">
-                    <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8" />
-                    </svg>
-                    <p className="text-sm text-gray-400">Servizi</p>
-                  </div>
-                  <ul className="space-y-1 ml-8">
-                    {formData.selectedServices.map(s => (
-                      <li key={s.id} className="text-sm text-white flex justify-between">
-                        <span>{s.name}</span>
-                        <span className="font-medium">€{s.price}</span>
-                      </li>
+                
+                <div>
+                  <h4 className="text-sm font-medium text-gray-300 mb-1">✂️ Servizi Selezionati</h4>
+                  <div className="space-y-2">
+                    {formData.selectedServices.map((service, index) => (
+                      <div key={service.id} className="flex justify-between items-center bg-gray-800/50 p-2 rounded">
+                        <span className="text-white">{service.name}</span>
+                        <span className="text-yellow-400 font-semibold">€{service.price}</span>
+                      </div>
                     ))}
-                  </ul>
-                </div>
-
-                <div className="flex items-center p-3 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
-                  <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <div>
-                    <p className="text-sm text-gray-400">Data e Ora</p>
-                    <p className="font-semibold text-white">{formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-700 pt-4 mt-4">
-                  <div className="flex justify-between items-center p-3 bg-yellow-400/20 rounded-lg border border-yellow-400/30">
-                    <div className="flex items-center">
-                      <svg className="w-5 h-5 mr-3 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="font-semibold text-yellow-300">Durata Totale</span>
-                    </div>
-                    <span className="font-bold text-yellow-300">{totalDuration} min</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center p-3 bg-green-400/20 rounded-lg mt-2 border border-green-400/30">
-                    <div className="flex items-center">
-                      <svg className="w-5 h-5 mr-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                      <span className="font-semibold text-green-300">Prezzo Totale</span>
-                    </div>
-                    <span className="font-bold text-green-300 text-lg">€{totalPrice}</span>
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </div>
+
+              {/* Right Column - Time & Price */}
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-300 mb-1">📅 Data e Ora</h4>
+                  <p className="text-white font-semibold">
+                    {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}
+                  </p>
+                  <p className="text-gray-400 text-sm">⏱️ Durata totale: {totalDuration} minuti</p>
+                </div>
+                
+                <div className="bg-yellow-400/10 border border-yellow-400/30 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-yellow-300 mb-1">💰 Totale</h4>
+                  <p className="text-2xl font-bold text-yellow-400">€{totalPrice}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Customer Info Display (Read-only) */}
+            <div className="mt-6 pt-4 border-t border-gray-600">
+              <h4 className="text-sm font-medium text-gray-300 mb-3">👤 Informazioni Cliente</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="bg-gray-800/30 p-3 rounded">
+                  <span className="text-gray-400">Nome:</span>
+                  <p className="text-white font-medium">{formData.customerInfo.name}</p>
+                </div>
+                <div className="bg-gray-800/30 p-3 rounded">
+                  <span className="text-gray-400">Email:</span>
+                  <p className="text-white font-medium">{formData.customerInfo.email}</p>
+                </div>
+                <div className="bg-gray-800/30 p-3 rounded">
+                  <span className="text-gray-400">Telefono:</span>
+                  <p className="text-white font-medium">{formData.customerInfo.phone || 'Da aggiungere'}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Benefits of your booking */}
+          <motion.div variants={fadeInUp} className="bg-gradient-to-r from-yellow-900/20 to-amber-900/20 p-4 rounded-lg border border-yellow-600/30">
+            <h4 className="text-yellow-300 font-semibold mb-3 flex items-center">
+              ✨ Con la tua prenotazione riceverai:
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center space-x-2">
+                <span className="text-green-400">✓</span>
+                <span className="text-gray-300">Conferma immediata via email</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-green-400">✓</span>
+                <span className="text-gray-300">Promemoria 24h prima</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-green-400">✓</span>
+                <span className="text-gray-300">Possibilità di modifica/cancellazione</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-green-400">✓</span>
+                <span className="text-gray-300">Servizio professionale garantito</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Notes Section - Only editable field */}
+          <motion.div variants={fadeInUp} className="space-y-4">
+            <div>
+              <label htmlFor="notes" className="block text-lg font-medium text-white mb-2">
+                📝 Note Aggiuntive (Opzionale)
+              </label>
+              <p className="text-sm text-gray-400 mb-4">
+                💡 <strong>Suggerimenti:</strong> Specifica allergie, preferenze di stile, richieste particolari o qualsiasi informazione utile per il barbiere.
+              </p>
+              <textarea
+                name="notes"
+                id="notes"
+                value={formData.customerInfo.notes}
+                onChange={handleCustomerInfoChange}
+                rows={4}
+                placeholder="Es. Preferisco un taglio più conservativo, allergia ai prodotti con profumo forte, taglio come la volta scorsa..."
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-white placeholder-gray-400 bg-gray-800 resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Le note aiutano il barbiere a personalizzare il servizio secondo le tue esigenze
+              </p>
+            </div>
+          </motion.div>
         </motion.div>
       )}
 
@@ -906,14 +904,29 @@ export default function BookingForm() {
           </motion.div>
           <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-green-600">
             Prenotazione Confermata!
-          </motion.h2>
-          <motion.div variants={fadeInUp} className="bg-gray-50 p-6 rounded-lg shadow text-left space-y-2">
+          </motion.h2>          <motion.div variants={fadeInUp} className="bg-gray-50 p-6 rounded-lg shadow text-left space-y-2">
             <p><strong>ID Prenotazione:</strong> {bookingResponse.id || bookingResponse.booking?.id}</p>
             <p><strong>Barbiere:</strong> {formData.selectedBarber?.name}</p>
             <p><strong>Servizi:</strong> {formData.selectedServices.map(s => s.name).join(', ')}</p>
             <p><strong>Data:</strong> {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
             <p><strong>Cliente:</strong> {formData.customerInfo.name}</p>
-            <p>Grazie per aver prenotato con Maskio Barber!</p>
+            
+            {/* Resoconto finale */}
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="font-semibold text-green-800 mb-2">🎉 Resoconto della prenotazione</h4>
+              <div className="text-sm text-green-700 space-y-1">
+                <p>✅ <strong>Prenotazione confermata</strong> nel nostro sistema</p>
+                <p>📧 <strong>Email di conferma inviata</strong> (se disponibile)</p>
+                <p>📱 <strong>Promemoria automatico</strong> 24h prima dell'appuntamento</p>
+                <p>🏪 <strong>Ti aspettiamo</strong> presso Maskio Barber</p>
+                {formData.customerInfo.notes && (
+                  <p>📝 <strong>Le tue note speciali</strong> sono state salvate per il barbiere</p>
+                )}
+                <p className="mt-2 font-medium">💡 <em>In caso di imprevisti, contattaci almeno 2 ore prima dell'appuntamento</em></p>
+              </div>
+            </div>
+            
+            <p className="mt-4 font-medium text-gray-700">Grazie per aver scelto Maskio Barber! 🙏</p>
           </motion.div>
 
           <motion.div variants={fadeInUp} className="mt-8 text-center">

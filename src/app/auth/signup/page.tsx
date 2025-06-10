@@ -17,13 +17,46 @@ export default function SignUp() {
     password: '',
     confirmPassword: ''
   });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // Validation
+    // Client-side validation
+    if (!formData.name || formData.name.trim().length < 2) {
+      setError('Il nome deve essere di almeno 2 caratteri');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.email || formData.email.trim().length === 0) {
+      setError('L\'email è obbligatoria');
+      setLoading(false);
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Formato email non valido');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.phone || formData.phone.trim().length === 0) {
+      setError('Il numero di telefono è obbligatorio');
+      setLoading(false);
+      return;
+    }
+
+    // Phone format validation
+    const phoneRegex = /^[\+]?[\d\s\-\(\)]{10,}$/;
+    if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
+      setError('Formato numero di telefono non valido (minimo 10 cifre)');
+      setLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Le password non corrispondono');
       setLoading(false);
@@ -115,12 +148,13 @@ export default function SignUp() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-              Nome completo
+              Nome completo <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
               id="name"
               required
+              minLength={2}
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder-gray-400"
@@ -130,7 +164,7 @@ export default function SignUp() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              Email
+              Email <span className="text-red-400">*</span>
             </label>
             <input
               type="email"
@@ -145,22 +179,24 @@ export default function SignUp() {
 
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
-              Telefono
+              Numero di telefono <span className="text-red-400">*</span>
             </label>
             <input
               type="tel"
               id="phone"
               required
+              minLength={10}
               value={formData.phone}
               onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
               className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder-gray-400"
               placeholder="+39 123 456 7890"
             />
+            <p className="text-xs text-gray-400 mt-1">Inserisci un numero valido (minimo 10 cifre)</p>
           </div>
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Password
+              Password <span className="text-red-400">*</span>
             </label>
             <input
               type="password"

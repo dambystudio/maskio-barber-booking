@@ -10,13 +10,13 @@ interface RateLimitConfig {
 
 const defaultConfig: RateLimitConfig = {
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 100 // requests per window
+  maxRequests: process.env.NODE_ENV === 'development' ? 1000 : 100 // Much higher in dev
 };
 
 const apiLimits: Record<string, RateLimitConfig> = {
-  '/api/bookings': { windowMs: 60 * 1000, maxRequests: 10 }, // 10 per minute
-  '/api/bookings/slots': { windowMs: 60 * 1000, maxRequests: 20 },
-  '/api/contact': { windowMs: 60 * 1000, maxRequests: 5 }
+  '/api/bookings': { windowMs: 60 * 1000, maxRequests: process.env.NODE_ENV === 'development' ? 100 : 10 },
+  '/api/bookings/slots': { windowMs: 60 * 1000, maxRequests: process.env.NODE_ENV === 'development' ? 200 : 20 },
+  '/api/contact': { windowMs: 60 * 1000, maxRequests: process.env.NODE_ENV === 'development' ? 50 : 5 }
 };
 
 function getClientIP(request: NextRequest): string {
@@ -137,33 +137,38 @@ export function middleware(request: NextRequest) {
 
   const ip = getClientIP(request);
   
-  // Detect suspicious activity
-  if (detectSuspiciousActivity(request)) {
-    return new NextResponse('Access Denied', { status: 403 });
-  }
+  // Skip rate limiting for localhost/development
+  const isLocalhost = ip === 'unknown' || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.') || process.env.NODE_ENV === 'development';
   
-  // Apply rate limiting for API routes
-  if (pathname.startsWith('/api/')) {
-    if (isRateLimited(ip, pathname)) {
-      return new NextResponse(
-        JSON.stringify({ 
-          error: 'Too many requests',
-          retryAfter: '60 seconds'
-        }),
-        { 
-          status: 429,
-          headers: {
-            'Content-Type': 'application/json',
-            'Retry-After': '60'
-          }
-        }
-      );
+  if (!isLocalhost) {
+    // Detect suspicious activity
+    if (detectSuspiciousActivity(request)) {
+      return new NextResponse('Access Denied', { status: 403 });
     }
-  }
-  
-  // Apply general rate limiting
-  if (isRateLimited(ip, 'general')) {
-    return new NextResponse('Too Many Requests', { status: 429 });
+    
+    // Apply rate limiting for API routes
+    if (pathname.startsWith('/api/')) {
+      if (isRateLimited(ip, pathname)) {
+        return new NextResponse(
+          JSON.stringify({ 
+            error: 'Too many requests',
+            retryAfter: '60 seconds'
+          }),
+          { 
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': '60'
+            }
+          }
+        );
+      }
+    }
+    
+    // Apply general rate limiting
+    if (isRateLimited(ip, 'general')) {
+      return new NextResponse('Too Many Requests', { status: 429 });
+    }
   }
   
   const response = NextResponse.next();
