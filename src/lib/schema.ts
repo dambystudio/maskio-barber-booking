@@ -2,8 +2,7 @@
 import { pgTable, varchar, text, timestamp, integer, decimal, boolean, uuid, primaryKey } from 'drizzle-orm/pg-core';
 
 // Users Table
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
+export const users = pgTable('users', {  id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   name: varchar('name', { length: 255 }).notNull(),
   role: varchar('role', { length: 20 }).notNull().default('customer'), // 'customer' | 'admin' | 'barber'

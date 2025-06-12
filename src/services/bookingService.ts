@@ -2,11 +2,12 @@ import { Booking, TimeSlot } from '../types/booking';
 
 const API_BASE = '/api/bookings';
 
-export class BookingService {
-  // Ottieni tutte le prenotazioni
+export class BookingService {  // Ottieni tutte le prenotazioni
   static async getBookings(): Promise<Booking[]> {
     try {
-      const response = await fetch(API_BASE);
+      const response = await fetch(API_BASE, {
+        credentials: 'include' // Include cookies for authentication
+      });
       if (!response.ok) {
         throw new Error('Errore nel caricamento delle prenotazioni');
       }
@@ -15,35 +16,44 @@ export class BookingService {
       console.error('Errore nel caricamento delle prenotazioni:', error);
       throw error;
     }
-  }
-
-  // Crea una nuova prenotazione
+  }  // Crea una nuova prenotazione
   static async createBooking(bookingData: Omit<Booking, 'id' | 'createdAt'>): Promise<Booking> {
     try {
+      console.log('📤 BookingService.createBooking called with:', bookingData);
+      console.log('🌐 Making request to:', API_BASE);
+      
       const response = await fetch(API_BASE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify(bookingData),
       });
 
+      console.log('📥 API Response status:', response.status);
+      console.log('📥 API Response ok:', response.ok);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('❌ API Error data:', errorData);
         throw new Error(errorData.error || 'Errore nella creazione della prenotazione');
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('✅ API Success data:', result);
+      return result;
     } catch (error) {
-      console.error('Errore nella creazione della prenotazione:', error);
+      console.error('💥 BookingService.createBooking error:', error);
       throw error;
     }
-  }
-  // Ottieni slot disponibili per una data e barbiere
+  }// Ottieni slot disponibili per una data e barbiere
   static async getAvailableSlots(date: string, barberId: string): Promise<TimeSlot[]> {
     try {
       const params = new URLSearchParams({ date, barberId });
-      const response = await fetch(`${API_BASE}/slots?${params}`);
+      const response = await fetch(`${API_BASE}/slots?${params}`, {
+        credentials: 'include' // Include cookies for authentication
+      });
       
       if (!response.ok) {
         throw new Error('Errore nel caricamento degli slot disponibili');

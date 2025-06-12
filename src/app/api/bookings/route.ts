@@ -3,7 +3,8 @@ import { DatabaseService } from '@/lib/database-postgres';
 import { EmailService } from '@/lib/email';
 import { Booking } from '@/lib/schema';
 import { randomUUID } from 'crypto';
-import { auth } from '@/lib/auth';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]/route';
 
 // Rate limiting per IP
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -82,10 +83,9 @@ export async function GET(request: NextRequest) {  try {
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
+export async function POST(request: NextRequest) {  try {
     // Check authentication
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Devi essere loggato per effettuare una prenotazione' },
@@ -100,7 +100,8 @@ export async function POST(request: NextRequest) {
         { error: 'Troppi tentativi. Riprova tra qualche minuto.' },
         { status: 429 }
       );
-    }const requestData = await request.json();
+    }    const requestData = await request.json();
+    console.log('📥 Booking API received data:', JSON.stringify(requestData, null, 2));
     
     // Fetch services data if we have service IDs
     let servicesData: any[] = [];

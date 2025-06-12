@@ -141,32 +141,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async signIn({ user, account, profile }) {
       return true
-    },
-    async session({ session, token }) {
+    },    async session({ session, token }) {
       if (session.user?.email) {
         try {
           const dbUser = await db
             .select()
             .from(users)
             .where(eq(users.email, session.user.email))
-            .limit(1)
-            
+            .limit(1);
+          
           if (dbUser[0]) {
-            session.user.id = dbUser[0].id
-            session.user.role = dbUser[0].role as 'customer' | 'admin' | 'barber'
-            session.user.name = dbUser[0].name
-            session.user.image = dbUser[0].image || undefined
+            (session.user as any).id = String(dbUser[0].id);
+            (session.user as any).role = dbUser[0].role as 'customer' | 'admin' | 'barber';
+            session.user.name = dbUser[0].name || '';
+            session.user.image = dbUser[0].image ? `${dbUser[0].image}` : undefined;
           }
         } catch (error) {
-          console.error('Error fetching user session:', error)
+          console.error('Error fetching user session:', error);
         }
       }
       return session
     },
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
-        token.id = user.id
+        (token as any).role = (user as any).role
+        (token as any).id = user.id
       }
       return token
     }
@@ -174,7 +173,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: '/auth/signin',
     error: '/auth/error',
-  },  session: {
+  },
+  session: {
     strategy: 'jwt'
   },
   secret: process.env.NEXTAUTH_SECRET,

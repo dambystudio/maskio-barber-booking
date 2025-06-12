@@ -2,8 +2,9 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 interface UserProfile {
   id: string;
@@ -16,62 +17,62 @@ interface UserProfile {
 export default function ProfiloUtente() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  useEffect(() => {
-    if (status === 'loading') return;
-    if (!session) {
-      router.push('/auth/signin?callbackUrl=' + encodeURIComponent('/area-personale/profilo'));
-      return;
-    }
-    
-    // Fetch complete profile data from database
-    fetchProfileData();
-  }, [session, status, router]);
 
-  const fetchProfileData = async () => {
+  const fetchProfileData = useCallback(async () => {
+    if (!session) return; // Guard clause for session
+    
     try {
-      setLoading(true);
+      setLoading(true);      
       const response = await fetch('/api/user/profile');
       if (response.ok) {
         const data = await response.json();
+        console.log('Profile data from API:', data); // Debug log
         setProfile({
           id: data.profile.id,
           name: data.profile.name,
           email: data.profile.email,
           phone: data.profile.phone || '',
           image: data.profile.image || ''
-        });      } else {
+        });
+      } else {
+        console.error('Error fetching profile:', response.status, response.statusText);
         // Fallback to session data
-        if (session?.user) {
-          setProfile({
-            id: session.user.id,
-            name: session.user.name,
-            email: session.user.email,
-            phone: '', // We'll need to fetch this from the database
-            image: session.user.image || ''
-          });
-        }
+        setProfile({
+          id: session!.user.id,
+          name: session!.user.name,
+          email: session!.user.email,
+          phone: '', // We'll need to fetch this from the database
+          image: session!.user.image || ''
+        });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
       // Fallback to session data
-      if (session?.user) {
-        setProfile({
-          id: session.user.id,
-          name: session.user.name,
-          email: session.user.email,
-          phone: '',
-          image: session.user.image || ''
-        });
-      }
+      setProfile({
+        id: session!.user.id,
+        name: session!.user.name,
+        email: session!.user.email,
+        phone: '',
+        image: session!.user.image || ''
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
+
+  useEffect(() => {
+    if (status === 'loading') return;
+    if (!session) {
+      router.push('/auth/signin?callbackUrl=' + encodeURIComponent('/area-personale/profilo'));
+      return;
+    }
+    // Fetch complete profile data from database
+    fetchProfileData();
+  }, [session, status, router, fetchProfileData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,15 +82,13 @@ export default function ProfiloUtente() {
     setError(null);
     setSuccess(false);
 
-    try {
-      const response = await fetch('/api/user/profile', {
+    try {      const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: profile.name,
-          phone: profile.phone,
         }),
       });
 
@@ -155,11 +154,10 @@ export default function ProfiloUtente() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Avatar */}
-            <div className="flex justify-center mb-8">
+            {/* Avatar */}            <div className="flex justify-center mb-8">
               <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center text-3xl text-white">
                 {profile.image ? (
-                  <img src={profile.image} alt="Avatar" className="w-24 h-24 rounded-full object-cover" />
+                  <Image src={profile.image} alt="Avatar" width={96} height={96} className="w-24 h-24 rounded-full object-cover" />
                 ) : (
                   profile.name.charAt(0).toUpperCase()
                 )}
@@ -180,9 +178,7 @@ export default function ProfiloUtente() {
                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 placeholder="Il tuo nome completo"
               />
-            </div>
-
-            {/* Email (readonly) */}
+            </div>            {/* Email (readonly) */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                 Email
@@ -196,9 +192,7 @@ export default function ProfiloUtente() {
                 placeholder="La tua email"
               />
               <p className="text-sm text-gray-400 mt-1">L'email non può essere modificata</p>
-            </div>
-
-            {/* Phone */}
+            </div>            {/* Phone (readonly) */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
                 Numero di Telefono
@@ -206,11 +200,12 @@ export default function ProfiloUtente() {
               <input
                 type="tel"
                 id="phone"
-                value={profile.phone || ''}
-                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="+39 123 456 7890"
+                value={profile.phone || 'Non specificato'}
+                readOnly
+                className="w-full px-4 py-3 bg-gray-600 border border-gray-600 rounded-lg text-gray-300 cursor-not-allowed"
+                placeholder="Numero di telefono"
               />
+              <p className="text-sm text-gray-400 mt-1">Il numero di telefono non può essere modificato</p>
             </div>
 
             {/* Account Info */}

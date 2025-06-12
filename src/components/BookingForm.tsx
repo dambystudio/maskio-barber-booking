@@ -338,7 +338,6 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   // Calculate total duration and price
   const totalDuration = formData.selectedServices.reduce((total, service) => total + service.duration, 0);
   const totalPrice = formData.selectedServices.reduce((total, service) => total + service.price, 0);
-
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -346,22 +345,45 @@ export default function BookingForm({ userSession }: BookingFormProps) {
 
     setLoading(true);
     setError(null);
-    setBookingResponse(null);    try {      const bookingPayload = {
+    setBookingResponse(null);
+
+    try {
+      // Verifica che l'utente abbia un ID valido
+      console.log('🔍 User session debug:', userSession);
+      console.log('🔍 User ID from session:', (userSession.user as any)?.id);
+      
+      const userId = (userSession.user as any)?.id;
+      if (!userId) {
+        throw new Error('Sessione utente non valida. Prova a fare logout e login di nuovo.');
+      }
+
+      // Verifica che il telefono sia presente
+      if (!formData.customerInfo.phone || formData.customerInfo.phone.trim().length === 0) {
+        throw new Error('Il numero di telefono è obbligatorio per le prenotazioni. Aggiorna il tuo profilo.');
+      }      const bookingPayload = {
+        userId: userId,
         barberId: formData.selectedBarber!.id,
-        serviceIds: formData.selectedServices.map(s => s.id),
-        services: formData.selectedServices, // Add the services array
+        serviceIds: formData.selectedServices.map(s => s.id), // Keep for API compatibility
+        services: formData.selectedServices, // Add for type compatibility
+        duration: totalDuration, // Add for type compatibility
+        customerInfo: formData.customerInfo,
         date: formData.selectedDate,
         time: formData.selectedTime,
-        customerInfo: formData.customerInfo,
         totalPrice: totalPrice,
-        duration: totalDuration, // Use totalDuration for the main duration property
-        totalDuration: totalDuration // Keep this if it's used elsewhere, or remove if redundant
+        totalDuration: totalDuration
       };
       
+      console.log('🚀 Booking payload being sent:', JSON.stringify(bookingPayload, null, 2));
+      console.log('📋 About to call BookingService.createBooking...');
+      
       const response = await BookingService.createBooking(bookingPayload);
+      console.log('✅ BookingService.createBooking completed successfully');
+      console.log('📥 Booking response:', response);
+      
       setBookingResponse(response); // Store full response
       setCurrentStep(5); // Move to confirmation step
     } catch (err: any) {
+      console.error('💥 Error in handleSubmit:', err);
       setError(err.message || 'Errore durante la creazione della prenotazione.');
     } finally {
       setLoading(false);

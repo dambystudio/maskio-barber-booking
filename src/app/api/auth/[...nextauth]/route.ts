@@ -1,12 +1,17 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import { db } from '@/lib/database-postgres';
 import { users } from '@/lib/schema';
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 
-const handler = NextAuth({
+const authOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -117,12 +122,66 @@ const handler = NextAuth({
         }
       }
     })
-  ],
-  callbacks: {
-    async signIn({ user, account, profile }) {
+  ],  callbacks: {
+    async signIn({ user, account, profile }: { user: any; account: any; profile?: any }) {
+      // Handle Google OAuth users
+      if (account?.provider === 'google' && user.email) {
+        try {
+          // Check if user already exists
+          const existingUser = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, user.email))
+            .limit(1);          if (existingUser.length === 0) {
+            // Create new user for Google OAuth (without phone initially)
+            await db
+              .insert(users)
+              .values({
+                email: user.email,
+                name: user.name || 'Google User',
+                role: 'customer',
+                image: user.image,
+                emailVerified: new Date(), // Google accounts are pre-verified
+                password: null, // No password for OAuth users
+                phone: null, // Will be requested in modal
+              });
+          } else {
+            // Update existing user with Google info if needed
+            await db
+              .update(users)
+              .set({
+                image: user.image,
+                emailVerified: new Date(), // Ensure email is verified
+                lastLogin: new Date(),
+              })
+              .where(eq(users.email, user.email));
+          }
+        } catch (error) {
+          console.error('Error handling Google sign in:', error);
+          return false;
+        }      }
       return true;
-    },
-    async session({ session, token }) {
+    },    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      // Always redirect to home page after sign in/sign up
+      // Unless there's a specific callbackUrl that should be honored
+      
+      console.log('🔗 NextAuth redirect called:', { url, baseUrl });
+      
+      // If it's a sign out, allow the default behavior
+      if (url.includes('/auth/signout')) {
+        return `${baseUrl}/`;
+      }
+      
+      // If there's a valid callback URL that's not auth-related, use it
+      if (url.startsWith(baseUrl) && !url.includes('/auth/')) {
+        console.log('✅ Using callback URL:', url);
+        return url;
+      }
+      
+      // Default: redirect to home page
+      console.log('🏠 Redirecting to home page');
+      return `${baseUrl}/`;
+    },    async session({ session, token }: { session: any; token: any }) {
       if (session.user?.email) {
         try {
           const dbUser = await db
@@ -130,10 +189,10 @@ const handler = NextAuth({
             .from(users)
             .where(eq(users.email, session.user.email))
             .limit(1);
-            
-          if (dbUser[0]) {
+              if (dbUser[0]) {
             (session.user as any).id = dbUser[0].id;
             (session.user as any).role = dbUser[0].role as 'customer' | 'admin' | 'barber';
+            (session.user as any).needsPhone = !dbUser[0].phone; // Flag per telefono mancante
             session.user.name = dbUser[0].name;
             session.user.image = dbUser[0].image || undefined;
           }
@@ -142,8 +201,7 @@ const handler = NextAuth({
         }
       }
       return session;
-    },
-    async jwt({ token, user }) {
+    },    async jwt({ token, user }: { token: any; user?: any }) {
       if (user) {
         (token as any).role = (user as any).role;
         (token as any).id = user.id;
@@ -154,14 +212,13 @@ const handler = NextAuth({
   pages: {
     signIn: '/auth/signin',
     error: '/auth/error',
-  },
-  session: {
-    strategy: 'jwt'
+  },  session: {
+    strategy: 'jwt' as const
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
-});
+};
 
-export { handler as GET, handler as POST };
+const handler = NextAuth(authOptions);
 
-export const runtime = 'nodejs';
+export { handler as GET, handler as POST, authOptions };

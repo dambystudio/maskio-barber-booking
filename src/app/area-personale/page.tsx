@@ -2,11 +2,13 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import Link from 'next/link';
+import PhoneRequiredModal from '@/components/PhoneRequiredModal';
+import { usePhoneRequired } from '@/hooks/usePhoneRequired';
 
 interface UserBooking {
   id: string;
@@ -27,19 +29,10 @@ export default function AreaPersonale() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+    // Hook per gestire il telefono richiesto
+  const { showPhoneModal, handlePhoneComplete, userEmail, userName } = usePhoneRequired();
 
-  useEffect(() => {
-    if (status === 'loading') return;
-    if (!session) {
-      router.push('/auth/signin?callbackUrl=' + encodeURIComponent('/area-personale'));
-      return;
-    }
-    
-    fetchUserBookings();
-    fetchUserProfile();
-  }, [session, status, router]);
-
-  const fetchUserBookings = async () => {
+  const fetchUserBookings = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/bookings?userId=${session?.user?.id}`);
@@ -53,9 +46,9 @@ export default function AreaPersonale() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session?.user?.id]);
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       const response = await fetch('/api/user/profile');
       if (response.ok) {
@@ -65,7 +58,17 @@ export default function AreaPersonale() {
     } catch (err) {
       console.error('Error fetching user profile:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (status === 'loading') return;
+    if (!session) {
+      router.push('/auth/signin?callbackUrl=' + encodeURIComponent('/area-personale'));
+      return;    }
+    
+    fetchUserBookings();
+    fetchUserProfile();
+  }, [session, status, router, fetchUserBookings, fetchUserProfile]);
 
   const handleCancelBooking = async (bookingId: string) => {
     if (!confirm('Sei sicuro di voler cancellare questa prenotazione?')) return;
@@ -241,12 +244,11 @@ export default function AreaPersonale() {
           className="bg-gray-800 border border-gray-700 rounded-xl p-6 mb-12"
         >
           <h2 className="text-2xl font-bold text-white mb-4">Informazioni Profilo</h2>
-          {userProfile ? (
-            <div className="text-gray-300 space-y-2">
+          {userProfile ? (            <div className="text-gray-300 space-y-2">
               <p><span className="font-semibold">Nome:</span> {userProfile.name}</p>
               <p><span className="font-semibold">Email:</span> {userProfile.email}</p>
               <p><span className="font-semibold">Telefono:</span> {userProfile.phone || 'Non fornito'}</p>
-              <p><span className="font-semibold">Data di registrazione:</span> {format(parseISO(userProfile.created_at), 'dd MMMM yyyy', { locale: it })}</p>
+              <p><span className="font-semibold">Data di registrazione:</span> {userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'dd MMMM yyyy', { locale: it }) : 'N/A'}</p>
             </div>
           ) : (
             <p className="text-gray-400">Caricamento informazioni profilo...</p>
@@ -277,10 +279,9 @@ export default function AreaPersonale() {
                 <div key={booking.id} className="bg-gray-800 border border-gray-700 rounded-xl p-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex-1 mb-4 md:mb-0">
-                      <h3 className="text-xl font-bold text-white mb-2">{booking.service_name}</h3>
-                      <div className="text-gray-300 space-y-1">
+                      <h3 className="text-xl font-bold text-white mb-2">{booking.service_name}</h3>                      <div className="text-gray-300 space-y-1">
                         <p>👨‍💼 Barbiere: {booking.barber_name}</p>
-                        <p>📅 Data: {format(parseISO(booking.booking_date), 'EEEE d MMMM yyyy', { locale: it })}</p>
+                        <p>📅 Data: {booking.booking_date ? format(parseISO(booking.booking_date), 'EEEE d MMMM yyyy', { locale: it }) : 'Data non disponibile'}</p>
                         <p>🕐 Ora: {booking.booking_time}</p>
                         {booking.notes && <p>📝 Note: {booking.notes}</p>}
                       </div>
@@ -322,10 +323,9 @@ export default function AreaPersonale() {
                 <div key={booking.id} className="bg-gray-900 border border-gray-700 rounded-xl p-6 opacity-75">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white mb-2">{booking.service_name}</h3>
-                      <div className="text-gray-400 space-y-1">
+                      <h3 className="text-lg font-bold text-white mb-2">{booking.service_name}</h3>                      <div className="text-gray-400 space-y-1">
                         <p>👨‍💼 Barbiere: {booking.barber_name}</p>
-                        <p>📅 Data: {format(parseISO(booking.booking_date), 'EEEE d MMMM yyyy', { locale: it })}</p>
+                        <p>📅 Data: {booking.booking_date ? format(parseISO(booking.booking_date), 'EEEE d MMMM yyyy', { locale: it }) : 'Data non disponibile'}</p>
                         <p>🕐 Ora: {booking.booking_time}</p>
                       </div>
                     </div>
@@ -344,9 +344,16 @@ export default function AreaPersonale() {
                 </Link>
               )}
             </div>
-          )}
-        </motion.div>
+          )}        </motion.div>
       </div>
+      
+      {/* Modal per richiesta telefono */}
+      <PhoneRequiredModal
+        isOpen={showPhoneModal}
+        userEmail={userEmail}
+        userName={userName}
+        onComplete={handlePhoneComplete}
+      />
     </div>
   );
 }

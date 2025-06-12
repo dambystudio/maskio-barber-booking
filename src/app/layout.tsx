@@ -72,13 +72,8 @@ export default function RootLayout({
 }>) {  return (
     <html lang="it">      
     <head>
-        <link rel="preload" as="image" href="/sediaOro.jpg" />
-        <link rel="preload" as="image" href="/LogoSimboloNome_BiancoOrizzontale_BUONO.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-      </head>      
+        <link rel="preload" as="image" href="/sediaOro.jpg" />        <link rel="preload" as="image" href="/LogoSimboloNome_BiancoOrizzontale_BUONO.png" />
+      </head>
       <body className={inter.className}>
         <SessionProvider>
           <SecurityProvider>

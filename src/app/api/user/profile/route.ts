@@ -1,21 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getServerSession } from 'next-auth/next';
 import { db } from '@/lib/database-postgres';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
+// Import the authOptions from NextAuth route
+const authOptions = {
+  session: {
+    strategy: 'jwt' as const
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+};
+
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Non autorizzato' },
         { status: 401 }
       );
     }
 
-    const { name, phone } = await request.json();
+    // Get user ID from database using email
+    const dbUser = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, session.user.email))
+      .limit(1);
+
+    if (!dbUser[0]) {
+      return NextResponse.json(
+        { error: 'Utente non trovato' },
+        { status: 404 }
+      );
+    }
+
+    const { name } = await request.json();
 
     if (!name || name.trim().length === 0) {
       return NextResponse.json(
@@ -29,9 +51,8 @@ export async function PUT(request: NextRequest) {
       .update(users)
       .set({
         name: name.trim(),
-        phone: phone?.trim() || null,
       })
-      .where(eq(users.id, session.user.id));
+      .where(eq(users.id, dbUser[0].id));
 
     return NextResponse.json({
       success: true,
@@ -49,9 +70,9 @@ export async function PUT(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Non autorizzato' },
         { status: 401 }
@@ -71,7 +92,7 @@ export async function GET(request: NextRequest) {
         lastLogin: users.lastLogin,
       })
       .from(users)
-      .where(eq(users.id, session.user.id))
+      .where(eq(users.email, session.user.email))
       .limit(1);
 
     if (userProfile.length === 0) {
