@@ -44,27 +44,30 @@ export default function ProfiloUtente() {
           email: data.profile.email,
           phone: data.profile.phone || '',
           image: data.profile.image || ''
-        });
-      } else {
+        });      } else {
         // Fallback to session data
-        setProfile({
-          id: session.user.id,
-          name: session.user.name,
-          email: session.user.email,
-          phone: '', // We'll need to fetch this from the database
-          image: session.user.image || ''
-        });
+        if (session?.user) {
+          setProfile({
+            id: session.user.id,
+            name: session.user.name,
+            email: session.user.email,
+            phone: '', // We'll need to fetch this from the database
+            image: session.user.image || ''
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
       // Fallback to session data
-      setProfile({
-        id: session.user.id,
-        name: session.user.name,
-        email: session.user.email,
-        phone: '',
-        image: session.user.image || ''
-      });
+      if (session?.user) {
+        setProfile({
+          id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
+          phone: '',
+          image: session.user.image || ''
+        });
+      }
     } finally {
       setLoading(false);
     }

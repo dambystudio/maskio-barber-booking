@@ -49,6 +49,8 @@ yarn-error.log*
 *.csr
 
 # file di configurazione sensibili
+VERCEL_REAL_CREDENTIALS.env
+*.credentials.*
 config.local.js
 config.production.js
 webpack.config.local.js
