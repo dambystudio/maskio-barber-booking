@@ -134,22 +134,23 @@ export default function Page() {
                 boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
                 transition: { duration: 0.3 }
               }}
-            >
-              <div className="grid grid-cols-2 gap-4">                <motion.div
+            >              <div className="grid grid-cols-2 gap-4">
+                <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 1.0 }}
                 >
-                  <h3 className="font-medium text-white">Lunedì - Venerdì</h3>
-                  <p className="text-gray-300">09:00 - 12:30 | 15:00 - 17:30</p>
+                  <h3 className="font-medium text-white">Lunedì - Sabato</h3>
+                  <p className="text-gray-300">09:00 - 13:00</p>
+                  <p className="text-gray-300">15:00 - 18:00</p>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 1.1 }}
                 >
-                  <h3 className="font-medium text-white">Sabato</h3>
-                  <p className="text-gray-300">09:00 - 12:30</p>
+                  <h3 className="font-medium text-white">Giovedì</h3>
+                  <p className="text-red-400">Chiuso</p>
                 </motion.div>
                 <motion.div 
                   className="col-span-2"
@@ -158,7 +159,7 @@ export default function Page() {
                   transition={{ duration: 0.5, delay: 1.2 }}
                 >
                   <h3 className="font-medium text-white">Domenica</h3>
-                  <p className="text-gray-300">Chiuso</p>
+                  <p className="text-red-400">Chiuso</p>
                 </motion.div>
               </div></motion.div>
           </motion.div>

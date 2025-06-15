@@ -130,66 +130,16 @@ export default function Home() {
     }
   };  return (
     <div className="min-h-screen bg-black">      {/* Enhanced Luxury Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">        {/* Primary golden glow - reduced intensity */}        <motion.div
-          initial="hidden"
-          className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-amber-300/5 to-amber-600/4 rounded-full blur-3xl"
-          animate={{
-            y: [-15, -7, 0, 7, 15, 7, 0, -7, -15],
-            x: [-8, -4, 0, 4, 8, 4, 0, -4, -8],
-            scale: [1, 1.03, 1.05, 1.07, 1.08, 1.07, 1.05, 1.03, 1],
-            opacity: [0.5, 0.53, 0.56, 0.58, 0.6, 0.58, 0.56, 0.53, 0.5]
-          }}
-          transition={{
-            duration: 12,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatType: "loop"
-          }}
-        />
-          {/* Secondary warm accent - reduced intensity */}
-        <motion.div
-          initial="hidden"
-          className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-amber-400/4 to-orange-500/4 rounded-full blur-3xl"
-          animate={{
-            y: [12, -12, 12],
-            x: [6, -6, 6],
-            scale: [1.1, 1.02, 1.1],
-            opacity: [0.4, 0.5, 0.4]
-          }}
-          transition={{
-            duration: 15,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatType: "reverse",
-            delay: 2
-          }}
-        />
-          {/* Subtle contrast element - reduced intensity */}
-        <motion.div
-          initial="hidden"
-          className="absolute top-1/2 left-1/4 w-60 h-60 bg-gradient-to-br from-gray-500/3 to-gray-700/3 rounded-full blur-3xl"
-          animate={{
-            y: [18, -18, 18],
-            x: [-10, 10, -10],
-            scale: [0.9, 1.1, 0.9],
-            opacity: [0.3, 0.4, 0.3]
-          }}
-          transition={{
-            duration: 18,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatType: "reverse",
-            delay: 4
-          }}
-        />
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        {/* Static background elements for better performance */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-amber-300/3 to-amber-600/2 rounded-full blur-3xl opacity-60" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-amber-400/2 to-orange-500/2 rounded-full blur-3xl opacity-40" />
+        <div className="absolute top-1/2 left-1/4 w-60 h-60 bg-gradient-to-br from-gray-500/2 to-gray-700/2 rounded-full blur-3xl opacity-30" />
           {/* Soft vignette effect for depth */}
-        <div className="absolute inset-0 bg-radial-gradient pointer-events-none opacity-40"
-          style={{
+        <div className="absolute inset-0 bg-radial-gradient pointer-events-none opacity-40"          style={{
             background: "radial-gradient(circle at center, transparent 30%, black 140%)"
           }}
         />
-          {/* Subtle texture overlay */}
-        <div className="absolute inset-0 bg-[url('/subtle-pattern.png')] opacity-[0.01] mix-blend-soft-light"></div>
       </div>
 
       {/* Hero Section - Design più lussuoso */}
@@ -231,107 +181,20 @@ export default function Home() {
             }}
           />
           
-          {/* Elementi decorativi più eleganti */}
-          <div className="absolute inset-0">            {/* Pattern overlay sottile */}
-            <motion.div 
-              className="absolute inset-0 bg-[url('/subtle-pattern.png')] bg-repeat opacity-[0.04]"
-              animate={{
-                opacity: [0.04, 0.05, 0.04]
-              }}
-              transition={{
-                duration: 8,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-            />
-            
-            {/* Barber pole decorative element */}
-            <motion.div
-              className="absolute top-[25%] right-[7%] h-40 w-3 rounded-full overflow-hidden hidden md:block"
+          {/* Elementi decorativi più eleganti */}          <div className="absolute inset-0">              {/* Static decorative elements for better performance */}
+            <div className="absolute top-[25%] right-[7%] h-40 w-3 rounded-full overflow-hidden hidden md:block opacity-50"
               style={{
                 background: "repeating-linear-gradient(45deg, #ffffff33, #ffffff33 10px, #fb923c33 10px, #fb923c33 20px, #ffffff33 20px, #ffffff33 30px)"
               }}
-              animate={{
-                backgroundPosition: ["0px 0px", "0px 100px"],
-                opacity: [0.4, 0.6, 0.4]
-              }}
-              transition={{
-                backgroundPosition: {
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "linear"
-                },
-                opacity: {
-                  duration: 5,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut"
-                }
-              }}
             />
             
-            {/* Linee decorative dorate */}
-            <motion.div 
-              className="absolute top-[10%] left-[5%] w-[2px] h-32 bg-gradient-to-b from-transparent via-amber-500/40 to-transparent"
-              animate={{
-                height: [128, 160, 128],
-                opacity: [0.4, 0.6, 0.4]
-              }}
-              transition={{
-                duration: 7,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-            />
+            {/* Static decorative lines */}
+            <div className="absolute top-[10%] left-[5%] w-[2px] h-32 bg-gradient-to-b from-transparent via-amber-500/40 to-transparent opacity-50" />
+            <div className="absolute bottom-[15%] right-[8%] w-[2px] h-40 bg-gradient-to-b from-transparent via-amber-500/40 to-transparent opacity-50" />
             
-            <motion.div 
-              className="absolute bottom-[15%] right-[8%] w-[2px] h-40 bg-gradient-to-b from-transparent via-amber-500/40 to-transparent"
-              animate={{
-                height: [160, 128, 160],
-                opacity: [0.4, 0.6, 0.4]
-              }}
-              transition={{
-                duration: 8,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse",
-                delay: 1.5
-              }}
-            />
-            
-            {/* Cerchi decorativi più raffinati */}
-            <motion.div
-              className="absolute top-28 right-28 w-3 h-3 border-2 border-amber-400/40 rounded-full"
-              animate={{
-                y: [-15, 15, -15],
-                x: [-8, 8, -8],
-                opacity: [0.4, 0.7, 0.4]
-              }}
-              transition={{
-                duration: 10,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-            />
-            
-            <motion.div
-              className="absolute bottom-36 left-24 w-2 h-2 border border-amber-300/50 rounded-full"
-              animate={{
-                y: [10, -10, 10],
-                x: [5, -5, 5],
-                opacity: [0.5, 0.8, 0.5]
-              }}
-              transition={{
-                duration: 12,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse",
-                delay: 2
-              }}
-            />
+            {/* Static decorative circles */}
+            <div className="absolute top-28 right-28 w-3 h-3 border-2 border-amber-400/40 rounded-full opacity-50" />
+            <div className="absolute bottom-36 left-24 w-2 h-2 border border-amber-300/50 rounded-full opacity-60" />
               {/* SVG Decorative scissors icon */}
             <motion.div
               className="absolute top-[30%] right-[15%] text-amber-500/30 w-12 h-12"
@@ -412,109 +275,22 @@ export default function Home() {
             <motion.div
               variants={fadeInUp}
               className="flex flex-col items-center"
-            >              <motion.div 
-                className="relative"                whileHover={{ scale: 1.05 }}
-                animate={{ y: [0, -5, 0] }}
-                transition={{
-                  scale: { duration: 0.3, type: "spring", stiffness: 300 },
-                  y: {
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }
-                }}
-              >
-                {/* Multiple glowing layers for more depth */}                <motion.div
-                  className="absolute -inset-16 opacity-3 blur-[80px]"
-                  animate={{
-                    background: [
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.15) 0%, rgba(251,191,36,0.05) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.13) 0%, rgba(251,191,36,0.045) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.04) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.035) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.09) 0%, rgba(251,191,36,0.03) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.07) 0%, rgba(251,191,36,0.025) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.05) 0%, rgba(251,191,36,0.02) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.07) 0%, rgba(251,191,36,0.025) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.09) 0%, rgba(251,191,36,0.03) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.035) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.04) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.13) 0%, rgba(251,191,36,0.045) 40%, transparent 80%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.15) 0%, rgba(251,191,36,0.05) 40%, transparent 80%)"
-                    ]
-                  }}
-                  transition={{
-                    duration: 12,
-                    ease: "easeInOut", 
-                    repeat: Infinity,
-                    repeatType: "loop"
-                  }}
-                ></motion.div>                <motion.div
-                  className="absolute -inset-12 opacity-3 blur-[60px]"
-                  animate={{
-                    background: [
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.03) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.09) 0%, rgba(251,191,36,0.028) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.025) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.07) 0%, rgba(251,191,36,0.022) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.06) 0%, rgba(251,191,36,0.02) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.05) 0%, rgba(251,191,36,0.015) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.04) 0%, rgba(251,191,36,0.013) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.03) 0%, rgba(251,191,36,0.01) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.04) 0%, rgba(251,191,36,0.013) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.05) 0%, rgba(251,191,36,0.015) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.06) 0%, rgba(251,191,36,0.02) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.07) 0%, rgba(251,191,36,0.022) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.025) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.09) 0%, rgba(251,191,36,0.028) 30%, transparent 70%)",
-                      "radial-gradient(ellipse at center, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.03) 30%, transparent 70%)"
-                    ]
-                  }}
-                  transition={{
-                    duration: 10,
-                    ease: "easeInOut", 
-                    repeat: Infinity,
-                    repeatType: "loop",
-                    delay: 0.5
-                  }}
-                ></motion.div>
-                  {/* Enhanced shimmer effect - more subtle */}                <motion.div
-                  className="absolute -inset-1 rounded-full opacity-35 blur-sm"
-                  animate={{
-                    background: [
-                      "linear-gradient(45deg, rgba(251,191,36,0) 0%, rgba(251,191,36,0.3) 50%, rgba(251,191,36,0) 100%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0) 10%, rgba(251,191,36,0.25) 50%, rgba(251,191,36,0) 90%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0) 20%, rgba(251,191,36,0.2) 50%, rgba(251,191,36,0) 80%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0) 30%, rgba(251,191,36,0.15) 50%, rgba(251,191,36,0) 70%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0) 40%, rgba(251,191,36,0.1) 50%, rgba(251,191,36,0) 60%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0) 45%, rgba(251,191,36,0) 50%, rgba(251,191,36,0.1) 60%, rgba(251,191,36,0) 70%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 50%, rgba(251,191,36,0.15) 70%, rgba(251,191,36,0) 80%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0) 60%, rgba(251,191,36,0) 50%, rgba(251,191,36,0.2) 80%, rgba(251,191,36,0) 90%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0) 70%, rgba(251,191,36,0) 50%, rgba(251,191,36,0.25) 90%, rgba(251,191,36,0) 100%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0.3) 0%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 100%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0.25) 10%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 90%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0.2) 20%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 80%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0.15) 30%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 70%)",
-                      "linear-gradient(45deg, rgba(251,191,36,0.1) 40%, rgba(251,191,36,0) 50%, rgba(251,191,36,0) 60%)"
-                    ],
-                    backgroundSize: ["200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%", "200% 200%"],
-                    backgroundPosition: ["0% 0%", "10% 10%", "20% 20%", "30% 30%", "40% 40%", "50% 50%", "60% 60%", "70% 70%", "80% 80%", "90% 90%", "100% 100%", "80% 80%", "60% 60%", "40% 40%", "20% 20%", "0% 0%"]
-                  }}
-                  transition={{
-                    duration: 8,
-                    ease: "easeInOut", 
-                    repeat: Infinity,
-                    repeatType: "loop"
-                  }}
-                ></motion.div>                  <Image
+            >              <div className="relative">
+                {/* Static glow effect for better performance */}
+                <div className="absolute -inset-16 opacity-10 blur-[80px] bg-gradient-radial from-amber-400/20 via-amber-400/5 to-transparent" />
+                <div className="absolute -inset-12 opacity-15 blur-[60px] bg-gradient-radial from-amber-400/15 via-amber-400/3 to-transparent" />
+                
+                {/* Logo */}
+                <Image
                   src="/LogoSimboloNome_Bianco(1).png"
                   alt="Maskio Barber Concept"
                   width={220}
                   height={22}
                   className="mb-1 relative z-10 drop-shadow-lg"
-                  priority
-                />
-              </motion.div>                {/* Linea decorativa elegante sotto il logo - Versione migliorata */}
+                  priority                />
+              </div>
+              
+              {/* Decorative line under logo */}
               <div className="relative mt-8 flex flex-col items-center">
                 {/* Decorative ornament */}
                 <motion.div className="mb-2 opacity-80"

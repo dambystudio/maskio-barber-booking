@@ -79,10 +79,9 @@ export default function MobileBottomNav() {
       icon: UserIcon,
       iconSolid: UserIconSolid,
     },
-  ];
-  return (
-    <nav className="fixed bottom-4 left-4 right-4 z-50 bg-white/90 backdrop-blur-md border border-gray-200 rounded-2xl shadow-xl dark:bg-gray-900/90 dark:border-gray-700 standalone-only">
-      <div className="grid grid-cols-5 h-20 px-2">
+  ];  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-xl dark:bg-gray-900/90 dark:border-gray-700 standalone-only pb-6">
+      <div className="grid grid-cols-5 h-20 px-4">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const IconComponent = isActive ? item.iconSolid : item.icon;

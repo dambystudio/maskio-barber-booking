@@ -56,13 +56,11 @@ export default function ChiSiamo() {
           transition={{ duration: 1.5, delay: 0.5 }}
           className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-tr from-amber-500/5 to-amber-600/3 rounded-full blur-3xl"
         />
-        <motion.div
-          initial={{ opacity: 0 }}
+        <motion.div          initial={{ opacity: 0 }}
           animate={{ opacity: 0.15 }}
           transition={{ duration: 1.5, delay: 0.7 }}
           className="absolute bottom-1/3 left-1/5 w-80 h-80 bg-gradient-to-tl from-orange-400/5 to-amber-300/3 rounded-full blur-3xl"
         />
-        <div className="absolute inset-0 bg-[url('/subtle-pattern.png')] opacity-[0.03] mix-blend-soft-light"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black to-black/80"></div>
       </div>
       
