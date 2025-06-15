@@ -9,6 +9,7 @@ import DailyUpdateManager from '../components/DailyUpdateManager';
 import SessionProvider from '../components/SessionProvider';
 
 import MobileBottomNav from '../components/MobileBottomNav';
+import PWAFloatingMenu from '../components/PWAFloatingMenu';
 import AddToHomeBanner from '../components/AddToHomeBanner';
 // Importazione URL per metadataBase
 import { URL } from 'url';
@@ -112,6 +113,7 @@ export default function RootLayout({
               {children}
             </main>            <Footer />
             <MobileBottomNav />
+            <PWAFloatingMenu />
           </SecurityProvider>
         </SessionProvider>
         <AddToHomeBanner />

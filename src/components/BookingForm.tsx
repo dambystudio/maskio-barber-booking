@@ -37,9 +37,11 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     // Add debouncing state and cache for rate limiting protection
   const [isDebouncing, setIsDebouncing] = useState(false);
   const [slotsCache, setSlotsCache] = useState<{[key: string]: {time: string, available: boolean}[]}>({});
-    // Closure system state
+  // Closure system state
   const [closedDays, setClosedDays] = useState<Set<number>>(new Set([0])); // Sunday closed by default
   const [closedDates, setClosedDates] = useState<Set<string>>(new Set()); // Specific closed dates
+  // Add state for tracking days with no available slots
+  const [unavailableDates, setUnavailableDates] = useState<Set<string>>(new Set());
 
   // Load closure settings from localStorage
   useEffect(() => {
@@ -226,6 +228,71 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     }
   };
 
+  // Check if a date has available slots
+  const checkDayAvailability = async (dateString: string) => {
+    if (!formData.selectedBarber || isDateClosed(dateString)) {
+      return false;
+    }
+    
+    try {
+      const cacheKey = `${dateString}-${formData.selectedBarber.id}`;
+      
+      // Check cache first
+      if (slotsCache[cacheKey]) {
+        return slotsCache[cacheKey].some(slot => slot.available);
+      }
+      
+      // Fetch from API
+      const slots = await BookingService.getAvailableSlots(dateString, formData.selectedBarber.id);
+      
+      // Cache the result
+      setSlotsCache(prev => ({
+        ...prev,
+        [cacheKey]: slots
+      }));
+      
+      return slots && slots.length > 0 && slots.some(slot => slot.available);
+    } catch (error) {
+      console.error('Error checking day availability:', error);
+      return false;
+    }
+  };
+
+  // Update unavailable dates when barber changes
+  useEffect(() => {
+    if (!formData.selectedBarber) {
+      setUnavailableDates(new Set());
+      return;
+    }
+
+    const updateUnavailableDates = async () => {
+      const today = new Date();
+      const newUnavailableDates = new Set<string>();
+      
+      // Check the next 30 days for availability
+      for (let i = 0; i < 30; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+        
+        const hasAvailableSlots = await checkDayAvailability(dateString);
+        if (!hasAvailableSlots && !isDateClosed(dateString)) {
+          newUnavailableDates.add(dateString);
+        }
+      }
+      
+      setUnavailableDates(newUnavailableDates);
+    };
+
+    // Debounce the update to avoid too many API calls
+    const timeoutId = setTimeout(updateUnavailableDates, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [formData.selectedBarber, slotsCache]);
+
   // Helper function to generate date buttons for the next 2 months (60 days)
   const generateDateButtons = () => {
     const dates = [];
@@ -250,19 +317,23 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
-      
-      // Check if date is closed using the flexible closure system
+        // Check if date is closed using the flexible closure system
       const isClosed = isDateClosed(dateString);
+      
+      // Check if date has no available slots (only if barber is selected)
+      const hasNoAvailableSlots = formData.selectedBarber && unavailableDates.has(dateString);
       
       dates.push({
         date: dateString,
         dayName: dayNames[date.getDay()],
         dayNumber: date.getDate(),
         monthName: monthNames[date.getMonth()],
-        disabled: isClosed,
+        disabled: isClosed || !!hasNoAvailableSlots,
         isToday,
         isNextWeek,
-        isNextMonth
+        isNextMonth,
+        isClosed,
+        hasNoAvailableSlots
       });}
     
     return dates;
@@ -645,12 +716,25 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 max-h-96 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
                 {generateDateButtons().map((dateButton) => (<motion.button
                     key={dateButton.date}
-                    onClick={() => !dateButton.disabled && handleDateChange(dateButton.date)}
-                    disabled={dateButton.disabled}
-                    className={`p-3 rounded-lg border-2 transition-all duration-200 min-h-[80px] flex flex-col items-center justify-center relative ${
+                    onClick={() => {
+                      if (dateButton.disabled) {
+                        if (dateButton.hasNoAvailableSlots) {
+                          alert('Tutti gli orari per questo giorno sono già occupati. Prova un altro giorno!');
+                        } else if (dateButton.isClosed) {
+                          alert('Siamo chiusi in questo giorno. Scegli un altro giorno!');
+                        }
+                        return;
+                      }
+                      handleDateChange(dateButton.date);
+                    }}
+                    disabled={dateButton.disabled}                    className={`p-3 rounded-lg border-2 transition-all duration-200 min-h-[80px] flex flex-col items-center justify-center relative ${
                       formData.selectedDate === dateButton.date                        ? 'border-yellow-400 bg-yellow-400 text-black shadow-lg'
                         : dateButton.disabled
-                        ? 'border-gray-700 bg-gray-800 text-gray-500 cursor-not-allowed'
+                        ? dateButton.isClosed
+                          ? 'border-red-600 bg-red-900/30 text-red-400 cursor-not-allowed'
+                          : dateButton.hasNoAvailableSlots
+                          ? 'border-orange-600 bg-orange-900/30 text-orange-400 cursor-not-allowed'
+                          : 'border-gray-700 bg-gray-800 text-gray-500 cursor-not-allowed'
                         : dateButton.isToday
                         ? 'border-blue-400 bg-blue-900/30 hover:border-blue-500 hover:shadow-md text-blue-300'
                         : dateButton.isNextWeek
@@ -695,9 +779,16 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                       'text-gray-300'
                     }`}>
                       {dateButton.monthName}
-                    </div>
-                    {dateButton.disabled && (
-                      <div className="text-xs text-red-400 mt-1">Chiuso</div>
+                    </div>                    {dateButton.disabled && (
+                      <div className="text-xs mt-1">
+                        {dateButton.isClosed ? (
+                          <span className="text-red-400">Chiuso</span>
+                        ) : dateButton.hasNoAvailableSlots ? (
+                          <span className="text-orange-400">Tutto occupato</span>
+                        ) : (
+                          <span className="text-red-400">Non disponibile</span>
+                        )}
+                      </div>
                     )}
                   </motion.button>
                 ))}              </div>              {/* Legend for date colors */}
@@ -715,9 +806,15 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                   <span>Prossimo mese</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-gray-800 border border-gray-600 rounded mr-2"></div>
+                  <div className="w-3 h-3 bg-red-900/30 border border-red-600 rounded mr-2"></div>
                   <span>Giorni di chiusura</span>
                 </div>
+                {formData.selectedBarber && (
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-orange-900/30 border border-orange-600 rounded mr-2"></div>
+                    <span>Tutto occupato</span>
+                  </div>
+                )}
               </div>
               
               {formData.selectedDate && (

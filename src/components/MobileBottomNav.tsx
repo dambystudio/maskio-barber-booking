@@ -79,9 +79,8 @@ export default function MobileBottomNav() {
       icon: UserIcon,
       iconSolid: UserIconSolid,
     },
-  ];  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-xl dark:bg-gray-900/90 dark:border-gray-700 standalone-only pb-6">
-      <div className="grid grid-cols-5 h-20 px-4">
+  ];  return (    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-xl dark:bg-gray-900/90 dark:border-gray-700 standalone-only pb-6">
+      <div className="grid grid-cols-5 h-24 px-4">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const IconComponent = isActive ? item.iconSolid : item.icon;
@@ -99,9 +98,8 @@ export default function MobileBottomNav() {
                   ? 'text-white bg-amber-600 rounded-xl px-3 py-2' 
                   : ''
                 }
-              `}            >
-              <IconComponent className={`w-7 h-7 ${item.isHighlight ? 'text-white' : ''}`} />
-              <span className={`text-xs font-medium ${item.isHighlight ? 'text-white' : ''}`}>
+              `}            >              <IconComponent className={`w-8 h-8 ${item.isHighlight ? 'text-white' : ''}`} />
+              <span className={`text-sm font-medium ${item.isHighlight ? 'text-white' : ''}`}>
                 {item.name}
               </span>
             </Link>
