@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import BookingButton from '../components/BookingButton';
-import ReviewsSection from '../components/ReviewsSection';
 
 export default function Home() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
