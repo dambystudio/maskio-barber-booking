@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import '../styles/pwa.css';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SecurityProvider from '../components/SecurityProvider';
 import DailyUpdateManager from '../components/DailyUpdateManager';
 import SessionProvider from '../components/SessionProvider';
+
+import MobileBottomNav from '../components/MobileBottomNav';
+import AddToHomeBanner from '../components/AddToHomeBanner';
 // Importazione URL per metadataBase
 import { URL } from 'url';
 import JsonLdScript from '../components/JsonLdScript';
@@ -17,6 +21,7 @@ export const metadata: Metadata = {
   description: 'Una nuova concezione del barbiere - Barbiere di qualità a San Giovanni Rotondo',
   robots: 'index, follow', // Allow indexing by search engines
   keywords: 'barbiere, barbiere San Giovanni Rotondo, taglio capelli, barba, Maskio, trattamenti capelli',
+  manifest: '/manifest.json',
   
   // Open Graph meta tags per migliorare la condivisione sui social media
   openGraph: {
@@ -69,26 +74,52 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {  return (
-    <html lang="it">      
-    <head>
-        <link rel="preload" as="image" href="/sediaOro.jpg" />        <link rel="preload" as="image" href="/LogoSimboloNome_BiancoOrizzontale_BUONO.png" />
-      </head>
+}>) {  return (    
+        <html lang="it">    
+        <head>
+        <link rel="preload" as="video" href="/videoLoopCompresso.mp4" type="video/mp4" />
+        <link rel="preload" as="image" href="/sediaOro.webp" />        
+        <link rel="preload" as="image" href="/LogoSimboloNome_BiancoOrizzontale_BUONO.png" />
+        
+        {/* PWA Meta Tags */}
+        <meta name="application-name" content="Maskio Barber" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-title" content="Maskio Barber" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="theme-color" content="#000000" />
+          {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" href="/icone/nero/180x180.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icone/nero/180x180.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icone/nero/180x180.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icone/nero/180x180.png" />
+        
+        {/* Favicon */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/icone/nero/32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icone/nero/16x16.png" />
+        <link rel="shortcut icon" href="/icone/nero/32x32.png" />
+      </head>      
       <body className={inter.className}>
         <SessionProvider>
           <SecurityProvider>
             <DailyUpdateManager />
             <Navbar />
-            <main className="min-h-screen pt-[70px]"> {/* Aumentato da 58px a 70px per adattarsi alla navbar più grande */}
+            <main className="min-h-screen pt-[70px] standalone:pt-0"> {/* Rimuovi padding top in modalità standalone */}
               {children}
-            </main>
-            <Footer />
+            </main>            <Footer />
+            <MobileBottomNav />
           </SecurityProvider>
         </SessionProvider>
+        <AddToHomeBanner />
         {/* Script per nascondere i blocchi di codice se non è attiva l'ispezione */}
         <script src="/js/dev-tools-detector.js" defer></script>
         {/* Schema.org JSON-LD script */}
         <JsonLdScript />
+
       </body></html>
   );
 }

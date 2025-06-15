@@ -152,15 +152,15 @@ export default function Servizi() {
                     </motion.div>
                   ))}
                 </motion.div>
-              </div>
-
-              {/* CTA Button */}
+              </div>              {/* CTA Button */}
               <div className="px-6 pb-6">
                 <motion.div
                   variants={scaleIn}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                >                  <BookingButton className="w-full bg-black hover:bg-gray-900 border border-yellow-400 text-yellow-400 hover:text-black hover:bg-yellow-400 font-semibold py-3 px-6 rounded-lg transition-colors">
+                  className="relative z-10"
+                >
+                  <BookingButton className="w-full bg-black hover:bg-gray-900 border border-yellow-400 text-yellow-400 hover:text-black hover:bg-yellow-400 font-semibold py-3 px-6 rounded-lg transition-colors relative z-10 opacity-100 visible">
                     Prenota con {barber.name}
                   </BookingButton>
                 </motion.div>

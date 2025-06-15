@@ -1,0 +1,64 @@
+/* PWA Styles - Stilizzazione per modalità standalone */
+
+/* Quando l'app è in modalità standalone (installata) */
+@media (display-mode: standalone) {
+  /* Aggiunge padding-top per compensare la status bar */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Navbar più compatta in modalità app */
+  .navbar-standalone {
+    padding-top: calc(env(safe-area-inset-top) + 0.5rem);
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Nasconde alcuni elementi quando è installata come app */
+  .hide-in-app {
+    display: none !important;
+  }
+
+  /* Mostra elementi specifici per app */
+  .show-in-app {
+    display: block !important;
+  }
+
+  /* Footer più adatto per app */
+  .footer-standalone {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+}
+
+/* Quando l'app è nel browser normale */
+@media (display-mode: browser) {
+  .show-in-app {
+    display: none !important;
+  }
+  
+  .hide-in-browser {
+    display: none !important;
+  }
+}
+
+/* iOS Safari specifico */
+@media (display-mode: standalone) and (-webkit-touch-callout: none) {
+  /* Stilizzazione specifica per iOS */
+  .ios-standalone {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Utilità per rilevare modalità standalone */
+.standalone-indicator {
+  display: none;
+}
+
+@media (display-mode: standalone) {
+  .standalone-indicator {
+    display: block;
+  }
+}

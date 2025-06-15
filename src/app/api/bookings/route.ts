@@ -4,7 +4,7 @@ import { EmailService } from '@/lib/email';
 import { Booking } from '@/lib/schema';
 import { randomUUID } from 'crypto';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth.config';
 
 // Rate limiting per IP
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();

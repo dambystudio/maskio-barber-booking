@@ -9,6 +9,21 @@ const nextConfig: NextConfig = {
   generateEtags: false,
   trailingSlash: false,
   
+  // Ottimizzazioni immagini
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 365, // 1 anno
+    dangerouslyAllowSVG: false,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },  
+  // Ottimizzazioni experimental per performance
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'next-auth'],
+  },
+  
   // Header di sicurezza avanzati
   async headers() {
     return [

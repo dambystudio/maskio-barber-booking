@@ -16,7 +16,7 @@ export default function BookingButton({
   className = '',
   children = 'Prenota Ora'
 }: BookingButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 relative z-10 opacity-100 visible';
   
   const variants = {
     primary: 'bg-yellow-400 text-black hover:bg-yellow-300 focus:ring-yellow-400',
@@ -41,6 +41,7 @@ export default function BookingButton({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
+        style={{ zIndex: 10, position: 'relative' }}
       >
         {children}
       </motion.button>

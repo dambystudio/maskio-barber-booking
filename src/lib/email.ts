@@ -18,9 +18,8 @@ export interface BookingEmailData {
   bookingId: string;
 }
 
-export class EmailService {
-  private static FROM_EMAIL = 'Maskio Barber <noreply@maskiobarber.com>';
-  private static ADMIN_EMAIL = 'admin@maskiobarber.com';  // Send booking confirmation to customer
+export class EmailService {  private static FROM_EMAIL = 'Maskio Barber <fabio.cassano97@icloud.com>';
+  private static ADMIN_EMAIL = 'fabio.cassano97@icloud.com';  // Send booking confirmation to customer
   static async sendBookingConfirmation(bookingData: BookingEmailData): Promise<boolean> {
     try {
       const emailHtml = BookingConfirmationEmail(bookingData);

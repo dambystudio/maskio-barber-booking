@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -22,6 +22,8 @@ interface UserBooking {
   service_price?: number;
 }
 
+type TabType = 'appointments' | 'profile' | 'account';
+
 export default function AreaPersonale() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -29,6 +31,7 @@ export default function AreaPersonale() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('appointments');
     // Hook per gestire il telefono richiesto
   const { showPhoneModal, handlePhoneComplete, userEmail, userName } = usePhoneRequired();
 
@@ -64,29 +67,46 @@ export default function AreaPersonale() {
     if (status === 'loading') return;
     if (!session) {
       router.push('/auth/signin?callbackUrl=' + encodeURIComponent('/area-personale'));
-      return;    }
+      return;
+    }
     
     fetchUserBookings();
     fetchUserProfile();
   }, [session, status, router, fetchUserBookings, fetchUserProfile]);
-
+  const canCancelBooking = (bookingDate: string, bookingTime: string) => {
+    try {
+      const bookingDateTime = new Date(`${bookingDate}T${bookingTime}`);
+      const now = new Date();
+      const timeDifference = bookingDateTime.getTime() - now.getTime();
+      const hoursDifference = timeDifference / (1000 * 60 * 60);
+      
+      return hoursDifference >= 48; // Almeno 48 ore prima
+    } catch (error) {
+      console.error('Error calculating booking time difference:', error);
+      return false;
+    }
+  };
   const handleCancelBooking = async (bookingId: string) => {
     if (!confirm('Sei sicuro di voler cancellare questa prenotazione?')) return;
 
     try {
-      const response = await fetch('/api/bookings/cancel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ bookingId }),
+      setLoading(true);
+      const response = await fetch(`/api/bookings?id=${bookingId}`, {
+        method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('Errore nella cancellazione');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Errore nella cancellazione');
+      }
 
       await fetchUserBookings(); // Refresh bookings
+      alert('Prenotazione cancellata con successo');
     } catch (err) {
-      alert('Errore nella cancellazione della prenotazione');
+      console.error('Error cancelling booking:', err);
+      alert('Errore nella cancellazione della prenotazione: ' + (err as Error).message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,6 +125,11 @@ export default function AreaPersonale() {
       case 'pending': return 'In attesa';
       case 'cancelled': return 'Cancellata';
       default: return status;
+    }
+  };
+  const handleLogout = async () => {
+    if (confirm('Sei sicuro di voler uscire?')) {
+      await signOut({ callbackUrl: '/' });
     }
   };
 
@@ -131,220 +156,411 @@ export default function AreaPersonale() {
     booking.status === 'cancelled'
   );
 
+  const tabVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -20 }
+  };
+
   return (
-    <div className="min-h-screen bg-black py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl font-bold text-white mb-4">
-            Ciao, {session.user.name}!
-          </h1>
-          <p className="text-gray-300 text-lg">
-            Benvenuto nella tua area personale
-          </p>
-        </motion.div>
-
-        {/* Quick Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
-        >
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 text-center">
-            <h3 className="text-3xl font-bold text-amber-500 mb-2">{upcomingBookings.length}</h3>
-            <p className="text-gray-300">Prossimi Appuntamenti</p>
+    <div className="min-h-screen bg-black">
+      {/* Header con Tab Navigation */}
+      <div className="bg-gray-900/50 backdrop-blur-sm sticky top-0 z-40 border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">          {/* Welcome Header */}
+          <div className="py-4 text-center">
+            <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
+              Ciao, {session.user.name?.split(' ')[0]}! 👋
+            </h1>
+            <p className="text-gray-400 text-xs md:text-sm">
+              La tua area personale
+            </p>
           </div>
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 text-center">
-            <h3 className="text-3xl font-bold text-blue-500 mb-2">{pastBookings.length}</h3>
-            <p className="text-gray-300">Storico Appuntamenti</p>
-          </div>
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 text-center">
-            <h3 className="text-3xl font-bold text-green-500 mb-2">{bookings.filter(b => b.status === 'confirmed').length}</h3>
-            <p className="text-gray-300">Appuntamenti Confermati</p>
-          </div>
-        </motion.div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-wrap gap-4 justify-center mb-12"
-        >
-          <Link
-            href="/prenota"
-            className="bg-amber-600 hover:bg-amber-700 text-black font-bold py-3 px-6 rounded-lg transition duration-300"
-          >
-            📅 Nuova Prenotazione
-          </Link>
-          <Link
-            href="/area-personale/profilo"
-            className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
-          >
-            👤 Modifica Profilo
-          </Link>
-        </motion.div>
+          {/* Tab Navigation */}
+          <div className="flex justify-center pb-3">
+            <div className="flex bg-gray-800/50 rounded-xl p-1 space-x-1">
+              <button
+                onClick={() => setActiveTab('appointments')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  activeTab === 'appointments' 
+                    ? 'bg-amber-600 text-black shadow-lg' 
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                }`}
+              >
+                <span>📅</span>
+                <span className="hidden sm:inline">Appuntamenti</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  activeTab === 'profile' 
+                    ? 'bg-amber-600 text-black shadow-lg' 
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                }`}
+              >
+                <span>👤</span>
+                <span className="hidden sm:inline">Profilo</span>
+              </button>
 
-        {/* User Profile Info */}
-        {userProfile && (
+              <button
+                onClick={() => setActiveTab('account')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  activeTab === 'account' 
+                    ? 'bg-amber-600 text-black shadow-lg' 
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                }`}
+              >
+                <span>⚙️</span>
+                <span className="hidden sm:inline">Account</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Appointments Tab */}
+        {activeTab === 'appointments' && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="mb-12"
+            key="appointments"
+            variants={tabVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
           >
-            <h2 className="text-2xl font-bold text-white mb-6">📋 Le tue informazioni</h2>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-gray-700/30 p-4 rounded-lg">
-                  <h3 className="text-gray-400 text-sm font-medium mb-2">Nome Completo</h3>
-                  <p className="text-white font-semibold">{userProfile.name}</p>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 text-center">
+                <h3 className="text-2xl md:text-3xl font-bold text-amber-500 mb-1">{upcomingBookings.length}</h3>
+                <p className="text-gray-300 text-sm">Prossimi</p>
+              </div>
+              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 text-center">
+                <h3 className="text-2xl md:text-3xl font-bold text-blue-500 mb-1">{pastBookings.length}</h3>
+                <p className="text-gray-300 text-sm">Completati</p>
+              </div>
+              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 text-center col-span-2 md:col-span-1">
+                <h3 className="text-2xl md:text-3xl font-bold text-green-500 mb-1">{bookings.filter(b => b.status === 'confirmed').length}</h3>
+                <p className="text-gray-300 text-sm">Confermati</p>
+              </div>
+            </div>
+
+            {/* Quick Action */}
+            <div className="mb-8">
+              <Link
+                href="/prenota"
+                className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-black font-bold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg"
+              >
+                <span>✨</span>
+                <span>Prenota Nuovo Appuntamento</span>
+              </Link>
+            </div>
+
+            {/* Upcoming Bookings */}
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+                <span className="mr-2">🔜</span>
+                Prossimi Appuntamenti
+              </h2>
+              {upcomingBookings.length === 0 ? (
+                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-8 text-center">
+                  <div className="text-6xl mb-4">📅</div>
+                  <p className="text-gray-300 text-lg mb-4">Nessun appuntamento programmato</p>
+                  <Link
+                    href="/prenota"
+                    className="inline-block bg-amber-600 hover:bg-amber-700 text-black font-bold py-2 px-6 rounded-lg transition duration-300"
+                  >
+                    Prenota ora
+                  </Link>
                 </div>
-                <div className="bg-gray-700/30 p-4 rounded-lg">
-                  <h3 className="text-gray-400 text-sm font-medium mb-2">Email</h3>
-                  <p className="text-white font-semibold">{userProfile.email}</p>
+              ) : (
+                <div className="space-y-4">
+                  {upcomingBookings.map((booking) => (
+                    <div key={booking.id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                      <div className="flex flex-col space-y-3">
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-lg font-bold text-white">{booking.service_name}</h3>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                            {getStatusText(booking.status)}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-300">
+                          <div className="flex items-center space-x-2">
+                            <span>👨‍💼</span>
+                            <span>{booking.barber_name}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span>🕐</span>
+                            <span>{booking.booking_time}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 md:col-span-2">
+                            <span>📅</span>
+                            <span>{booking.booking_date ? format(parseISO(booking.booking_date), 'EEEE d MMMM yyyy', { locale: it }) : 'Data non disponibile'}</span>
+                          </div>
+                          {booking.notes && (
+                            <div className="flex items-center space-x-2 md:col-span-2">
+                              <span>📝</span>
+                              <span>{booking.notes}</span>
+                            </div>
+                          )}                        </div>
+                        {booking.status !== 'cancelled' && (
+                          <div className="mt-3">
+                            {canCancelBooking(booking.booking_date, booking.booking_time) ? (
+                              <button
+                                onClick={() => handleCancelBooking(booking.id)}
+                                className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-4 py-2 rounded-lg transition duration-300 text-sm font-medium"
+                              >
+                                Cancella Prenotazione
+                              </button>
+                            ) : (
+                              <div className="text-xs text-gray-500 italic">
+                                ⚠️ Non è più possibile cancellare (meno di 48h dall'appuntamento)
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="bg-gray-700/30 p-4 rounded-lg">
-                  <h3 className="text-gray-400 text-sm font-medium mb-2">Telefono</h3>
-                  <p className="text-white font-semibold">{userProfile.phone || 'Non specificato'}</p>
+              )}
+            </div>
+
+            {/* Recent Past Bookings */}
+            {pastBookings.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <span className="mr-2">📋</span>
+                  Ultimi Appuntamenti
+                </h2>
+                <div className="space-y-3">
+                  {pastBookings.slice(0, 3).map((booking) => (
+                    <div key={booking.id} className="bg-gray-900/50 border border-gray-700 rounded-xl p-4 opacity-75">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-white font-semibold">{booking.service_name}</h3>
+                          <p className="text-gray-400 text-sm">
+                            {booking.booking_date ? format(parseISO(booking.booking_date), 'dd/MM/yyyy', { locale: it }) : 'N/A'} - {booking.booking_time}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                          {getStatusText(booking.status)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {pastBookings.length > 3 && (
+                    <div className="text-center">
+                      <button className="text-amber-500 hover:text-amber-400 text-sm font-medium">
+                        Vedi tutti ({pastBookings.length - 3} altri)
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="bg-gray-700/30 p-4 rounded-lg">
-                  <h3 className="text-gray-400 text-sm font-medium mb-2">Cliente dal</h3>
-                  <p className="text-white font-semibold">
-                    {userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'dd MMMM yyyy', { locale: it }) : 'N/A'}
-                  </p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Profile Tab */}
+        {activeTab === 'profile' && (
+          <motion.div
+            key="profile"
+            variants={tabVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+          >
+            {userProfile ? (
+              <div className="space-y-6">
+                {/* Profile Header */}
+                <div className="bg-gradient-to-r from-amber-600/10 to-amber-500/10 border border-amber-500/20 rounded-xl p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center text-2xl font-bold text-black">
+                      {userProfile.name?.charAt(0) || '👤'}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">{userProfile.name}</h2>
+                      <p className="text-amber-400">Cliente dal {userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'MMMM yyyy', { locale: it }) : 'N/A'}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-gray-700/30 p-4 rounded-lg">
-                  <h3 className="text-gray-400 text-sm font-medium mb-2">Ultimo accesso</h3>
-                  <p className="text-white font-semibold">
-                    {userProfile.lastLogin ? format(parseISO(userProfile.lastLogin), 'dd/MM/yyyy HH:mm', { locale: it }) : 'Primo accesso'}
-                  </p>
+
+                {/* Profile Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                    <h3 className="text-amber-500 font-semibold mb-2 flex items-center">
+                      <span className="mr-2">📧</span>
+                      Email
+                    </h3>
+                    <p className="text-white">{userProfile.email}</p>
+                  </div>
+                  
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                    <h3 className="text-amber-500 font-semibold mb-2 flex items-center">
+                      <span className="mr-2">📱</span>
+                      Telefono
+                    </h3>
+                    <p className="text-white">{userProfile.phone || 'Non specificato'}</p>
+                  </div>
+
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                    <h3 className="text-amber-500 font-semibold mb-2 flex items-center">
+                      <span className="mr-2">📅</span>
+                      Membro dal
+                    </h3>
+                    <p className="text-white">
+                      {userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'dd MMMM yyyy', { locale: it }) : 'N/A'}
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                    <h3 className="text-amber-500 font-semibold mb-2 flex items-center">
+                      <span className="mr-2">⏰</span>
+                      Ultimo accesso
+                    </h3>
+                    <p className="text-white">
+                      {userProfile.lastLogin ? format(parseISO(userProfile.lastLogin), 'dd/MM/yyyy HH:mm', { locale: it }) : 'Primo accesso'}
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-gray-700/30 p-4 rounded-lg">
-                  <h3 className="text-gray-400 text-sm font-medium mb-2">Stato Account</h3>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-900/20 text-green-400 border border-green-500/30">
-                    ✓ Attivo
-                  </span>
+
+                {/* Stats */}
+                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                  <h3 className="text-white font-bold mb-4 flex items-center">
+                    <span className="mr-2">📊</span>
+                    Le tue statistiche
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-amber-500">{bookings.length}</div>
+                      <div className="text-gray-400 text-sm">Appuntamenti totali</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-500">{bookings.filter(b => b.status === 'confirmed').length}</div>
+                      <div className="text-gray-400 text-sm">Confermati</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-500">{pastBookings.length}</div>
+                      <div className="text-gray-400 text-sm">Completati</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-amber-500">{upcomingBookings.length}</div>
+                      <div className="text-gray-400 text-sm">In programma</div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Edit Profile Button */}
+                <div className="text-center">
+                  <Link
+                    href="/area-personale/profilo"
+                    className="inline-flex items-center space-x-2 bg-amber-600 hover:bg-amber-700 text-black font-bold py-3 px-6 rounded-lg transition duration-300"
+                  >
+                    <span>✏️</span>
+                    <span>Modifica Profilo</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="animate-pulse text-gray-400">Caricamento profilo...</div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Account Tab */}
+        {activeTab === 'account' && (
+          <motion.div
+            key="account"
+            variants={tabVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            {/* Account Status */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+                <span className="mr-2">🔐</span>
+                Stato Account
+              </h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-300">Il tuo account è attivo e verificato</p>
+                  <p className="text-green-400 text-sm font-medium mt-1">✓ Account verificato</p>
+                </div>
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              </div>
+            </div>
+
+            {/* Account Actions */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white mb-4">Azioni Account</h3>
+              
+              <Link
+                href="/area-personale/profilo"
+                className="w-full bg-gray-800/50 border border-gray-700 hover:border-amber-500/50 rounded-xl p-4 flex items-center justify-between transition duration-300 group"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">✏️</span>
+                  <div>
+                    <h4 className="font-semibold text-white group-hover:text-amber-400 transition duration-300">Modifica Profilo</h4>
+                    <p className="text-gray-400 text-sm">Aggiorna le tue informazioni personali</p>
+                  </div>
+                </div>
+                <span className="text-gray-400 group-hover:text-amber-400 transition duration-300">→</span>
+              </Link>
+
+              <Link
+                href="/prenota"
+                className="w-full bg-gray-800/50 border border-gray-700 hover:border-amber-500/50 rounded-xl p-4 flex items-center justify-between transition duration-300 group"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">📅</span>
+                  <div>
+                    <h4 className="font-semibold text-white group-hover:text-amber-400 transition duration-300">Nuova Prenotazione</h4>
+                    <p className="text-gray-400 text-sm">Prenota il tuo prossimo appuntamento</p>
+                  </div>
+                </div>
+                <span className="text-gray-400 group-hover:text-amber-400 transition duration-300">→</span>
+              </Link>
+            </div>
+
+            {/* Logout Section */}
+            <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <span className="mr-2">⚠️</span>
+                Zona Pericolosa
+              </h3>
+              <p className="text-gray-300 mb-4">
+                Disconnessione dal tuo account. Dovrai effettuare nuovamente l'accesso.
+              </p>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center space-x-2"
+              >
+                <span>🚪</span>
+                <span>Disconnetti Account</span>
+              </button>
+            </div>
+
+            {/* App Info */}
+            <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Informazioni App</h3>
+              <div className="space-y-2 text-sm text-gray-400">
+                <p>Versione: 1.0.0</p>
+                <p>Ultimo aggiornamento: {new Date().toLocaleDateString('it-IT')}</p>
+                <p>Sviluppato con ❤️ per Maskio Barber</p>
               </div>
             </div>
           </motion.div>
         )}
-
-        {/* Profile Information */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-gray-800 border border-gray-700 rounded-xl p-6 mb-12"
-        >
-          <h2 className="text-2xl font-bold text-white mb-4">Informazioni Profilo</h2>
-          {userProfile ? (            <div className="text-gray-300 space-y-2">
-              <p><span className="font-semibold">Nome:</span> {userProfile.name}</p>
-              <p><span className="font-semibold">Email:</span> {userProfile.email}</p>
-              <p><span className="font-semibold">Telefono:</span> {userProfile.phone || 'Non fornito'}</p>
-              <p><span className="font-semibold">Data di registrazione:</span> {userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'dd MMMM yyyy', { locale: it }) : 'N/A'}</p>
-            </div>
-          ) : (
-            <p className="text-gray-400">Caricamento informazioni profilo...</p>
-          )}
-        </motion.div>
-
-        {/* Upcoming Bookings */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-12"
-        >
-          <h2 className="text-2xl font-bold text-white mb-6">Prossimi Appuntamenti</h2>
-          {upcomingBookings.length === 0 ? (
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 text-center">
-              <p className="text-gray-300 text-lg">Non hai appuntamenti programmati</p>
-              <Link
-                href="/prenota"
-                className="inline-block mt-4 bg-amber-600 hover:bg-amber-700 text-black font-bold py-2 px-4 rounded transition duration-300"
-              >
-                Prenota ora
-              </Link>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {upcomingBookings.map((booking) => (
-                <div key={booking.id} className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="flex-1 mb-4 md:mb-0">
-                      <h3 className="text-xl font-bold text-white mb-2">{booking.service_name}</h3>                      <div className="text-gray-300 space-y-1">
-                        <p>👨‍💼 Barbiere: {booking.barber_name}</p>
-                        <p>📅 Data: {booking.booking_date ? format(parseISO(booking.booking_date), 'EEEE d MMMM yyyy', { locale: it }) : 'Data non disponibile'}</p>
-                        <p>🕐 Ora: {booking.booking_time}</p>
-                        {booking.notes && <p>📝 Note: {booking.notes}</p>}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end space-y-2">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
-                        {getStatusText(booking.status)}
-                      </span>
-                      {booking.status !== 'cancelled' && (
-                        <button
-                          onClick={() => handleCancelBooking(booking.id)}
-                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition duration-300"
-                        >
-                          Cancella
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Past Bookings */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h2 className="text-2xl font-bold text-white mb-6">Storico Appuntamenti</h2>
-          {pastBookings.length === 0 ? (
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 text-center">
-              <p className="text-gray-300 text-lg">Nessun appuntamento passato</p>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {pastBookings.slice(0, 5).map((booking) => (
-                <div key={booking.id} className="bg-gray-900 border border-gray-700 rounded-xl p-6 opacity-75">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white mb-2">{booking.service_name}</h3>                      <div className="text-gray-400 space-y-1">
-                        <p>👨‍💼 Barbiere: {booking.barber_name}</p>
-                        <p>📅 Data: {booking.booking_date ? format(parseISO(booking.booking_date), 'EEEE d MMMM yyyy', { locale: it }) : 'Data non disponibile'}</p>
-                        <p>🕐 Ora: {booking.booking_time}</p>
-                      </div>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
-                      {getStatusText(booking.status)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {pastBookings.length > 5 && (
-                <Link
-                  href="/area-personale/storico"
-                  className="block text-center bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl transition duration-300"
-                >
-                  Vedi tutto lo storico ({pastBookings.length - 5} altri)
-                </Link>
-              )}
-            </div>
-          )}        </motion.div>
       </div>
       
       {/* Modal per richiesta telefono */}

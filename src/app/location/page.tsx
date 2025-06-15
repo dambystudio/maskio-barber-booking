@@ -202,9 +202,8 @@ export default function Page() {
               variants={fadeInUp}
               className="text-4xl md:text-6xl font-bold text-white mb-6"
               whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-            >
-              La Nostra 
+              transition={{ duration: 0.3 }}            >
+              La Nostra{" "}
               <motion.span 
                 className="text-amber-500 inline-block"
                 animate={{ 
@@ -221,7 +220,7 @@ export default function Page() {
                   repeatType: "reverse"
                 }}
               >
-                {" "} Sede
+                Sede
               </motion.span>
             </motion.h1>
             
@@ -582,9 +581,8 @@ export default function Page() {
                   variants={scaleIn}
                   className="text-4xl md:text-5xl font-bold text-white"
                   whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  Strumenti di 
+                  transition={{ duration: 0.3 }}                >
+                  Strumenti di{" "}
                   <motion.span 
                     className="text-amber-500 inline-block"
                     animate={{ 
@@ -601,7 +599,7 @@ export default function Page() {
                       repeatType: "reverse"
                     }}
                   >
-                    {" "}Eccellenza
+                    Eccellenza
                   </motion.span>
                 </motion.h2>
                 
@@ -974,21 +972,21 @@ export default function Page() {
                   whileHover={{ scale: 1.05 }}
                 >
                   <span className="text-xl">📱</span>
-                  <span className="text-gray-200 font-medium">+39 333 123 4567</span>
+                  <span className="text-gray-200 font-medium">+39 331 710 0730</span>
                 </motion.div>
                 <motion.div 
                   className="flex items-center justify-center gap-3 p-3 rounded-xl hover:bg-gray-700/30 transition-colors duration-300"
                   whileHover={{ scale: 1.05 }}
                 >
                   <span className="text-xl">✉️</span>
-                  <span className="text-gray-200 font-medium">info@maskio.it</span>
+                  <span className="text-gray-200 font-medium">fabio.cassano97@icloud.com</span>
                 </motion.div>
                 <motion.div 
                   className="flex items-center justify-center gap-3 p-3 rounded-xl hover:bg-gray-700/30 transition-colors duration-300"
                   whileHover={{ scale: 1.05 }}
                 >
                   <span className="text-xl">💬</span>
-                  <span className="text-gray-200 font-medium">WhatsApp: +39 333 123 4567</span>
+                  <span className="text-gray-200 font-medium">WhatsApp: +39 331 710 0730</span>
                 </motion.div>
               </div>
               
@@ -1132,7 +1130,7 @@ export default function Page() {
                         className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium transition-all duration-300"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => window.open(`tel:+390881234567`)}
+                        onClick={() => window.open(`tel:+393317100730`)}
                       >
                         Chiama
                       </motion.button>
@@ -1199,7 +1197,7 @@ export default function Page() {
                       <span className="text-blue-500 mt-1">🚌</span>
                       <div>
                         <h4 className="font-semibold text-white mb-1">Mezzi Pubblici</h4>
-                        <p>Fermata autobus a 50 metri. Linee urbane disponibili dal centro.</p>
+                        <p>Fermata autobus nelle vicinanze. Linee urbane disponibili dal centro.</p>
                       </div>
                     </div>
                     
@@ -1252,10 +1250,6 @@ export default function Page() {
                     <p className="flex items-center gap-2">
                       <span className="text-amber-500">✓</span>
                       Parcheggio gratuito disponibile nelle strade adiacenti
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-amber-500">✓</span>
-                      WiFi gratuito disponibile nel nostro locale
                     </p>
                   </div>
                 </motion.div>

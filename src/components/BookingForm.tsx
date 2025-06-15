@@ -298,7 +298,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     // Check if it's the special "altri-servizi" service
     if (service.id === 'altri-servizi') {
       // For "altri-servizi", show a message instead of allowing booking
-      alert('Per questo servizio contatta direttamente Maskio al numero: +39 334 123 4567');
+      alert('Per questo servizio contatta direttamente Maskio al numero: +39 331 710 0730');
       return;
     }
     
@@ -920,23 +920,21 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           initial="hidden"
           animate="visible"
           className="text-center space-y-6"
-        >
-          <motion.div variants={fadeInUp}>
-            <svg className="w-16 h-16 mx-auto text-green-500" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        >          <motion.div variants={fadeInUp}>
+            <svg className="w-16 h-16 mx-auto text-amber-500" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           </motion.div>
-          <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-green-600">
+          <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-amber-600">
             Prenotazione Confermata!
-          </motion.h2>          <motion.div variants={fadeInUp} className="bg-gray-50 p-6 rounded-lg shadow text-left space-y-2">
-            <p><strong>ID Prenotazione:</strong> {bookingResponse.id || bookingResponse.booking?.id}</p>
-            <p><strong>Barbiere:</strong> {formData.selectedBarber?.name}</p>
-            <p><strong>Servizi:</strong> {formData.selectedServices.map(s => s.name).join(', ')}</p>
-            <p><strong>Data:</strong> {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
-            <p><strong>Cliente:</strong> {formData.customerInfo.name}</p>
-            
-            {/* Resoconto finale */}
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h4 className="font-semibold text-green-800 mb-2">🎉 Resoconto della prenotazione</h4>
-              <div className="text-sm text-green-700 space-y-1">
+          </motion.h2>          <motion.div variants={fadeInUp} className="bg-amber-50 border-2 border-amber-200 p-6 rounded-lg shadow-lg text-left space-y-2">
+            <p className="text-amber-900"><strong>ID Prenotazione:</strong> {bookingResponse.id || bookingResponse.booking?.id}</p>
+            <p className="text-amber-900"><strong>Barbiere:</strong> {formData.selectedBarber?.name}</p>
+            <p className="text-amber-900"><strong>Servizi:</strong> {formData.selectedServices.map(s => s.name).join(', ')}</p>
+            <p className="text-amber-900"><strong>Data:</strong> {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
+            <p className="text-amber-900"><strong>Cliente:</strong> {formData.customerInfo.name}</p>
+              {/* Resoconto finale */}
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <h4 className="font-semibold text-amber-800 mb-2">🎉 Resoconto della prenotazione</h4>
+              <div className="text-sm text-amber-700 space-y-1">
                 <p>✅ <strong>Prenotazione confermata</strong> nel nostro sistema</p>
                 <p>📧 <strong>Email di conferma inviata</strong> (se disponibile)</p>
                 <p>📱 <strong>Promemoria automatico</strong> 24h prima dell'appuntamento</p>
@@ -946,12 +944,18 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 )}
                 <p className="mt-2 font-medium">💡 <em>In caso di imprevisti, contattaci almeno 2 ore prima dell'appuntamento</em></p>
               </div>
-            </div>
-            
-            <p className="mt-4 font-medium text-gray-700">Grazie per aver scelto Maskio Barber! 🙏</p>
-          </motion.div>
-
-          <motion.div variants={fadeInUp} className="mt-8 text-center">
+            </div>            
+            <p className="mt-4 font-medium text-amber-800">Grazie per aver scelto Maskio Barber! 🙏</p>
+          </motion.div><motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => {
+                // Redirect alla home page
+                window.location.href = '/';
+              }}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
+            >
+              Continua
+            </button>
             <button
               onClick={() => {
                 setCurrentStep(1);
@@ -966,16 +970,15 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 setAvailableSlots([]);
                 setError(null);
               }}
-              className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
+              className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
             >
               Effettua Nuova Prenotazione
             </button>
           </motion.div>
         </motion.div>
-      )}
-
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-8">
+      )}      {/* Navigation Buttons - Hide when booking is confirmed */}
+      {!bookingResponse && (
+        <div className="flex justify-between mt-8">
         <motion.button
           onClick={() => {
             setCurrentStep(Math.max(1, currentStep - 1));
@@ -1002,17 +1005,16 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               nextStep(); 
             }
           }}
-          disabled={!isStepValid(currentStep) || loading}
-          className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
+          disabled={!isStepValid(currentStep) || loading}          className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
             !isStepValid(currentStep) || loading
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-yellow-400 text-black hover:bg-yellow-300'
+              : 'bg-amber-500 text-white hover:bg-amber-600'
           }`}
           whileHover={{ scale: isStepValid(currentStep) && !loading ? 1.05 : 1 }}
-          whileTap={{ scale: isStepValid(currentStep) && !loading ? 0.95 : 1 }}
-        >          {loading ? 'Caricamento...' : currentStep === 4 ? 'Conferma Prenotazione' : 'Continua'}
+          whileTap={{ scale: isStepValid(currentStep) && !loading ? 0.95 : 1 }}        >          {loading ? 'Caricamento...' : currentStep === 4 ? 'Conferma Prenotazione' : 'Continua'}
         </motion.button>
-      </div>
+        </div>
+      )}
         </>
       )}
     </div>

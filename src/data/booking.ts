@@ -9,9 +9,9 @@ export const fabioSpecificServices: Service[] = [
 ];
 
 export const micheleSpecificServices: Service[] = [
-  { id: 'taglio', name: 'Taglio', description: 'Taglio di capelli personalizzato', duration: 30, price: 18 },
-  { id: 'barba', name: 'Barba', description: 'Modellatura e contorno barba', duration: 15, price: 10 },
-  { id: 'taglio-e-barba', name: 'Taglio e Barba', description: 'Taglio capelli e sistemazione barba', duration: 40, price: 23 },
+  { id: 'taglio', name: 'Taglio', description: 'Taglio di capelli personalizzato', duration: 30, price: 15 },
+  { id: 'barba', name: 'Barba', description: 'Modellatura e contorno barba', duration: 15, price: 7 },
+  { id: 'taglio-e-barba', name: 'Taglio e Barba', description: 'Taglio capelli e sistemazione barba', duration: 40, price: 18 },
   { id: 'altri-servizi', name: 'Altri servizi', description: 'colore o altri servizi', duration: 30, price: 0 }
 ];
 

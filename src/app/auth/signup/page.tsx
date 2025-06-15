@@ -2,17 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
 export default function SignUp() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [verificationStep, setVerificationStep] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,15 +17,14 @@ export default function SignUp() {
     password: '',
     confirmPassword: ''
   });
-
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
     
     try {
       const result = await signIn('google', {
-        callbackUrl: '/area-personale',
-        redirect: false,
+        callbackUrl: '/',
+        redirect: true, // Lascia che NextAuth gestisca il redirect
       });
       
       if (result?.error) {
@@ -91,11 +87,9 @@ export default function SignUp() {
       setError('La password deve essere di almeno 6 caratteri');
       setLoading(false);
       return;
-    }
-
-    try {
-      // STEP 1: Send verification email
-      const response = await fetch('/api/auth/register-with-verification', {
+    }    try {
+      // Registrazione diretta senza verifica email
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,66 +99,49 @@ export default function SignUp() {
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
-          step: 'send-verification'
         }),
-      });
-
-      if (!response.ok) {
+      });      if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Errore durante l\'invio del codice di verifica');
+        throw new Error(data.error || 'Errore durante la registrazione');
       }
 
-      // Switch to verification step
-      setVerificationStep(true);
+      // Registrazione riuscita, fai login automatico
+      const loginResult = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (loginResult?.ok) {
+        // Aspetta che la sessione si aggiorni
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Verifica che la sessione sia aggiornata
+        const session = await getSession();
+        
+        if (session) {
+          // Redirect to home page
+          window.location.href = '/';
+        } else {
+          // Fallback se la sessione non è ancora aggiornata
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 500);
+        }
+      } else {
+        // Se il login automatico fallisce, vai alla pagina di login
+        setSuccess(true);
+        setTimeout(() => {
+          router.push('/auth/signin');
+        }, 2000);
+      }
 
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    if (!verificationCode || verificationCode.length !== 6) {
-      setError('Inserisci un codice di verifica valido (6 cifre)');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // STEP 2: Verify code and complete registration
-      const response = await fetch('/api/auth/register-with-verification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          verificationCode: verificationCode,
-          step: 'verify-and-register'
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Codice di verifica non valido');
-      }
-
-      setSuccess(true);
-      setTimeout(() => {
-        router.push('/auth/signin');
-      }, 2000);
-
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };  // Success screen
+  };// Success screen
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
@@ -177,98 +154,13 @@ export default function SignUp() {
             <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">✅ Registrazione completata!</h2>
-          <p className="text-gray-300 mb-4">Email verificata con successo. Ti reindirizzeremo alla pagina di login...</p>
+          </div>          <h2 className="text-xl font-bold text-white mb-2">✅ Registrazione completata!</h2>
+          <p className="text-gray-300 mb-4">Account creato con successo. Ti reindirizzeremo alla pagina di login...</p>
         </motion.div>
       </div>
     );
   }
-
-  // Email verification step
-  if (verificationStep) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-md backdrop-blur-sm"
-        >
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <Image
-              src="/logo.jpg"
-              alt="Maskio Barber"
-              width={80}
-              height={80}
-              className="mx-auto rounded-full mb-4 border-2 border-gray-600"
-            />
-            <h1 className="text-2xl font-bold text-white">📧 Verifica Email</h1>
-            <p className="text-gray-300">Abbiamo inviato un codice a</p>
-            <p className="text-amber-400 font-medium">{formData.email}</p>
-          </div>
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-red-900/20 border border-red-500/30 text-red-400 p-3 rounded-lg mb-6 text-sm"
-            >
-              {error}
-            </motion.div>
-          )}
-
-          {/* Verification Form */}
-          <form onSubmit={handleVerification} className="space-y-6">
-            <div>
-              <label htmlFor="verificationCode" className="block text-sm font-medium text-gray-300 mb-2">
-                Codice di verifica (6 cifre) <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                id="verificationCode"
-                required
-                maxLength={6}
-                minLength={6}
-                pattern="[0-9]{6}"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder-gray-400 text-center text-2xl font-mono tracking-widest"
-                placeholder="123456"
-              />
-              <p className="text-xs text-gray-400 mt-2">
-                💡 In modalità sviluppo, controlla la console del server per vedere il codice
-              </p>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={loading || verificationCode.length !== 6}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 px-4 rounded-lg font-medium hover:from-amber-600 hover:to-amber-700 transition-colors disabled:opacity-50 shadow-lg"
-            >
-              {loading ? 'Verifica in corso...' : 'Verifica e Completa Registrazione'}
-            </motion.button>
-          </form>
-
-          {/* Back to registration */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setVerificationStep(false);
-                setVerificationCode('');
-                setError(null);
-              }}
-              className="text-gray-400 hover:text-gray-300 font-medium transition-colors"
-            >
-              ← Torna ai dati di registrazione
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+  // Main registration form
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
       <motion.div
@@ -285,7 +177,7 @@ export default function SignUp() {
             height={80}
             className="mx-auto rounded-full mb-4 border-2 border-gray-600"
           />          <h1 className="text-2xl font-bold text-white">📝 Registrati</h1>
-          <p className="text-gray-300">Crea il tuo account - Verifica email obbligatoria</p>
+          <p className="text-gray-300">Crea il tuo account per prenotare</p>
         </div>        {error && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}

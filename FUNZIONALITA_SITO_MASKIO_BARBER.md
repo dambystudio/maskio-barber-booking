@@ -16,7 +16,6 @@ Questo documento elenca tutte le funzionalità presenti nel sito web di Maskio B
 - **Chi Siamo**: Informazioni sul barbiere, la sua filosofia e il team
 - **Servizi**: Elenco dei servizi offerti con descrizioni e prezzi
 - **Prodotti**: Catalogo dei prodotti disponibili per la vendita
-- **Blog**: Articoli e consigli sul mondo della cura della barba e dei capelli
 - **Location**: Mappa e informazioni sulla posizione del negozio
 - **Testimonianze**: Recensioni dei clienti
 - **Lavora con noi**: Sezione dedicata alle opportunità lavorative

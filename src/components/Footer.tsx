@@ -35,47 +35,126 @@ const socialLinks = [
 ];
 
 export default function Footer() {
-  return (
-    <footer className="bg-black text-white border-t border-gray-800">
-      <div className="container mx-auto px-4 py-8">
-        {/* Logo Section */}        <div className="flex justify-center mb-6">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/LogoSimboloNome_BiancoOrizzontale_BUONO.png"
-              alt="Maskio Barber Concept"
-              width={300}
-              height={75}
-              className="h-16 w-auto"
-              loading="lazy"
-              quality={75}
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-            />
-          </Link>
-        </div>
-          {/* Social Media Links */}
-        <div className="flex justify-center items-center space-x-8 mb-6">
-          {socialLinks.map((item) => (
-            <motion.a
-              key={item.name}
-              href={item.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-300 hover:text-white transition-colors duration-200 p-1"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="sr-only">{item.name}</span>
-              <div className="w-8 h-8 flex items-center justify-center">
-                {item.icon}
+  return (    <footer className="bg-black text-white border-t border-gray-800 standalone-hidden">
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
+          
+          {/* Contatti - Area Sinistra (Centrata) */}
+          <div className="flex flex-col items-center text-center">
+            <h3 className="font-semibold text-xl mb-6 text-amber-400">Contatti</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-center space-x-3">
+                <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>                <a href="tel:+393317100730" className="text-gray-300 hover:text-white transition-colors">
+                  +39 331 710 0730
+                </a>
               </div>
-            </motion.a>
-          ))}
+              <div className="flex items-center justify-center space-x-3">
+                <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>                <a href="mailto:fabio.cassano97@icloud.com" className="text-gray-300 hover:text-white transition-colors">
+                  fabio.cassano97@icloud.com
+                </a>
+              </div>
+              <div className="flex flex-col items-center space-y-2 mt-6">
+                <div className="flex items-center space-x-2 mb-2">
+                  <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-gray-300 text-sm font-medium">Orari</span>
+                </div>
+                <div className="text-gray-300 text-sm text-center">
+                  <div>Lun-Sab: 9:00-13:00</div>
+                  <div>15:00-18:00</div>
+                  <div className="text-red-400 mt-2">Giovedì e Domenica: Chiuso</div>
+                </div>
+              </div>
+            </div>
+          </div>{/* Logo e Social - Area Centro (Perfettamente Centrata) */}
+          <div className="flex flex-col items-center text-center">
+            <Link href="/" className="flex justify-center mb-6">
+              <Image
+                src="/LogoSimboloNome_BiancoOrizzontale_BUONO.png"
+                alt="Maskio Barber Concept"
+                width={280}
+                height={70}
+                className="h-20 w-auto"
+                loading="lazy"
+                quality={75}
+              />
+            </Link>
+            <p className="text-gray-400 text-sm mb-6 max-w-xs leading-relaxed">
+              Il tuo barbiere di fiducia per un look sempre perfetto. Tradizione, stile e innovazione in un unico posto.
+            </p>
+              {/* Social Media */}
+            <h3 className="font-semibold text-xl mb-4 text-amber-400">Seguici</h3>
+            <div className="flex justify-center space-x-6">
+              {socialLinks.map((item) => (
+                <motion.a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-300 hover:text-amber-400 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-800/50"
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  title={item.name}
+                >
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    {item.icon}
+                  </div>
+                </motion.a>
+              ))}
+            </div>
+          </div>          {/* Location - Area Destra (Centrata) */}
+          <div className="flex flex-col items-center text-center">
+            <h3 className="font-semibold text-xl mb-6 text-amber-400">Dove Siamo</h3>
+            <div className="space-y-4">
+              <div className="flex flex-col items-center space-y-3">
+                <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <div>
+                  <p className="text-gray-300 leading-relaxed">
+                    Via Sant'Agata, 24<br />
+                    San Giovanni Rotondo (FG)
+                  </p>
+                </div>
+              </div>
+              <a 
+                href="https://www.google.com/maps/search/?api=1&query=Via+Sant'Agata+24,+San+Giovanni+Rotondo,+FG,+Italy"
+                target="_blank"
+                rel="noopener noreferrer" 
+                className="inline-flex items-center space-x-2 text-amber-400 hover:text-amber-300 transition-colors text-sm mt-4 px-3 py-2 rounded-lg hover:bg-gray-800/50"
+              >
+                <span>Visualizza sulla mappa</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          </div>
         </div>
         
-        {/* Copyright */}
-        <div className="text-center text-gray-400 text-sm">
-          <p>&copy; {new Date().getFullYear()} Maskio Barber Concept. Tutti i diritti riservati.</p>
+        {/* Divider */}
+        <div className="border-t border-gray-800 mt-8 pt-6">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p className="text-gray-400 text-sm">
+              &copy; {new Date().getFullYear()} Maskio Barber Concept. Tutti i diritti riservati.
+            </p>            <div className="flex space-x-6 text-sm">
+              <Link href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/cookie-policy" className="text-gray-400 hover:text-white transition-colors">
+                Cookie Policy
+              </Link>
+              <Link href="/termini-servizio" className="text-gray-400 hover:text-white transition-colors">
+                Termini di Servizio
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

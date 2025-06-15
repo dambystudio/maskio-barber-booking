@@ -27,6 +27,11 @@ export async function GET(request: NextRequest) {
     const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
     const PLACE_ID = process.env.GOOGLE_PLACE_ID; // Il Place ID del tuo barbiere su Google
 
+    console.log('🔑 API Key presente:', !!GOOGLE_PLACES_API_KEY);
+    console.log('📍 Place ID presente:', !!PLACE_ID);
+    console.log('🔑 API Key (primi 10 char):', GOOGLE_PLACES_API_KEY?.substring(0, 10));
+    console.log('📍 Place ID:', PLACE_ID);
+
     if (!GOOGLE_PLACES_API_KEY || !PLACE_ID) {
       console.warn('Google Places API Key or Place ID not configured');
       
@@ -95,15 +100,18 @@ export async function GET(request: NextRequest) {
       };
 
       return NextResponse.json(mockData);
-    }
-
-    // Chiama l'API di Google Places per ottenere i dettagli del posto con le recensioni
+    }    // Chiama l'API di Google Places per ottenere i dettagli del posto con le recensioni
     const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${PLACE_ID}&fields=name,rating,reviews,user_ratings_total&key=${GOOGLE_PLACES_API_KEY}&language=it`;
     
+    console.log('🌐 Calling Google Places API...');
     const response = await fetch(url);
     const data: GooglePlacesResponse = await response.json();
 
+    console.log('📊 Google API Response Status:', data.status);
+    console.log('📊 Full API Response:', JSON.stringify(data, null, 2));
+
     if (data.status !== 'OK') {
+      console.error('❌ Google Places API error details:', data);
       throw new Error(`Google Places API error: ${data.status}`);
     }
 

@@ -80,10 +80,9 @@ export function BookingConfirmationEmail(data: BookingEmailData) {
 
           <!-- Contact Info -->
           <div style="text-align: center; background: #f9fafb; border-radius: 8px; padding: 25px; margin: 30px 0;">
-            <h4 style="color: #1f2937; margin: 0 0 15px 0;">📞 Contatti</h4>
-            <p style="color: #4b5563; margin: 0; line-height: 1.6;">
-              <strong>Telefono:</strong> +39 123 456 7890<br>
-              <strong>Email:</strong> info@maskiobarber.com<br>
+            <h4 style="color: #1f2937; margin: 0 0 15px 0;">📞 Contatti</h4>            <p style="color: #4b5563; margin: 0; line-height: 1.6;">
+              <strong>Telefono:</strong> +39 331 710 0730<br>
+              <strong>Email:</strong> fabio.cassano97@icloud.com<br>
               <strong>Indirizzo:</strong> Via Sant'Agata 24, San Giovanni Rotondo (FG)
             </p>
           </div>
@@ -179,7 +178,7 @@ export function BookingReminderEmail(data: BookingEmailData) {
           <div style="text-align: center; background: #fee2e2; border: 1px solid #ef4444; border-radius: 8px; padding: 20px; margin: 30px 0;">
             <h4 style="color: #dc2626; margin: 0 0 10px 0;">🚨 Devi cancellare o rinviare?</h4>
             <p style="color: #dc2626; margin: 0; font-weight: 600;">
-              Chiamaci subito: <a href="tel:+391234567890" style="color: #dc2626; text-decoration: none;">+39 123 456 7890</a>
+              Chiamaci subito: <a href="tel:+393317100730" style="color: #dc2626; text-decoration: none;">+39 331 710 0730</a>
             </p>
           </div>
 

@@ -2,9 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession, signOut } from 'next-auth/react';
+import { usePWA } from '@/hooks/usePWA';
 import BookingButton from './BookingButton';
 import RotatingPhrases from './RotatingPhrases';
 import { 
@@ -14,7 +15,6 @@ import {
   UserGroupIcon,
   ScissorsIcon,
   ShoppingBagIcon,  
-  NewspaperIcon,
   MapPinIcon,
   StarIcon,
   PhoneIcon,
@@ -27,7 +27,6 @@ const navigation = [
   { name: 'Chi Siamo', href: '/chi-siamo', icon: UserGroupIcon },
   { name: 'Servizi', href: '/servizi', icon: ScissorsIcon },
   { name: 'Prodotti', href: '/prodotti', icon: ShoppingBagIcon },
-  { name: 'Blog', href: '/blog', icon: NewspaperIcon },
   { name: 'Location', href: '/location', icon: MapPinIcon },
   { name: 'Contatti', href: '/contatti', icon: PhoneIcon },
   { name: 'Cosa dicono di noi', href: '/testimonianze', icon: StarIcon },
@@ -35,24 +34,66 @@ const navigation = [
 
 export default function Navbar() {
   const { data: session, status } = useSession();
+  const { isStandalone, isInstalled } = usePWA();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  
-  // Chiudi il menu mobile quando si passa al desktop
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const userButtonRef = useRef<HTMLButtonElement>(null);// Chiudi il menu mobile quando si passa al desktop
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) { // lg breakpoint
+      if (typeof window !== 'undefined' && window.innerWidth >= 1024) { // lg breakpoint
         setMobileMenuOpen(false);
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
   }, []);
-  
-  return (
+  // Chiudi il menu utente quando si clicca fuori
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [userMenuOpen]);
+
+  // Calcola la posizione del dropdown in base allo spazio disponibile
+  const calculateDropdownPosition = () => {
+    if (userButtonRef.current) {
+      const buttonRect = userButtonRef.current.getBoundingClientRect();
+      const dropdownHeight = 150; // Altezza stimata del dropdown
+      const spaceBelow = window.innerHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+      
+      // Se non c'è abbastanza spazio sotto, aprilo sopra
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+        setDropdownPosition('top');
+      } else {
+        setDropdownPosition('bottom');
+      }
+    }
+  };
+
+  const handleUserMenuToggle = () => {
+    if (!userMenuOpen) {
+      calculateDropdownPosition();
+    }
+    setUserMenuOpen(!userMenuOpen);
+  };
+    return (
     <>
-      <header className="fixed inset-x-0 top-0 z-[100] bg-black/90 backdrop-blur-md shadow-none">
+      <header className={`fixed inset-x-0 top-0 z-[100] backdrop-blur-md shadow-none ${
+        isStandalone ? 'standalone-hidden' : 'bg-black/90'
+      }`}>
         <div className="mx-auto">
           <div className="flex items-center justify-between p-2 py-4 relative">
             {/* Left side with rotating phrases (visible on desktop) */}
@@ -62,19 +103,17 @@ export default function Navbar() {
             
             {/* Empty space for mobile (to keep logo centered) */}
             <div className="w-6 lg:hidden"></div>
-            
-            {/* Logo al centro sia per mobile che desktop */}            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+              {/* Logo al centro sia per mobile che desktop */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
               <Link href="/" className="flex items-center">
                 <Image
                   src="/LogoSimboloNome_BiancoOrizzontale_BUONO.png"
                   alt="Maskio Barber Concept"
                   width={400}
                   height={100}
-                  className="h-20 w-auto"
+                  className="h-16 w-auto"
                   priority
                   quality={85}
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
                 />
               </Link>
             </div>
@@ -86,26 +125,33 @@ export default function Navbar() {
                   Prenota
                 </BookingButton>
               </div>
-              
-              {/* User menu (desktop) */}
+                {/* User menu (desktop) */}
               {session && (
-                <div className="hidden lg:block relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                <div className="hidden lg:block relative" ref={userMenuRef}>                  <button
+                    ref={userButtonRef}
+                    onClick={handleUserMenuToggle}
                     className="flex items-center space-x-2 text-white hover:text-amber-400 transition-colors"
                   >
                     <UserIcon className="h-6 w-6" />
                     <span className="text-sm font-medium">{session.user.name}</span>
                   </button>
-                  
-                  {/* User dropdown menu */}
+                    {/* User dropdown menu */}
                   <AnimatePresence>
-                    {userMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
+                    {userMenuOpen && (                      <motion.div
+                        initial={{ opacity: 0, y: dropdownPosition === 'bottom' ? -10 : 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg"
+                        exit={{ opacity: 0, y: dropdownPosition === 'bottom' ? -10 : 10 }}
+                        className={`absolute right-0 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-[9999] ${
+                          dropdownPosition === 'bottom' ? 'mt-2' : 'mb-2'
+                        }`}
+                        style={{ 
+                          position: 'absolute',
+                          [dropdownPosition === 'bottom' ? 'top' : 'bottom']: '100%',
+                          right: 0,
+                          zIndex: 9999,
+                          maxHeight: '200px',
+                          overflow: 'visible'
+                        }}
                       >
                         <Link
                           href="/area-personale"
@@ -149,13 +195,14 @@ export default function Navbar() {
                 </div>
               )}
               
-              {/* Menu button */}
-              <motion.button
+              {/* Menu button */}              <motion.button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="text-white flex items-center justify-center z-10"
                 whileTap={{ scale: 0.95 }}
                 whileHover={{ scale: 1.05 }}
+                aria-label={mobileMenuOpen ? "Chiudi menu di navigazione" : "Apri menu di navigazione"}
+                aria-expanded={mobileMenuOpen}
               >
                 {mobileMenuOpen ? (
                   <XMarkIcon className="h-7 w-7" />
@@ -193,12 +240,11 @@ export default function Navbar() {
                 type: "spring",
                 damping: 30,
                 stiffness: 300
-              }}
-              className="fixed inset-y-0 right-0 w-72 bg-black shadow-xl z-[99] border-l border-gray-800"
+              }}              className="fixed inset-y-0 right-0 w-72 bg-black shadow-xl z-[99] border-l border-gray-800"
             >
-              <div className="flex flex-col h-full pt-24">
+              <div className="flex flex-col h-full pt-20">
                 {/* Navigation items */}
-                <div className="flex-1 px-6 py-6">
+                <div className="flex-1 px-6 py-4">
                   <nav className="space-y-1">
                     {navigation.map((item) => {
                       const Icon = item.icon;

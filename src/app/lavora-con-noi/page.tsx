@@ -61,6 +61,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
     }
   ];
   // Le foto del team verranno aggiunte manualmente
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -74,8 +75,50 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Candidatura inviata con successo! Ti contatteremo presto.');
+    setIsSubmitting(true);
+
+    try {
+      const submitFormData = new FormData();
+      submitFormData.append('name', formData.name);
+      submitFormData.append('email', formData.email);
+      submitFormData.append('phone', formData.phone);
+      submitFormData.append('experience', formData.experience);
+      submitFormData.append('message', formData.message);
+      
+      if (formData.cv) {
+        submitFormData.append('cv', formData.cv);
+      }
+
+      const response = await fetch('/api/careers', {
+        method: 'POST',
+        body: submitFormData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('🎉 Candidatura inviata con successo! Ti contatteremo presto.');
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          experience: '',
+          message: '',
+          cv: null,
+        });
+        // Reset file input
+        const fileInput = document.getElementById('cv') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      } else {
+        alert(`❌ Errore: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Errore durante l\'invio:', error);
+      alert('❌ Errore durante l\'invio. Riprova più tardi.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const fadeInUp = {
@@ -155,60 +198,11 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
               </div>
             </motion.div>
           </motion.div>
-        </div>
-      </section>      {/* Photo Gallery Section - Ready for manual photos */}      <section className="py-20 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="text-center mb-16"
-          >
-            <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Il Nostro Mondo
-            </motion.h2>
-            <motion.p variants={fadeInUp} className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Scopri l'ambiente di lavoro che ti aspetta: professionalità, stile e passione per l'eccellenza
-            </motion.p>
-          </motion.div>
+        </div>      </section>
 
-          {/* Placeholder per le foto che aggiungerai manualmente */}
-          <div className="grid md:grid-cols-3 gap-8">            <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-                <div className="text-white text-6xl">📸</div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-2">Il Nostro Team</h3>
-                <p className="text-gray-300">Foto del team al lavoro</p>
-              </div>
-            </div>
-            
-            <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                <div className="text-white text-6xl">✂️</div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-2">Il Nostro Ambiente</h3>
-                <p className="text-gray-300">Spazi moderni e professionali</p>
-              </div>
-            </div>
-            
-            <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                <div className="text-white text-6xl">🎯</div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-2">La Nostra Passione</h3>
-                <p className="text-gray-600">Dedizione e professionalità</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      
       {/* Why Choose Us */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gradient-to-br from-gray-900 via-black to-gray-800">\
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -257,8 +251,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-2">
                         {benefit.title}
-                      </h3>
-                      <p className="text-gray-600 leading-relaxed">
+                      </h3>                      <p className="text-gray-300 leading-relaxed">
                         {benefit.description}
                       </p>
                     </div>
@@ -268,10 +261,8 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
             </motion.div>
           </div>
         </div>
-      </section>
-
-      {/* Application Form */}
-      <section id="application-form" className="py-20 bg-white">
+      </section>      {/* Application Form */}
+      <section id="application-form" className="py-20 bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -283,7 +274,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
             <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold text-white mb-6">
               Inizia il Tuo Viaggio
             </motion.h2>
-            <motion.p variants={fadeInUp} className="text-xl text-gray-600">
+            <motion.p variants={fadeInUp} className="text-xl text-gray-300">
               Compila il modulo e allega il tuo CV. Il tuo futuro in Maskio inizia qui!
             </motion.p>
           </motion.div>
@@ -293,12 +284,11 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
             whileInView="visible"
             viewport={{ once: true }}
             variants={scaleIn}
-            className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 md:p-12 shadow-2xl border border-gray-100"
+            className="bg-gray-800 border border-gray-700 rounded-3xl p-8 md:p-12 shadow-2xl"
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="space-y-6">              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-3">
+                  <label htmlFor="name" className="block text-sm font-semibold text-white mb-3">
                     Nome Completo *
                   </label>
                   <input
@@ -308,13 +298,13 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 bg-white shadow-sm"
+                    className="w-full px-4 py-4 border border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 bg-gray-700 shadow-sm text-white placeholder-gray-400"
                     placeholder="Mario Rossi"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-3">
+                  <label htmlFor="email" className="block text-sm font-semibold text-white mb-3">
                     Email *
                   </label>
                   <input
@@ -324,13 +314,13 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 bg-white shadow-sm"
+                    className="w-full px-4 py-4 border border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 bg-gray-700 shadow-sm text-white placeholder-gray-400"
                     placeholder="mario.rossi@email.com"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-3">
+                  <label htmlFor="phone" className="block text-sm font-semibold text-white mb-3">
                     Telefono *
                   </label>
                   <input
@@ -340,14 +330,14 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                     value={formData.phone}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 bg-white shadow-sm"
+                    className="w-full px-4 py-4 border border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 bg-gray-700 shadow-sm text-white placeholder-gray-400"
                     placeholder="+39 123 456 7890"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="experience" className="block text-sm font-semibold text-gray-700 mb-3">
+                <label htmlFor="experience" className="block text-sm font-semibold text-white mb-3">
                   Esperienza Professionale
                 </label>
                 <input
@@ -356,13 +346,13 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                   name="experience"
                   value={formData.experience}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 bg-white shadow-sm"
+                  className="w-full px-4 py-4 border border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 bg-gray-700 shadow-sm text-white placeholder-gray-400"
                   placeholder="Es. 3 anni nel settore barbering, specializzato in tagli classici"
                 />
               </div>
 
               <div>
-                <label htmlFor="cv" className="block text-sm font-semibold text-gray-700 mb-3">
+                <label htmlFor="cv" className="block text-sm font-semibold text-white mb-3">
                   Curriculum Vitae (PDF) *
                 </label>
                 <input
@@ -372,12 +362,12 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                   onChange={handleFileChange}
                   accept=".pdf"
                   required
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 bg-white shadow-sm"
+                  className="w-full px-4 py-4 border border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200 bg-gray-700 shadow-sm text-white"
                 />
               </div>
 
               <div>
-                <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-3">
+                <label htmlFor="message" className="block text-sm font-semibold text-white mb-3">
                   Lettera di Presentazione
                 </label>
                 <textarea
@@ -386,18 +376,21 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                   value={formData.message}
                   onChange={handleInputChange}
                   rows={5}
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 resize-none bg-white shadow-sm"
+                  className="w-full px-4 py-4 border border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 resize-none bg-gray-700 shadow-sm text-white placeholder-gray-400"
                   placeholder="Raccontaci di te, delle tue passioni e perché vorresti far parte del team Maskio..."
                 ></textarea>
-              </div>
-
-              <motion.button
+              </div>              <motion.button
                 type="submit"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-5 px-8 rounded-xl transition-all duration-300 text-lg shadow-xl hover:shadow-2xl"
+                disabled={isSubmitting}
+                whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
+                className={`w-full font-bold py-5 px-8 rounded-xl transition-all duration-300 text-lg shadow-xl hover:shadow-2xl ${
+                  isSubmitting 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white'
+                }`}
               >
-                🚀 Invia la Tua Candidatura
+                {isSubmitting ? '🔄 Invio in corso...' : '🚀 Invia la Tua Candidatura'}
               </motion.button>
             </form>
           </motion.div>
@@ -441,7 +434,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Candidature</h3>
-                  <p className="text-gray-300">careers@maskiobarber.com</p>
+                  <p className="text-gray-300">fabio.cassano97@icloud.com</p>
                 </div>
               </div>
               

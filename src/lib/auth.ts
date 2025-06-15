@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 import { db } from './database-postgres'
 import { users } from './schema'
 import bcrypt from 'bcryptjs'
@@ -27,6 +28,10 @@ declare module 'next-auth' {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -137,11 +142,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
     })
-  ],
-  callbacks: {
+  ],  callbacks: {
     async signIn({ user, account, profile }) {
+      // For Google OAuth
+      if (account?.provider === 'google' && user?.email) {
+        try {
+          // Check if user already exists
+          const existingUser = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, user.email))
+            .limit(1)
+          
+          if (existingUser.length === 0) {
+            // Create new user from Google profile
+            await db
+              .insert(users)
+              .values({
+                email: user.email,
+                name: user.name || 'Google User',
+                role: 'customer',
+                image: user.image,
+                password: null, // No password for OAuth users
+              })
+          } else {
+            // Update existing user with Google image if available
+            if (user.image && existingUser[0].image !== user.image) {
+              await db
+                .update(users)
+                .set({ image: user.image })
+                .where(eq(users.email, user.email))
+            }
+          }
+        } catch (error) {
+          console.error('Error handling Google sign-in:', error)
+          return false
+        }
+      }
       return true
-    },    async session({ session, token }) {
+    },async session({ session, token }) {
       if (session.user?.email) {
         try {
           const dbUser = await db

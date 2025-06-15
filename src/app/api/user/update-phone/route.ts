@@ -3,13 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { db } from '@/lib/database-postgres';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
-
-const authOptions = {
-  session: {
-    strategy: 'jwt' as const
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-};
+import { authOptions } from '@/lib/auth.config';
 
 export async function POST(request: NextRequest) {
   try {

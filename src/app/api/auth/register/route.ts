@@ -70,15 +70,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Create user with normalized data
+    const hashedPassword = await bcrypt.hash(password, 12);    // Create user with normalized data
     const newUser = await DatabaseService.createUser({
       name: name.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
       role: 'customer',
-      password: hashedPassword
+      password: hashedPassword,
+      emailVerified: new Date(), // Segna come verificato automaticamente
     });
 
     // Remove password from response

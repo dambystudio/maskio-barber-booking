@@ -199,16 +199,17 @@ export default function Home() {
           className="absolute inset-0 z-0"
           initial={{ scale: 1.05 }}
           animate={{ scale: 1 }}
-          transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        ><video
-            src="/videoLoop.mp4"
+          transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}        >          <video
+            src="/videoLoopCompresso.mp4"
             autoPlay
             muted
             loop
             playsInline
             className="absolute inset-0 w-full h-full object-cover brightness-[0.55] filter contrast-110 saturate-[1.02]"
-            preload="auto"
-          />            {/* Overlay con gradiente più sofisticato e lussuoso */}
+            poster="/sediaOro.webp"
+            preload="metadata"
+          />
+          {/* Overlay con gradiente più sofisticato e lussuoso */}
           <motion.div
             className="absolute inset-0 bg-gradient-to-br from-black/70 via-gray-900/50 to-amber-950/20"
             initial={{ opacity: 0 }}
@@ -1647,13 +1648,13 @@ export default function Home() {
                 />
               </motion.div>
             ))}
-          </motion.div>
-
-          <motion.div 
+          </motion.div>          <motion.div 
             className="text-center mt-12"
             variants={fadeInUp}
-          >            <Link href="/blog">
-              <motion.button                className="bg-gradient-to-r from-black to-gray-900 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 relative overflow-hidden group"
+          >
+            <Link href="/testimonianze">
+              <motion.button
+                className="bg-gradient-to-r from-black to-gray-900 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 relative overflow-hidden group"
                 variants={magneticHover}
                 initial="rest"
                 whileTap="tap"
@@ -1669,14 +1670,11 @@ export default function Home() {
                   whileHover={{ x: "100%" }}
                   transition={{ duration: 0.6, ease: "easeInOut" }}
                 />
-                <span className="relative z-10">Vedi Tutte le Gallerie</span>
-              </motion.button>            </Link>
-          </motion.div>
-        </div>
+                <span className="relative z-10">Vedi Tutte le Recensioni</span>
+              </motion.button>
+            </Link>
+          </motion.div>        </div>
       </motion.section>
-
-      {/* Reviews Section */}
-      <ReviewsSection />
 
       {/* CTA Section with Advanced Animations */}
       <motion.section 

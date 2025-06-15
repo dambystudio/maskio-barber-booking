@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
@@ -14,15 +14,14 @@ export default function SignIn() {
     email: '',
     password: ''
   });
-
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
     
     try {
       const result = await signIn('google', {
-        callbackUrl: '/area-personale',
-        redirect: false,
+        callbackUrl: '/',
+        redirect: true, // Lascia che NextAuth gestisca il redirect
       });
       
       if (result?.error) {
@@ -34,7 +33,6 @@ export default function SignIn() {
       setLoading(false);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -48,9 +46,23 @@ export default function SignIn() {
       });
 
       if (result?.error) {
-        setError('Email o password non corretti');      } else {
-        // Redirect after successful login
-        router.push('/area-personale');
+        setError('Email o password non corretti');
+      } else if (result?.ok) {
+        // Aspetta che la sessione si aggiorni
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Verifica che la sessione sia aggiornata
+        const session = await getSession();
+        
+        if (session) {
+          // Redirect to home page
+          window.location.href = '/';
+        } else {
+          // Fallback se la sessione non è ancora aggiornata
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 500);
+        }
       }
     } catch (err) {
       setError('Errore durante il login');

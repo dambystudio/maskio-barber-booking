@@ -1,0 +1,57 @@
+{
+  "name": "Maskio Barber Concept",
+  "short_name": "Maskio Barber",
+  "description": "Una nuova concezione del barbiere - Prenota il tuo appuntamento",
+  "start_url": "/?standalone=true",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "it",
+  "categories": ["business", "lifestyle"],  "icons": [
+    {
+      "src": "/icone/nero/512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icone/nero/192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icone/nero/180x180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Prenota Appuntamento",
+      "short_name": "Prenota",
+      "description": "Prenota velocemente il tuo appuntamento",
+      "url": "/prenota-appuntamento",      "icons": [
+        {
+          "src": "/icone/nero/192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Contatti",
+      "short_name": "Contatti",
+      "description": "Visualizza i nostri contatti",
+      "url": "/contatti",
+      "icons": [
+        {
+          "src": "/icone/nero/192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

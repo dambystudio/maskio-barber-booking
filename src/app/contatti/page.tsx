@@ -44,25 +44,23 @@ export default function Page() {
             animate="animate"
           >            {/* Phone */}
             <motion.a 
-              href="tel:+393123456789"
+              href="tel:+393317100730"
               className="bg-gray-900 border border-gray-800 p-6 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors duration-200 block"
               variants={fadeInUp}
               {...cardHover}
             >
               <h3 className="text-lg font-semibold text-white mb-2">📞 Telefono</h3>
-              <p className="text-gray-300">+39 312 345 6789</p>
+              <p className="text-gray-300">+39 331 710 0730</p>
               <p className="text-sm text-yellow-400 mt-2">Tocca per chiamare</p>
-            </motion.a>
-
-            {/* Email */}
+            </motion.a>            {/* Email */}
             <motion.a 
-              href="mailto:info@maskiobarber.com"
+              href="mailto:fabio.cassano97@icloud.com"
               className="bg-gray-900 border border-gray-800 p-6 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors duration-200 block"
               variants={fadeInUp}
               {...cardHover}
             >
               <h3 className="text-lg font-semibold text-white mb-2">✉️ Email</h3>
-              <p className="text-gray-300">info@maskiobarber.com</p>
+              <p className="text-gray-300">fabio.cassano97@icloud.com</p>
               <p className="text-sm text-yellow-400 mt-2">Tocca per scrivere</p>
             </motion.a>
 
@@ -85,9 +83,8 @@ export default function Page() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <motion.a
-              href="tel:+393123456789"
+          >            <motion.a
+              href="tel:+393317100730"
               className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -95,7 +92,7 @@ export default function Page() {
               📞 Chiama Ora
             </motion.a>
             <motion.a
-              href="https://wa.me/393123456789"
+              href="https://wa.me/393317100730"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200 flex items-center gap-2"
@@ -103,9 +100,8 @@ export default function Page() {
               whileTap={{ scale: 0.95 }}
             >
               💬 WhatsApp
-            </motion.a>
-            <motion.a
-              href="mailto:info@maskiobarber.com"
+            </motion.a>            <motion.a
+              href="mailto:fabio.cassano97@icloud.com"
               className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
