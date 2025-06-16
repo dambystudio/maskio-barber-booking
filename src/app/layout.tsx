@@ -11,6 +11,7 @@ import SessionProvider from '../components/SessionProvider';
 import MobileBottomNav from '../components/MobileBottomNav';
 import PWAFloatingMenu from '../components/PWAFloatingMenu';
 import AddToHomeBanner from '../components/AddToHomeBanner';
+import DynamicManifest from '../components/DynamicManifest';
 // Importazione URL per metadataBase
 import { URL } from 'url';
 import JsonLdScript from '../components/JsonLdScript';
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
   description: 'Una nuova concezione del barbiere - Barbiere di qualità a San Giovanni Rotondo',
   robots: 'index, follow', // Allow indexing by search engines
   keywords: 'barbiere, barbiere San Giovanni Rotondo, taglio capelli, barba, Maskio, trattamenti capelli',
-  manifest: '/manifest.json',
+  manifest: '/api/manifest',
   
   // Open Graph meta tags per migliorare la condivisione sui social media
   openGraph: {
@@ -103,10 +104,10 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/icone/nero/32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/icone/nero/16x16.png" />
         <link rel="shortcut icon" href="/icone/nero/32x32.png" />
-      </head>      
-      <body className={inter.className}>
+      </head>        <body className={inter.className}>
         <SessionProvider>
           <SecurityProvider>
+            <DynamicManifest />
             <DailyUpdateManager />
             <Navbar />
             <main className="min-h-screen pt-[70px] standalone:pt-0"> {/* Rimuovi padding top in modalità standalone */}
