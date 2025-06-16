@@ -101,8 +101,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } catch (error) {
             console.error('Registration error:', error)
             return null
-          }
-        } else {
+          }        } else {
           // Login
           try {
             const user = await db
@@ -115,13 +114,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               return null
             }
             
+            // Check environment variables for role override
+            const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
+            const barberEmails = process.env.BARBER_EMAILS?.split(',').map(email => email.trim()) || [];
+            
+            // Determine current role based on environment variables
+            const isAdmin = adminEmails.includes(user[0].email);
+            const isBarber = barberEmails.includes(user[0].email);
+            
+            let currentRole = 'customer'; // default
+            if (isAdmin) {
+              currentRole = 'admin';
+            } else if (isBarber) {
+              currentRole = 'barber';
+            }
+            
+            // Update role in database if it has changed
+            if (user[0].role !== currentRole) {
+              await db
+                .update(users)
+                .set({ role: currentRole })
+                .where(eq(users.id, user[0].id));
+              
+              console.log(`Updated user ${user[0].email} role from ${user[0].role} to ${currentRole}`);
+            }
+            
             // For OAuth users without password
             if (!user[0].password && !credentials.password) {
               return {
                 id: user[0].id,
                 email: user[0].email,
                 name: user[0].name,
-                role: user[0].role as 'customer' | 'admin' | 'barber',
+                role: currentRole as 'customer' | 'admin' | 'barber',
                 image: user[0].image || undefined,
               }
             }
@@ -141,7 +165,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 id: user[0].id,
                 email: user[0].email,
                 name: user[0].name,
-                role: user[0].role as 'customer' | 'admin' | 'barber',
+                role: currentRole as 'customer' | 'admin' | 'barber',
                 image: user[0].image || undefined,
               }
             }
@@ -214,8 +238,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return false
         }
       }
-      return true
-    },async session({ session, token }) {
+      return true    },async session({ session, token }) {
       if (session.user?.email) {
         try {
           const dbUser = await db
@@ -225,8 +248,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             .limit(1);
           
           if (dbUser[0]) {
+            // Check environment variables for role override
+            const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
+            const barberEmails = process.env.BARBER_EMAILS?.split(',').map(email => email.trim()) || [];
+            
+            // Determine current role based on environment variables
+            const isAdmin = adminEmails.includes(session.user.email);
+            const isBarber = barberEmails.includes(session.user.email);
+            
+            let currentRole = 'customer'; // default
+            if (isAdmin) {
+              currentRole = 'admin';
+            } else if (isBarber) {
+              currentRole = 'barber';
+            }
+            
+            // Update role in database if it has changed
+            if (dbUser[0].role !== currentRole) {
+              await db
+                .update(users)
+                .set({ role: currentRole })
+                .where(eq(users.id, dbUser[0].id));
+              
+              console.log(`Session: Updated user ${session.user.email} role from ${dbUser[0].role} to ${currentRole}`);
+            }
+            
             (session.user as any).id = String(dbUser[0].id);
-            (session.user as any).role = dbUser[0].role as 'customer' | 'admin' | 'barber';
+            (session.user as any).role = currentRole as 'customer' | 'admin' | 'barber';
             session.user.name = dbUser[0].name || '';
             session.user.image = dbUser[0].image ? `${dbUser[0].image}` : undefined;
           }

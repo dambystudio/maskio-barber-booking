@@ -32,16 +32,16 @@ export default function AreaPersonale() {
   const [error, setError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<TabType>('appointments');
-  
-  // Verifica se l'utente è un barbiere
+    // Verifica se l'utente è un barbiere o admin
   const isBarber = session?.user?.role === 'barber';
-  
-  // Aggiorna il tab iniziale in base al ruolo
+  const isAdmin = session?.user?.role === 'admin';
+  const hasManagementAccess = isBarber || isAdmin;
+    // Aggiorna il tab iniziale in base al ruolo
   useEffect(() => {
-    if (isBarber) {
-      setActiveTab('profile'); // I barbieri iniziano dal profilo
+    if (hasManagementAccess) {
+      setActiveTab('profile'); // Admin e barbieri iniziano dal profilo
     }
-  }, [isBarber]);
+  }, [hasManagementAccess]);
   
   // Hook per gestire il telefono richiesto
   const { showPhoneModal, handlePhoneComplete, userEmail, userName } = usePhoneRequired();
@@ -257,13 +257,13 @@ export default function AreaPersonale() {
               </div>
             </div>            {/* Quick Action */}
             <div className="mb-8">
-              {isBarber ? (
+              {hasManagementAccess ? (
                 <Link
-                  href="/prenotazioni"
+                  href="/pannello-prenotazioni"
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg"
                 >
                   <span>⚙️</span>
-                  <span>Pannello Gestione</span>
+                  <span>Pannello {isAdmin ? 'Admin' : 'Gestione'}</span>
                 </Link>
               ) : (
                 <Link
@@ -398,27 +398,35 @@ export default function AreaPersonale() {
                   <div className="flex items-center space-x-4">
                     <div className={`w-16 h-16 ${isBarber ? 'bg-blue-500' : 'bg-amber-500'} rounded-full flex items-center justify-center text-2xl font-bold text-${isBarber ? 'white' : 'black'}`}>
                       {isBarber ? '✂️' : (userProfile.name?.charAt(0) || '👤')}
-                    </div>
-                    <div>
+                    </div>                    <div>
                       <h2 className="text-2xl font-bold text-white">{userProfile.name}</h2>
-                      <p className={`${isBarber ? 'text-blue-400' : 'text-amber-400'}`}>
-                        {isBarber ? 'Barbiere' : `Cliente dal ${userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'MMMM yyyy', { locale: it }) : 'N/A'}`}
+                      <p className={`${hasManagementAccess ? 'text-blue-400' : 'text-amber-400'}`}>
+                        {isAdmin ? 'Amministratore' : isBarber ? 'Barbiere' : `Cliente dal ${userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'MMMM yyyy', { locale: it }) : 'N/A'}`}
                       </p>
                     </div>
                   </div>
                   
-                  {/* Pannello di accesso rapido per barbieri */}
-                  {isBarber && (
+                  {/* Pannello di accesso rapido per barbieri e admin */}
+                  {hasManagementAccess && (
                     <div className="mt-6 pt-6 border-t border-blue-500/20">
                       <h3 className="text-lg font-semibold text-white mb-4">Accesso Rapido</h3>
                       <div className="grid grid-cols-2 gap-4">
                         <Link
-                          href="/prenotazioni"
+                          href="/pannello-prenotazioni"
                           className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
                         >
                           <span>📊</span>
                           <span>Gestione Prenotazioni</span>
                         </Link>
+                        {isAdmin && (
+                          <Link
+                            href="/admin/users"
+                            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
+                          >
+                            <span>👥</span>
+                            <span>Gestione Utenti</span>
+                          </Link>
+                        )}
                         <Link
                           href="/calendario"
                           className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
