@@ -45,21 +45,22 @@ export default function AreaPersonale() {
     hasManagementAccess,
     fullSession: session
   });  const [sessionUpdateAttempted, setSessionUpdateAttempted] = useState(false);
-  
-  // Debug visibile
+    // Debug visibile
   useEffect(() => {
     if (session?.user?.email === 'davide431@outlook.it' && session?.user?.role && !sessionUpdateAttempted) {
       const debugInfo = `Email: ${session.user.email}\nRole: ${session.user.role}\nIs Admin: ${isAdmin}\nHas Management: ${hasManagementAccess}`;
       console.log('🎯 Debug Info for davide431@outlook.it:', debugInfo);
       
-      // Se il ruolo è customer ma dovrebbe essere admin, forza refresh della sessione (solo una volta)
+      // Se il ruolo è customer ma dovrebbe essere admin, forza logout e login
       if (session.user.role === 'customer') {
-        console.log('🔄 Role mismatch detected, forcing session update...');
+        console.log('🔄 Role mismatch detected, forcing logout/login...');
+        alert('Ruolo non aggiornato. Effettuo logout per aggiornare i permessi...');
         setSessionUpdateAttempted(true);
-        update(); // Aggiorna la sessione NextAuth
+        signOut({ callbackUrl: '/auth/signin' });
+        return;
       }
     }
-  }, [session, isAdmin, hasManagementAccess, update, sessionUpdateAttempted]);
+  }, [session, isAdmin, hasManagementAccess, sessionUpdateAttempted]);
     // Aggiorna il tab iniziale in base al ruolo
   useEffect(() => {
     if (hasManagementAccess) {
