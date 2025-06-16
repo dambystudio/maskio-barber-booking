@@ -33,11 +33,38 @@ export default function PannelloPrenotazioni() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDebouncing, setIsDebouncing] = useState(false);  // Check if user is authorized (barber or admin role)
-  const isAuthorized = session?.user?.role === 'barber' || session?.user?.role === 'admin';
+  const [isDebouncing, setIsDebouncing] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [permissionsChecked, setPermissionsChecked] = useState(false);
 
-  // If still loading session, show loading
-  if (status === 'loading') {
+  // Verifica permessi tramite API invece che da sessione
+  const checkPermissions = async () => {
+    try {
+      const response = await fetch('/api/debug/user-permissions');
+      if (response.ok) {
+        const data = await response.json();
+        setIsAuthorized(data.permissions.isAdmin || data.permissions.isBarber || false);
+      }
+    } catch (error) {
+      console.error('Error checking permissions:', error);
+      setIsAuthorized(false);
+    } finally {
+      setPermissionsChecked(true);
+    }
+  };
+
+  useEffect(() => {
+    if (status === 'loading') return;
+    
+    if (!session) {
+      window.location.href = '/auth/signin';
+      return;
+    }
+
+    checkPermissions();
+  }, [session, status]);
+  // If still loading session or permissions, show loading
+  if (status === 'loading' || !permissionsChecked) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">

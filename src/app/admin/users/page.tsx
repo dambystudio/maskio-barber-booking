@@ -19,8 +19,24 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [updateLoading, setUpdateLoading] = useState<string | null>(null);
-  // Verifica se l'utente è admin (solo admin possono gestire utenti)
-  const isAdmin = session?.user?.role === 'admin';
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [permissionsChecked, setPermissionsChecked] = useState(false);
+
+  // Verifica permessi tramite API invece che da sessione
+  const checkAdminPermissions = async () => {
+    try {
+      const response = await fetch('/api/debug/user-permissions');
+      if (response.ok) {
+        const data = await response.json();
+        setIsAdmin(data.permissions.isAdmin || false);
+      }
+    } catch (error) {
+      console.error('Error checking permissions:', error);
+      setIsAdmin(false);
+    } finally {
+      setPermissionsChecked(true);
+    }
+  };
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -30,11 +46,19 @@ export default function AdminUsersPage() {
       return;
     }
 
+    checkAdminPermissions();
+  }, [session, status, router]);
+
+  useEffect(() => {
+    if (!permissionsChecked) return;
+    
     if (!isAdmin) {
       router.push('/');
       return;
-    }    fetchUsers();
-  }, [session, status, router, isAdmin]);
+    }
+    
+    fetchUsers();
+  }, [permissionsChecked, isAdmin, router]);
 
   const fetchUsers = async () => {
     try {
