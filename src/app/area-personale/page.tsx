@@ -31,11 +31,71 @@ export default function AreaPersonale() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('appointments');
-  // Verifica se l'utente è un barbiere o admin
+  const [activeTab, setActiveTab] = useState<TabType>('appointments');  // Verifica se l'utente è un barbiere o admin
   const isBarber = session?.user?.role === 'barber';
   const isAdmin = session?.user?.role === 'admin';
   const hasManagementAccess = isBarber || isAdmin;
+  
+  // Stato per i permessi reali dal backend
+  const [realPermissions, setRealPermissions] = useState({
+    isAdmin: false,
+    isBarber: false,
+    hasManagementAccess: false,
+    checked: false
+  });
+  // Check permessi tramite API
+  useEffect(() => {
+    if (session?.user?.email === 'davide431@outlook.it') {
+      console.log('🔍 Checking permissions for davide431@outlook.it...');
+      fetch('/api/debug/user-permissions')
+        .then(res => {
+          console.log('🌐 API Response Status:', res.status);
+          return res.json();
+        })
+        .then(data => {
+          console.log('📋 API Response Data:', data);
+          if (data.permissions) {
+            const newPermissions = {
+              isAdmin: data.permissions.isAdmin,
+              isBarber: data.permissions.isBarber,
+              hasManagementAccess: data.permissions.isAdmin || data.permissions.isBarber,
+              checked: true
+            };
+            console.log('✅ Setting real permissions:', newPermissions);
+            setRealPermissions(newPermissions);
+          } else {
+            console.log('⚠️ No permissions in API response');
+            setRealPermissions({
+              isAdmin: false,
+              isBarber: false,
+              hasManagementAccess: false,
+              checked: true
+            });
+          }
+        })
+        .catch(err => {
+          console.error('❌ Error checking permissions:', err);
+          setRealPermissions({
+            isAdmin: false,
+            isBarber: false,
+            hasManagementAccess: false,
+            checked: true
+          });
+        });
+    } else {
+      setRealPermissions({
+        isAdmin: false,
+        isBarber: false,
+        hasManagementAccess: false,
+        checked: true
+      });
+    }
+  }, [session?.user?.email]);
+
+  // Usa i permessi reali per davide431@outlook.it, altrimenti usa la sessione
+  const effectiveIsAdmin = session?.user?.email === 'davide431@outlook.it' ? realPermissions.isAdmin : isAdmin;
+  const effectiveIsBarber = session?.user?.email === 'davide431@outlook.it' ? realPermissions.isBarber : isBarber;
+  const effectiveHasManagementAccess = session?.user?.email === 'davide431@outlook.it' ? realPermissions.hasManagementAccess : hasManagementAccess;
     // Debug temporaneo
   console.log('🔍 Session Debug:', {
     email: session?.user?.email,
@@ -44,29 +104,44 @@ export default function AreaPersonale() {
     isBarber,
     hasManagementAccess,
     fullSession: session
-  });  const [sessionUpdateAttempted, setSessionUpdateAttempted] = useState(false);
-    // Debug visibile
+  });  const [sessionUpdateAttempted, setSessionUpdateAttempted] = useState(false);  // Debug visibile
   useEffect(() => {
-    if (session?.user?.email === 'davide431@outlook.it' && session?.user?.role && !sessionUpdateAttempted) {
-      const debugInfo = `Email: ${session.user.email}\nRole: ${session.user.role}\nIs Admin: ${isAdmin}\nHas Management: ${hasManagementAccess}`;
+    if (session?.user?.email === 'davide431@outlook.it' && realPermissions.checked) {
+      const debugInfo = {
+        email: session.user.email,
+        sessionRole: session.user.role,
+        sessionIsAdmin: isAdmin,
+        sessionIsBarber: isBarber,
+        sessionHasManagement: hasManagementAccess,
+        realIsAdmin: realPermissions.isAdmin,
+        realIsBarber: realPermissions.isBarber,
+        realHasManagement: realPermissions.hasManagementAccess,
+        effectiveIsAdmin,
+        effectiveIsBarber,
+        effectiveHasManagementAccess
+      };
+      
       console.log('🎯 Debug Info for davide431@outlook.it:', debugInfo);
       
-      // Se il ruolo è customer ma dovrebbe essere admin, forza logout e login
-      if (session.user.role === 'customer') {
-        console.log('🔄 Role mismatch detected, forcing logout/login...');
-        alert('Ruolo non aggiornato. Effettuo logout per aggiornare i permessi...');
-        setSessionUpdateAttempted(true);
-        signOut({ callbackUrl: '/auth/signin' });
-        return;
+      // Debug aggiuntivo per il rendering condizionale
+      console.log('🖼️ Rendering conditions:');
+      console.log('- Will show management access?', effectiveHasManagementAccess);
+      console.log('- Will show admin features?', effectiveIsAdmin);
+      console.log('- Permissions checked?', realPermissions.checked);
+      
+      // Se c'è una discrepanza tra session e real permissions
+      if (session.user.role === 'customer' && effectiveIsAdmin) {
+        console.log('⚠️ Role mismatch: session shows customer but API shows admin');
+        console.log('✅ Using API permissions instead of session');
       }
     }
-  }, [session, isAdmin, hasManagementAccess, sessionUpdateAttempted]);
-    // Aggiorna il tab iniziale in base al ruolo
+  }, [session, realPermissions, effectiveIsAdmin, effectiveIsBarber, effectiveHasManagementAccess]);
+  // Aggiorna il tab iniziale in base al ruolo
   useEffect(() => {
-    if (hasManagementAccess) {
+    if (effectiveHasManagementAccess) {
       setActiveTab('profile'); // Admin e barbieri iniziano dal profilo
     }
-  }, [hasManagementAccess]);
+  }, [effectiveHasManagementAccess]);
   
   // Hook per gestire il telefono richiesto
   const { showPhoneModal, handlePhoneComplete, userEmail, userName } = usePhoneRequired();
@@ -199,8 +274,7 @@ export default function AreaPersonale() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Header con Tab Navigation */}
+    <div className="min-h-screen bg-black">      {/* Header con Tab Navigation */}
       <div className="bg-gray-900/50 backdrop-blur-sm sticky top-0 z-40 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">          {/* Welcome Header */}
           <div className="py-4 text-center">
@@ -210,7 +284,21 @@ export default function AreaPersonale() {
             <p className="text-gray-400 text-xs md:text-sm">
               La tua area personale
             </p>
-          </div>          {/* Tab Navigation */}
+          </div>
+
+          {/* Debug Info - Solo per davide431@outlook.it */}
+          {session?.user?.email === 'davide431@outlook.it' && (
+            <div className="mb-4 p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg">
+              <div className="text-xs text-purple-200 space-y-1">
+                <div><strong>Debug Info:</strong></div>
+                <div>Session Role: {session?.user?.role || 'None'}</div>
+                <div>Real Admin: {realPermissions.isAdmin ? 'Yes' : 'No'}</div>
+                <div>Real Barber: {realPermissions.isBarber ? 'Yes' : 'No'}</div>
+                <div>Effective Management: {effectiveHasManagementAccess ? 'Yes' : 'No'}</div>
+                <div>Permissions Checked: {realPermissions.checked ? 'Yes' : 'No'}</div>
+              </div>
+            </div>
+          )}          {/* Tab Navigation */}
           <div className="flex justify-center pb-3">
             <div className="flex bg-gray-800/50 rounded-xl p-1 space-x-1">
               {!isBarber && (
@@ -282,13 +370,13 @@ export default function AreaPersonale() {
               </div>
             </div>            {/* Quick Action */}
             <div className="mb-8">
-              {hasManagementAccess ? (
+              {effectiveHasManagementAccess ? (
                 <Link
                   href="/pannello-prenotazioni"
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg"
                 >
                   <span>⚙️</span>
-                  <span>Pannello {isAdmin ? 'Admin' : 'Gestione'}</span>
+                  <span>Pannello {effectiveIsAdmin ? 'Admin' : 'Gestione'}</span>
                 </Link>
               ) : (
                 <Link
@@ -424,15 +512,14 @@ export default function AreaPersonale() {
                     <div className={`w-16 h-16 ${isBarber ? 'bg-blue-500' : 'bg-amber-500'} rounded-full flex items-center justify-center text-2xl font-bold text-${isBarber ? 'white' : 'black'}`}>
                       {isBarber ? '✂️' : (userProfile.name?.charAt(0) || '👤')}
                     </div>                    <div>
-                      <h2 className="text-2xl font-bold text-white">{userProfile.name}</h2>
-                      <p className={`${hasManagementAccess ? 'text-blue-400' : 'text-amber-400'}`}>
-                        {isAdmin ? 'Amministratore' : isBarber ? 'Barbiere' : `Cliente dal ${userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'MMMM yyyy', { locale: it }) : 'N/A'}`}
+                      <h2 className="text-2xl font-bold text-white">{userProfile.name}</h2>                      <p className={`${effectiveHasManagementAccess ? 'text-blue-400' : 'text-amber-400'}`}>
+                        {effectiveIsAdmin ? 'Amministratore' : effectiveIsBarber ? 'Barbiere' : `Cliente dal ${userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'MMMM yyyy', { locale: it }) : 'N/A'}`}
                       </p>
                     </div>
                   </div>
                   
                   {/* Pannello di accesso rapido per barbieri e admin */}
-                  {hasManagementAccess && (
+                  {effectiveHasManagementAccess && (
                     <div className="mt-6 pt-6 border-t border-blue-500/20">
                       <h3 className="text-lg font-semibold text-white mb-4">Accesso Rapido</h3>
                       <div className="grid grid-cols-2 gap-4">
@@ -443,7 +530,7 @@ export default function AreaPersonale() {
                           <span>📊</span>
                           <span>Gestione Prenotazioni</span>
                         </Link>
-                        {isAdmin && (
+                        {effectiveIsAdmin && (
                           <Link
                             href="/admin/users"
                             className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
