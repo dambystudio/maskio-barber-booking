@@ -42,29 +42,36 @@ export default function AreaPersonale() {
     isBarber: false,
     hasManagementAccess: false,
     checked: false
-  });
-  // Check permessi tramite API
+  });  // Check permessi tramite API
   useEffect(() => {
     if (session?.user?.email === 'davide431@outlook.it') {
       console.log('🔍 Checking permissions for davide431@outlook.it...');
-      fetch('/api/debug/user-permissions')
+      
+      // Usa il nuovo endpoint che non richiede autenticazione
+      fetch('/api/debug/check-permissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: session.user.email })
+      })
         .then(res => {
           console.log('🌐 API Response Status:', res.status);
           return res.json();
         })
         .then(data => {
           console.log('📋 API Response Data:', data);
-          if (data.permissions) {
+          if (data.success && data.permissions) {
             const newPermissions = {
               isAdmin: data.permissions.isAdmin,
               isBarber: data.permissions.isBarber,
-              hasManagementAccess: data.permissions.isAdmin || data.permissions.isBarber,
+              hasManagementAccess: data.permissions.hasManagementAccess,
               checked: true
             };
             console.log('✅ Setting real permissions:', newPermissions);
             setRealPermissions(newPermissions);
           } else {
-            console.log('⚠️ No permissions in API response');
+            console.log('⚠️ No permissions in API response or API failed:', data);
             setRealPermissions({
               isAdmin: false,
               isBarber: false,

@@ -6,13 +6,29 @@ import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
-    // Ottieni la sessione con la configurazione corretta
-    const session = await auth();
+    // Primo tentativo: ottieni la sessione
+    let session = null;
+    try {
+      session = await auth();
+    } catch (authError) {
+      console.error('Auth error:', authError);
+      return NextResponse.json({ 
+        error: 'Errore autenticazione',
+        authenticated: false,
+        authError: authError instanceof Error ? authError.message : 'Auth error'
+      }, { status: 500 });
+    }
     
     if (!session?.user?.email) {
       return NextResponse.json({ 
         error: 'Non autenticato',
-        authenticated: false 
+        authenticated: false,
+        debug: {
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          hasEmail: !!session?.user?.email,
+          sessionData: session
+        }
       });
     }
 
