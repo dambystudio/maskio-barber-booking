@@ -25,7 +25,7 @@ interface UserBooking {
 type TabType = 'appointments' | 'profile' | 'account';
 
 export default function AreaPersonale() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
   const [bookings, setBookings] = useState<UserBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,14 +45,19 @@ export default function AreaPersonale() {
     hasManagementAccess,
     fullSession: session
   });
-  
   // Debug visibile
   useEffect(() => {
     if (session?.user?.email === 'davide431@outlook.it' && session?.user?.role) {
       const debugInfo = `Email: ${session.user.email}\nRole: ${session.user.role}\nIs Admin: ${isAdmin}\nHas Management: ${hasManagementAccess}`;
       console.log('🎯 Debug Info for davide431@outlook.it:', debugInfo);
+      
+      // Se il ruolo è customer ma dovrebbe essere admin, forza refresh della sessione
+      if (session.user.role === 'customer') {
+        console.log('🔄 Role mismatch detected, forcing session update...');
+        update(); // Aggiorna la sessione NextAuth
+      }
     }
-  }, [session, isAdmin, hasManagementAccess]);
+  }, [session, isAdmin, hasManagementAccess, update]);
     // Aggiorna il tab iniziale in base al ruolo
   useEffect(() => {
     if (hasManagementAccess) {
