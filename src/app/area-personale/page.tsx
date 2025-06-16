@@ -32,10 +32,27 @@ export default function AreaPersonale() {
   const [error, setError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<TabType>('appointments');
-    // Verifica se l'utente è un barbiere o admin
+  // Verifica se l'utente è un barbiere o admin
   const isBarber = session?.user?.role === 'barber';
   const isAdmin = session?.user?.role === 'admin';
   const hasManagementAccess = isBarber || isAdmin;
+    // Debug temporaneo
+  console.log('🔍 Session Debug:', {
+    email: session?.user?.email,
+    role: session?.user?.role,
+    isAdmin,
+    isBarber,
+    hasManagementAccess,
+    fullSession: session
+  });
+  
+  // Debug visibile
+  useEffect(() => {
+    if (session?.user?.email === 'davide431@outlook.it' && session?.user?.role) {
+      const debugInfo = `Email: ${session.user.email}\nRole: ${session.user.role}\nIs Admin: ${isAdmin}\nHas Management: ${hasManagementAccess}`;
+      console.log('🎯 Debug Info for davide431@outlook.it:', debugInfo);
+    }
+  }, [session, isAdmin, hasManagementAccess]);
     // Aggiorna il tab iniziale in base al ruolo
   useEffect(() => {
     if (hasManagementAccess) {
