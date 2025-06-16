@@ -66,6 +66,36 @@ export class BookingService {  // Ottieni tutte le prenotazioni
       throw error;
     }
   }
+
+  // Ottieni disponibilità per multipli giorni in una sola chiamata (ottimizzato)
+  static async getBatchAvailability(barberId: string, dates: string[]): Promise<Record<string, { hasSlots: boolean; availableCount: number; totalSlots: number }>> {
+    try {
+      console.log(`📊 BatchAvailability request for ${barberId}: ${dates.length} dates`);
+      
+      const response = await fetch(`${API_BASE}/batch-availability`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          barberId,
+          dates
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Errore nel caricamento della disponibilità batch');
+      }
+      
+      const result = await response.json();
+      console.log(`✅ BatchAvailability completed: ${Object.keys(result.availability).length} dates processed`);
+      return result.availability;
+    } catch (error) {
+      console.error('Errore nel caricamento della disponibilità batch:', error);
+      throw error;
+    }
+  }
 }
 
 // Utility per validare i dati della prenotazione

@@ -14,6 +14,7 @@ interface UserBooking {
   id: string;
   service_name: string;
   barber_name: string;
+  barber_phone?: string;
   booking_date: string;
   booking_time: string;
   status: 'confirmed' | 'pending' | 'cancelled';
@@ -142,12 +143,10 @@ export default function AreaPersonale() {
         console.log('✅ Using API permissions instead of session');
       }
     }
-  }, [session, realPermissions, effectiveIsAdmin, effectiveIsBarber, effectiveHasManagementAccess]);
-  // Aggiorna il tab iniziale in base al ruolo
+  }, [session, realPermissions, effectiveIsAdmin, effectiveIsBarber, effectiveHasManagementAccess]);  // Aggiorna il tab iniziale in base al ruolo
   useEffect(() => {
-    if (effectiveHasManagementAccess) {
-      setActiveTab('profile'); // Admin e barbieri iniziano dal profilo
-    }
+    // Tutti iniziano da 'appointments', sia customer che barbieri che admin
+    setActiveTab('appointments');
   }, [effectiveHasManagementAccess]);
   
   // Hook per gestire il telefono richiesto
@@ -236,7 +235,6 @@ export default function AreaPersonale() {
       default: return 'text-gray-400 bg-gray-900/20';
     }
   };
-
   const getStatusText = (status: string) => {
     switch (status) {
       case 'confirmed': return 'Confermata';
@@ -244,6 +242,21 @@ export default function AreaPersonale() {
       case 'cancelled': return 'Cancellata';
       default: return status;
     }
+  };
+
+  const generateWhatsAppLink = (phone: string, barberName: string, serviceName: string, date: string, time: string) => {
+    if (!phone) return '';
+    
+    // Pulisce il numero di telefono da spazi e caratteri speciali, mantiene solo numeri e +
+    const cleanPhone = phone.replace(/[^\d+]/g, '');
+    
+    // Crea il messaggio per WhatsApp
+    const message = `Ciao ${barberName}! Ti scrivo per la mia prenotazione del ${date} alle ${time} per ${serviceName}.`;
+    
+    // Codifica il messaggio per URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
   };
   const handleLogout = async () => {
     if (confirm('Sei sicuro di voler uscire?')) {
@@ -306,21 +319,18 @@ export default function AreaPersonale() {
               </div>
             </div>
           )}          {/* Tab Navigation */}
-          <div className="flex justify-center pb-3">
-            <div className="flex bg-gray-800/50 rounded-xl p-1 space-x-1">
-              {!isBarber && (
-                <button
-                  onClick={() => setActiveTab('appointments')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    activeTab === 'appointments' 
-                      ? 'bg-amber-600 text-black shadow-lg' 
-                      : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
-                  }`}
-                >
-                  <span>📅</span>
-                  <span className="hidden sm:inline">Appuntamenti</span>
-                </button>
-              )}
+          <div className="flex justify-center pb-3">            <div className="flex bg-gray-800/50 rounded-xl p-1 space-x-1">
+              <button
+                onClick={() => setActiveTab('appointments')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  activeTab === 'appointments' 
+                    ? 'bg-amber-600 text-black shadow-lg' 
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                }`}
+              >
+                <span>📅</span>
+                <span className="hidden sm:inline">Appuntamenti</span>
+              </button>
               
               <button
                 onClick={() => setActiveTab('profile')}
@@ -352,7 +362,7 @@ export default function AreaPersonale() {
 
       {/* Tab Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">        {/* Appointments Tab - Solo per clienti */}
-        {activeTab === 'appointments' && !isBarber && (
+        {activeTab === 'appointments' && (
           <motion.div
             key="appointments"
             variants={tabVariants}
@@ -444,7 +454,27 @@ export default function AreaPersonale() {
                             </div>
                           )}                        </div>
                         {booking.status !== 'cancelled' && (
-                          <div className="mt-3">
+                          <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                            {/* Pulsante WhatsApp */}
+                            {booking.barber_phone && (
+                              <a
+                                href={generateWhatsAppLink(
+                                  booking.barber_phone,
+                                  booking.barber_name,
+                                  booking.service_name,
+                                  booking.booking_date ? format(parseISO(booking.booking_date), 'dd/MM/yyyy', { locale: it }) : '',
+                                  booking.booking_time
+                                )}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-4 py-2 rounded-lg transition duration-300 text-sm font-medium flex items-center justify-center space-x-2"
+                              >
+                                <span>💬</span>
+                                <span>Contatta {booking.barber_name}</span>
+                              </a>
+                            )}
+                            
+                            {/* Pulsante Cancella */}
                             {canCancelBooking(booking.booking_date, booking.booking_time) ? (
                               <button
                                 onClick={() => handleCancelBooking(booking.id)}
@@ -526,8 +556,7 @@ export default function AreaPersonale() {
                   </div>
                   
                   {/* Pannello di accesso rapido per barbieri e admin */}
-                  {effectiveHasManagementAccess && (
-                    <div className="mt-6 pt-6 border-t border-blue-500/20">
+                  {effectiveHasManagementAccess && (                    <div className="mt-6 pt-6 border-t border-blue-500/20">
                       <h3 className="text-lg font-semibold text-white mb-4">Accesso Rapido</h3>
                       <div className="grid grid-cols-2 gap-4">
                         <Link
@@ -546,13 +575,6 @@ export default function AreaPersonale() {
                             <span>Gestione Utenti</span>
                           </Link>
                         )}
-                        <Link
-                          href="/calendario"
-                          className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
-                        >
-                          <span>📅</span>
-                          <span>Calendario</span>
-                        </Link>
                       </div>
                     </div>
                   )}

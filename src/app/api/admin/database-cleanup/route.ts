@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth.config';
+import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/database-postgres';
 import { users, bookings, accounts, sessions, verificationTokens, closureSettings } from '@/lib/schema';
 import { sql } from 'drizzle-orm';

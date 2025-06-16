@@ -72,7 +72,7 @@ async function writeClosureSettings(settings: { closedDays: number[], closedDate
 export async function GET() {
   try {
     // Per ora non verifichiamo la sessione per il GET, così possiamo testare più facilmente
-    const settings = readClosureSettings();
+    const settings = await readClosureSettings();
     return NextResponse.json(settings);
   } catch (error) {
     console.error('Error fetching closure settings:', error);

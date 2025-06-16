@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth.config';
+import { authOptions } from '@/lib/auth';
 
 // API per gestire le email autorizzate per i ruoli
 export async function GET(request: NextRequest) {

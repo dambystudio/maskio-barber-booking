@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService } from '@/lib/database';
 import { isDateClosed, getClosureSettings } from '../../closure-settings/route';
+import { isBarberClosed } from '@/lib/barber-closures';
 
 interface TimeSlot {
   time: string;
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verifica se la data è chiusa
+    // Verifica se la data è chiusa per tutto il negozio
     const dateIsClosed = await isDateClosed(date);
     if (dateIsClosed) {
       console.log(`Date ${date} is closed according to closure settings`);
@@ -33,11 +34,30 @@ export async function GET(request: NextRequest) {
     // Get available slots from database
     const availableSlotTimes = await DatabaseService.getAvailableSlots(barberId, date);
     
-    // Create TimeSlot objects with availability status
-    const timeSlots: TimeSlot[] = allTimeSlots.map(time => ({
-      time,
-      available: availableSlotTimes.includes(time)
-    }));
+    // Ottieni l'email del barbiere dal database
+    const barberData = await DatabaseService.getBarberById(barberId);
+    const barberEmail = barberData?.email;
+    
+    // Create TimeSlot objects with availability status, considerando le chiusure specifiche del barbiere
+    const timeSlots: TimeSlot[] = [];
+    
+    for (const time of allTimeSlots) {
+      let available = availableSlotTimes.includes(time);
+      
+      // Controlla se il barbiere è chiuso per questo orario specifico
+      if (available && barberEmail) {
+        const barberIsClosed = await isBarberClosed(barberEmail, date, time);
+        if (barberIsClosed) {
+          available = false;
+          console.log(`Barber ${barberEmail} is closed at ${time} on ${date}`);
+        }
+      }
+      
+      timeSlots.push({
+        time,
+        available
+      });
+    }
     
     return NextResponse.json(timeSlots);
   } catch (error) {

@@ -1,10 +1,11 @@
-import NextAuth from 'next-auth'
+import NextAuth, { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import { db } from './database-postgres'
 import { users } from './schema'
 import bcrypt from 'bcryptjs'
 import { eq } from 'drizzle-orm'
+import type { Account, User } from "next-auth"
 
 declare module 'next-auth' {
   interface Session {
@@ -26,7 +27,7 @@ declare module 'next-auth' {
   }
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -113,14 +114,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (!user[0]) {
               return null
             }
-            
-            // Check environment variables for role override
+              // Check environment variables for role override
             const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
             const barberEmails = process.env.BARBER_EMAILS?.split(',').map(email => email.trim()) || [];
+            
+            console.log(`🔍 Role check for ${user[0].email}:`);
+            console.log(`📧 Admin emails: ${adminEmails}`);
+            console.log(`🧔 Barber emails: ${barberEmails}`);
             
             // Determine current role based on environment variables
             const isAdmin = adminEmails.includes(user[0].email);
             const isBarber = barberEmails.includes(user[0].email);
+            
+            console.log(`✅ Is admin: ${isAdmin}`);
+            console.log(`🧔 Is barber: ${isBarber}`);
             
             let currentRole = 'customer'; // default
             if (isAdmin) {
@@ -129,14 +136,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               currentRole = 'barber';
             }
             
+            console.log(`🎯 Current role from env: ${currentRole}`);
+            console.log(`💾 DB role: ${user[0].role}`);
+            
             // Update role in database if it has changed
             if (user[0].role !== currentRole) {
-              await db
-                .update(users)
-                .set({ role: currentRole })
-                .where(eq(users.id, user[0].id));
-              
-              console.log(`Updated user ${user[0].email} role from ${user[0].role} to ${currentRole}`);
+              try {
+                await db
+                  .update(users)
+                  .set({ role: currentRole })
+                  .where(eq(users.id, user[0].id));
+                
+                console.log(`✅ Updated user ${user[0].email} role from ${user[0].role} to ${currentRole}`);
+              } catch (updateError) {
+                console.error(`❌ Failed to update role for ${user[0].email}:`, updateError);
+              }
+            } else {
+              console.log(`ℹ️ Role ${currentRole} already correct for ${user[0].email}`);
             }
             
             // For OAuth users without password
@@ -179,7 +195,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
     })
   ],  callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile }: { user: User; account: Account | null; profile?: any }) {
       // For Google OAuth
       if (account?.provider === 'google' && user?.email) {        try {
           // Get authorized emails from environment variables
@@ -238,7 +254,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return false
         }
       }
-      return true    },async session({ session, token }) {
+      return true    },    async session({ session, token }: { session: any; token: any }) {
+      console.log(`🔄 Session callback triggered for: ${session.user?.email}`);
+      
       if (session.user?.email) {
         try {
           const dbUser = await db
@@ -248,13 +266,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             .limit(1);
           
           if (dbUser[0]) {
+            console.log(`💾 Found DB user: ${dbUser[0].email} with role: ${dbUser[0].role}`);
+            
             // Check environment variables for role override
             const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
             const barberEmails = process.env.BARBER_EMAILS?.split(',').map(email => email.trim()) || [];
             
+            console.log(`📧 Admin emails: ${adminEmails}`);
+            console.log(`🧔 Barber emails: ${barberEmails}`);
+            
             // Determine current role based on environment variables
             const isAdmin = adminEmails.includes(session.user.email);
             const isBarber = barberEmails.includes(session.user.email);
+            
+            console.log(`✅ Is admin: ${isAdmin}, Is barber: ${isBarber}`);
             
             let currentRole = 'customer'; // default
             if (isAdmin) {
@@ -263,42 +288,54 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               currentRole = 'barber';
             }
             
+            console.log(`🎯 Calculated role: ${currentRole}, DB role: ${dbUser[0].role}`);
+            
             // Update role in database if it has changed
             if (dbUser[0].role !== currentRole) {
-              await db
-                .update(users)
-                .set({ role: currentRole })
-                .where(eq(users.id, dbUser[0].id));
-              
-              console.log(`Session: Updated user ${session.user.email} role from ${dbUser[0].role} to ${currentRole}`);
+              try {
+                await db
+                  .update(users)
+                  .set({ role: currentRole })
+                  .where(eq(users.id, dbUser[0].id));
+                
+                console.log(`✅ Session: Updated user ${session.user.email} role from ${dbUser[0].role} to ${currentRole}`);
+              } catch (updateError) {
+                console.error(`❌ Failed to update role in session callback:`, updateError);
+              }
+            } else {
+              console.log(`ℹ️ Role ${currentRole} already correct for ${session.user.email}`);
             }
             
             (session.user as any).id = String(dbUser[0].id);
             (session.user as any).role = currentRole as 'customer' | 'admin' | 'barber';
             session.user.name = dbUser[0].name || '';
             session.user.image = dbUser[0].image ? `${dbUser[0].image}` : undefined;
+            
+            console.log(`🚀 Final session user role: ${(session.user as any).role}`);
+          } else {
+            console.log(`❌ No DB user found for: ${session.user.email}`);
           }
         } catch (error) {
-          console.error('Error fetching user session:', error);
+          console.error('❌ Error fetching user session:', error);
         }
       }
       return session
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        (token as any).role = (user as any).role
-        (token as any).id = user.id
+    },    async jwt({ token, user }: { token: any; user?: any }) {      if (user) {
+        // Per OAuth providers, il ruolo viene determinato nel session callback
+        // Per credentials provider, il ruolo viene già determinato nell'authorize
+        token.role = user.role || 'customer';
+        token.id = user.id;
       }
       return token
-    }
-  },
+    }},
   pages: {
     signIn: '/auth/signin',
     error: '/auth/error',
-  },
-  session: {
-    strategy: 'jwt'
+  },  session: {
+    strategy: 'jwt' as const
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
-})
+};
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);

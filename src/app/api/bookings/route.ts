@@ -3,8 +3,8 @@ import { DatabaseService } from '@/lib/database-postgres';
 import { EmailService } from '@/lib/email';
 import { Booking } from '@/lib/schema';
 import { randomUUID } from 'crypto';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth.config';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // Rate limiting per IP
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -29,6 +29,15 @@ function checkRateLimit(ip: string): boolean {
 }
 
 export async function GET(request: NextRequest) {  try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: 'Devi essere loggato per visualizzare le prenotazioni' },
+        { status: 401 }
+      );
+    }
+
     // Get IP for rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     if (!checkRateLimit(ip)) {
@@ -38,40 +47,104 @@ export async function GET(request: NextRequest) {  try {
       );
     }
 
+    // Check user permissions
+    const userRole = session.user.role;
+    const userEmail = session.user.email;
+
     // Get query parameters for filtering
     const url = new URL(request.url);
     const date = url.searchParams.get('date');
     const barberId = url.searchParams.get('barberId');
-    const userId = url.searchParams.get('userId');    let bookings: Booking[] = [];
+    const barberEmail = url.searchParams.get('barberEmail');
+    const status = url.searchParams.get('status');
+    const userId = url.searchParams.get('userId');
 
-    if (userId) {
-      bookings = await DatabaseService.getBookingsByUser(userId);
-    } else if (date) {
-      bookings = await DatabaseService.getBookingsByDate(date);    
-    } else if (barberId) {
-      bookings = await DatabaseService.getBookingsByBarber(barberId);
-    } else {
-      // Get all bookings for admin panel
-      bookings = await DatabaseService.getAllBookings();
-    }    // Filter by user if specified
-    if (userId) {
-      bookings = bookings.filter(booking => booking.userId === userId);
+    let bookings: Booking[] = [];
+
+    // If user is a barber (not admin), they can only see their own bookings
+    if (userRole === 'barber') {
+      // Force filter by current barber's email
+      const allBarbers = await DatabaseService.getBarbers();
+      const currentBarber = allBarbers.find(b => b.email === userEmail);
+      
+      if (!currentBarber) {
+        return NextResponse.json(
+          { error: 'Barbiere non trovato' },
+          { status: 404 }
+        );
+      }
+
+      // Get bookings only for this barber
+      bookings = await DatabaseService.getBookingsByBarber(currentBarber.id);
+      
+      // Apply additional filters if specified
+      if (date) {
+        bookings = bookings.filter(booking => booking.date === date);
+      }
+      if (status && status !== 'all') {
+        bookings = bookings.filter(booking => booking.status === status);
+      }
+    } 
+    // If user is admin, allow filtering by parameters
+    else if (userRole === 'admin') {
+      if (userId) {
+        bookings = await DatabaseService.getBookingsByUser(userId);
+      } else if (date) {
+        bookings = await DatabaseService.getBookingsByDate(date);    
+      } else if (barberId) {
+        bookings = await DatabaseService.getBookingsByBarber(barberId);
+      } else {
+        // Get all bookings for admin panel
+        bookings = await DatabaseService.getAllBookings();
+      }
+
+      // Apply additional filters for admin
+      if (userId) {
+        bookings = bookings.filter(booking => booking.userId === userId);
+      }
+        // Filter by barber email if specified
+      if (barberEmail) {
+        // Get all barbers and find by email
+        const allBarbers = await DatabaseService.getBarbers();
+        const barber = allBarbers.find(b => b.email === barberEmail);
+        if (barber) {
+          bookings = bookings.filter(booking => booking.barberId === barber.id);
+        } else {
+          // If barber not found, return empty array
+          bookings = [];
+        }
+      }
+      
+      // Filter by status if specified
+      if (status && status !== 'all') {
+        bookings = bookings.filter(booking => booking.status === status);
+      }
     }
+    // If user is customer, they can only see their own bookings
+    else {
+      bookings = await DatabaseService.getBookingsByUser(session.user.id);
+    }    // Get all barbers to map phone numbers
+    const allBarbers = await DatabaseService.getBarbers();
+    const barberMap = new Map(allBarbers.map(b => [b.id, b]));
 
     // Format bookings for the admin panel
-    const formattedBookings = bookings.map(booking => ({
-      id: booking.id,
-      service_name: booking.service,
-      barber_name: booking.barberName,
-      booking_date: booking.date,
-      booking_time: booking.time,
-      customer_name: booking.customerName,
-      customer_phone: booking.customerPhone,
-      customer_email: booking.customerEmail,
-      status: booking.status,
-      created_at: booking.createdAt?.toISOString(),
-      notes: booking.notes,
-    }));
+    const formattedBookings = bookings.map(booking => {
+      const barber = barberMap.get(booking.barberId || '');
+      return {
+        id: booking.id,
+        service_name: booking.service,
+        barber_name: booking.barberName,
+        barber_phone: barber?.phone, // Add barber phone
+        booking_date: booking.date,
+        booking_time: booking.time,
+        customer_name: booking.customerName,
+        customer_phone: booking.customerPhone,
+        customer_email: booking.customerEmail,
+        status: booking.status,
+        created_at: booking.createdAt?.toISOString(),
+        notes: booking.notes,
+      };
+    });
 
     return NextResponse.json({ bookings: formattedBookings });
   } catch (error) {
@@ -83,8 +156,7 @@ export async function GET(request: NextRequest) {  try {
   }
 }
 
-export async function POST(request: NextRequest) {  try {
-    // Check authentication
+export async function POST(request: NextRequest) {  try {    // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -281,6 +353,15 @@ export async function PUT(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: 'Devi essere loggato per modificare le prenotazioni' },
+        { status: 401 }
+      );
+    }
+
     // Get IP for rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     if (!checkRateLimit(ip)) {
@@ -313,7 +394,33 @@ export async function PATCH(request: NextRequest) {
         { error: 'Status non valido. Deve essere: confirmed, cancelled, o pending' },
         { status: 400 }
       );
-    }    // Update booking status
+    }
+
+    // Check authorization: barbiere can only modify their own bookings
+    if (session.user.role === 'barber') {
+      // Get the booking to check if it belongs to this barber
+      const allBookings = await DatabaseService.getAllBookings();
+      const booking = allBookings.find(b => b.id === requestData.id);
+      
+      if (!booking) {
+        return NextResponse.json(
+          { error: 'Prenotazione non trovata' },
+          { status: 404 }
+        );
+      }
+
+      // Get barber info
+      const allBarbers = await DatabaseService.getBarbers();
+      const currentBarber = allBarbers.find(b => b.email === session.user.email);
+        if (!currentBarber || booking.barberId !== currentBarber.id) {
+        return NextResponse.json(
+          { error: 'Non hai i permessi per modificare questa prenotazione' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Update booking status
     const updatedBooking = await DatabaseService.updateBookingStatus(requestData.id, requestData.status);
     
     if (!updatedBooking) {
@@ -341,6 +448,15 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: 'Devi essere loggato per eliminare le prenotazioni' },
+        { status: 401 }
+      );
+    }
+
     const url = new URL(request.url);
     const bookingId = url.searchParams.get('id');
     
@@ -349,6 +465,31 @@ export async function DELETE(request: NextRequest) {
         { error: 'ID prenotazione mancante' },
         { status: 400 }
       );
+    }
+
+    // Check authorization: barbiere can only delete their own bookings
+    if (session.user.role === 'barber') {
+      // Get the booking to check if it belongs to this barber
+      const allBookings = await DatabaseService.getAllBookings();
+      const booking = allBookings.find(b => b.id === bookingId);
+      
+      if (!booking) {
+        return NextResponse.json(
+          { error: 'Prenotazione non trovata' },
+          { status: 404 }
+        );
+      }
+
+      // Get barber info
+      const allBarbers = await DatabaseService.getBarbers();
+      const currentBarber = allBarbers.find(b => b.email === session.user.email);
+      
+      if (!currentBarber || booking.barberId !== currentBarber.id) {
+        return NextResponse.json(
+          { error: 'Non hai i permessi per eliminare questa prenotazione' },
+          { status: 403 }
+        );
+      }
     }
 
     const success = await DatabaseService.deleteBooking(bookingId);

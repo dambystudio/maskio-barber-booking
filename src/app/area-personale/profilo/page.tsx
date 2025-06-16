@@ -21,16 +21,19 @@ export default function ProfiloUtente() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
   const fetchProfileData = useCallback(async () => {
     if (!session) return; // Guard clause for session
     
     try {
-      setLoading(true);      
+      setLoading(true);
+      console.log('🔄 Fetching profile data for:', session.user.email);
+      
       const response = await fetch('/api/user/profile');
+      console.log('📡 Profile API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        console.log('Profile data from API:', data); // Debug log
+        console.log('✅ Profile data from API:', data); // Debug log
         setProfile({
           id: data.profile.id,
           name: data.profile.name,
@@ -38,8 +41,12 @@ export default function ProfiloUtente() {
           phone: data.profile.phone || '',
           image: data.profile.image || ''
         });
+        console.log('📞 Phone value set:', data.profile.phone || 'empty');
       } else {
-        console.error('Error fetching profile:', response.status, response.statusText);
+        console.error('❌ Error fetching profile:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('📄 Error response:', errorText);
+        
         // Fallback to session data
         setProfile({
           id: session!.user.id,
@@ -50,7 +57,7 @@ export default function ProfiloUtente() {
         });
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('❌ Error fetching profile:', error);
       // Fallback to session data
       setProfile({
         id: session!.user.id,
@@ -89,6 +96,7 @@ export default function ProfiloUtente() {
         },
         body: JSON.stringify({
           name: profile.name,
+          phone: profile.phone,
         }),
       });
 
@@ -192,7 +200,7 @@ export default function ProfiloUtente() {
                 placeholder="La tua email"
               />
               <p className="text-sm text-gray-400 mt-1">L'email non può essere modificata</p>
-            </div>            {/* Phone (readonly) */}
+            </div>            {/* Phone */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
                 Numero di Telefono
@@ -200,12 +208,12 @@ export default function ProfiloUtente() {
               <input
                 type="tel"
                 id="phone"
-                value={profile.phone || 'Non specificato'}
-                readOnly
-                className="w-full px-4 py-3 bg-gray-600 border border-gray-600 rounded-lg text-gray-300 cursor-not-allowed"
-                placeholder="Numero di telefono"
+                value={profile.phone || ''}
+                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="Es. +39 333 1234567"
               />
-              <p className="text-sm text-gray-400 mt-1">Il numero di telefono non può essere modificato</p>
+              <p className="text-sm text-gray-400 mt-1">Il numero di telefono è richiesto per le prenotazioni</p>
             </div>
 
             {/* Account Info */}

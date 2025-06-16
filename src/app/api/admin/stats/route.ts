@@ -6,15 +6,31 @@ export async function GET(request: NextRequest) {
     // Get the date parameter from the URL, default to today
     const { searchParams } = new URL(request.url);
     const selectedDate = searchParams.get('date');
+    const barberEmail = searchParams.get('barber'); // Filtro per email barbiere
     
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     const targetDate = selectedDate || todayStr;
 
-    console.log(`📊 Calculating stats for date: ${targetDate}`);
+    console.log(`📊 Calculating stats for date: ${targetDate}${barberEmail ? ` (barber: ${barberEmail})` : ''}`);
 
     // Get all bookings
-    const allBookings = await DatabaseService.getAllBookings();
+    let allBookings = await DatabaseService.getAllBookings();
+    
+    // Applica filtro barbiere se specificato
+    if (barberEmail) {
+      // Get all barbers and find by email
+      const allBarbers = await DatabaseService.getBarbers();
+      const barber = allBarbers.find(b => b.email === barberEmail);
+      if (barber) {
+        allBookings = allBookings.filter(booking => booking.barberId === barber.id);
+        console.log(`🧔 Filtering for barber: ${barberEmail} (ID: ${barber.id}) - ${allBookings.length} bookings found`);
+      } else {
+        console.warn(`⚠️ Barber not found: ${barberEmail}`);
+        // If barber not found, return empty stats
+        allBookings = [];
+      }
+    }
     
     // Get selected date's bookings (non-cancelled)
     const selectedDateBookings = allBookings.filter(booking => 

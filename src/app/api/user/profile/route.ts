@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/database-postgres';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
-import { authOptions } from '@/lib/auth.config';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -28,9 +28,7 @@ export async function PUT(request: NextRequest) {
         { error: 'Utente non trovato' },
         { status: 404 }
       );
-    }
-
-    const { name } = await request.json();
+    }    const { name, phone } = await request.json();
 
     if (!name || name.trim().length === 0) {
       return NextResponse.json(
@@ -39,12 +37,43 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Validazione telefono se presente
+    if (phone && phone.trim()) {
+      const phoneRegex = /^[\+]?[\d\s\-\(\)]{10,}$/;
+      if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+        return NextResponse.json(
+          { error: 'Formato numero di telefono non valido (minimo 10 cifre)' },
+          { status: 400 }
+        );
+      }
+
+      // Verifica se il telefono esiste già per un altro utente
+      const existingUserWithPhone = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.phone, phone.trim()))
+        .limit(1);
+
+      if (existingUserWithPhone.length > 0 && existingUserWithPhone[0].id !== dbUser[0].id) {
+        return NextResponse.json(
+          { error: 'Questo numero di telefono è già associato a un altro account' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update user profile
+    const updateData: any = {
+      name: name.trim(),
+    };
+
+    if (phone !== undefined) {
+      updateData.phone = phone.trim() || null;
+    }
+
     await db
       .update(users)
-      .set({
-        name: name.trim(),
-      })
+      .set(updateData)
       .where(eq(users.id, dbUser[0].id));
 
     return NextResponse.json({

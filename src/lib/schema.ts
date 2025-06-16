@@ -125,6 +125,28 @@ export const closureSettings = pgTable('closure_settings', {
   updatedBy: uuid('updated_by').references(() => users.id), // Chi ha fatto l'ultima modifica
 });
 
+// Barber Closures Table (Chiusure specifiche per barbiere e fasce orarie)
+export const barberClosures = pgTable('barber_closures', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  barberEmail: varchar('barber_email', { length: 255 }).notNull(), // Email del barbiere
+  closureDate: varchar('closure_date', { length: 10 }).notNull(), // Data in formato YYYY-MM-DD
+  closureType: varchar('closure_type', { length: 20 }).notNull(), // 'full', 'morning', 'afternoon'
+  reason: text('reason'), // Motivo della chiusura (opzionale)
+  createdBy: varchar('created_by', { length: 255 }), // Chi ha creato la chiusura
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Barber Recurring Closures Table (Chiusure ricorrenti per barbiere - giorni della settimana)
+export const barberRecurringClosures = pgTable('barber_recurring_closures', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  barberEmail: varchar('barber_email', { length: 255 }).notNull(), // Email del barbiere
+  closedDays: text('closed_days').notNull().default('[]'), // Array JSON dei giorni chiusi (0=Dom, 1=Lun, ..., 6=Sab)
+  createdBy: varchar('created_by', { length: 255 }), // Chi ha creato la chiusura
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Authorized Roles Table (for dynamic role management)
 export const authorizedRoles = pgTable('authorized_roles', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -158,5 +180,9 @@ export type BarberSchedule = typeof barberSchedules.$inferSelect;
 export type NewBarberSchedule = typeof barberSchedules.$inferInsert;
 export type ClosureSettings = typeof closureSettings.$inferSelect;
 export type NewClosureSettings = typeof closureSettings.$inferInsert;
+export type BarberClosure = typeof barberClosures.$inferSelect;
+export type NewBarberClosure = typeof barberClosures.$inferInsert;
+export type BarberRecurringClosure = typeof barberRecurringClosures.$inferSelect;
+export type NewBarberRecurringClosure = typeof barberRecurringClosures.$inferInsert;
 export type AuthorizedRole = typeof authorizedRoles.$inferSelect;
 export type NewAuthorizedRole = typeof authorizedRoles.$inferInsert;

@@ -36,10 +36,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   const [bookingResponse, setBookingResponse] = useState<any>(null);
     // Add debouncing state and cache for rate limiting protection
   const [isDebouncing, setIsDebouncing] = useState(false);
-  const [slotsCache, setSlotsCache] = useState<{[key: string]: {time: string, available: boolean}[]}>({});
-  // Closure system state
+  const [slotsCache, setSlotsCache] = useState<{[key: string]: {time: string, available: boolean}[]}>({});  // Closure system state
   const [closedDays, setClosedDays] = useState<Set<number>>(new Set([0])); // Sunday closed by default
   const [closedDates, setClosedDates] = useState<Set<string>>(new Set()); // Specific closed dates
+  const [barberClosedDays, setBarberClosedDays] = useState<Set<number>>(new Set()); // Barber-specific recurring closures
   // Add state for tracking days with no available slots
   const [unavailableDates, setUnavailableDates] = useState<Set<string>>(new Set());
   // Load closure settings from localStorage and server
@@ -67,38 +67,91 @@ export default function BookingForm({ userSession }: BookingFormProps) {
 
     // Poi carica dal server per avere i dati più aggiornati
     fetchClosureSettingsFromServer();
-  }, []);
-
-  // Funzione per caricare le impostazioni di chiusura dal server
+  }, []);  // Funzione per caricare le impostazioni di chiusura dal server
   const fetchClosureSettingsFromServer = async () => {
     try {
+      console.log('🔄 Fetching closure settings from server...');
       const response = await fetch('/api/closure-settings');
-      if (response.ok) {
-        const settings = await response.json();
-        setClosedDays(new Set(settings.closedDays));
-        setClosedDates(new Set(settings.closedDates));
-        
-        // Aggiorna anche il localStorage con i dati del server
-        localStorage.setItem('maskio-closed-days', JSON.stringify(settings.closedDays));
-        localStorage.setItem('maskio-closed-dates', JSON.stringify(settings.closedDates));
-        
-        console.log('✅ Closure settings loaded from server in BookingForm:', settings);
-      } else {
-        console.warn('Failed to load closure settings from server, using localStorage');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+      
+      const text = await response.text();
+      console.log('📄 Raw response from closure-settings API:', text);
+      
+      if (!text || text.trim() === '') {
+        throw new Error('Empty response from server');
+      }
+      
+      let settings;
+      try {
+        settings = JSON.parse(text);
+      } catch (parseError) {
+        console.error('❌ JSON parse error:', parseError);
+        console.error('🔍 Response text was:', JSON.stringify(text));
+        throw new Error('Invalid JSON response from server');
+      }
+      
+      // Validazione e valori di default per evitare errori JSON
+      const closedDays = Array.isArray(settings.closedDays) ? settings.closedDays : [0]; // Default: domenica chiusa
+      const closedDates = Array.isArray(settings.closedDates) ? settings.closedDates : [];
+      
+      setClosedDays(new Set(closedDays));
+      setClosedDates(new Set(closedDates));
+      
+      // Aggiorna anche il localStorage con i dati del server
+      localStorage.setItem('maskio-closed-days', JSON.stringify(closedDays));
+      localStorage.setItem('maskio-closed-dates', JSON.stringify(closedDates));
+      
+      console.log('✅ Closure settings loaded from server in BookingForm:', { closedDays, closedDates });
+      
     } catch (error) {
-      console.error('Error loading closure settings from server:', error);
-      console.warn('Using localStorage closure settings as fallback');
+      console.error('❌ Error loading closure settings from server:', error);
+      console.warn('📦 Using localStorage closure settings as fallback');
+      
+      // Fallback al localStorage
+      try {
+        const savedClosedDays = localStorage.getItem('maskio-closed-days');
+        const savedClosedDates = localStorage.getItem('maskio-closed-dates');
+        
+        if (savedClosedDays && savedClosedDates) {
+          const fallbackClosedDays = JSON.parse(savedClosedDays);
+          const fallbackClosedDates = JSON.parse(savedClosedDates);
+          
+          setClosedDays(new Set(fallbackClosedDays));
+          setClosedDates(new Set(fallbackClosedDates));
+          
+          console.log('📦 Loaded closure settings from localStorage:', { 
+            closedDays: fallbackClosedDays, 
+            closedDates: fallbackClosedDates 
+          });
+        } else {
+          // Valori di default assoluti
+          setClosedDays(new Set([0])); // Domenica chiusa
+          setClosedDates(new Set([]));
+          console.log('🔧 Using absolute default closure settings');
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback loading also failed:', fallbackError);
+        // Valori di default assoluti
+        setClosedDays(new Set([0])); // Domenica chiusa
+        setClosedDates(new Set([]));
+        console.log('🔧 Using absolute default closure settings');
+      }
     }
   };
-
   // Load user profile data
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
+        console.log('🔄 Fetching user profile data...');
         const response = await fetch('/api/user/profile');
+        console.log('📡 Profile API response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('✅ Profile data received:', data);
           setFormData(prev => ({
             ...prev,
             customerInfo: {
@@ -108,14 +161,22 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               phone: data.profile.phone || '',
             }
           }));
+          console.log('📞 Phone set to:', data.profile.phone || 'empty');
+        } else {
+          console.error('❌ Profile API error:', response.status, response.statusText);
+          const errorText = await response.text();
+          console.error('📄 Error response:', errorText);
         }
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('❌ Error fetching user profile:', error);
       }
     };
 
     if (userSession?.user?.id) {
+      console.log('👤 User session found, fetching profile for:', userSession.user.email);
       fetchUserProfile();
+    } else {
+      console.log('⚠️ No user session or user ID found');
     }
   }, [userSession]);
 
@@ -166,7 +227,6 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     };
     fetchData();
   }, []);
-
   // Update displayed services when a barber is selected
   useEffect(() => {
     if (formData.selectedBarber) {
@@ -178,7 +238,55 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     }
     // Reset selected services when barber changes or displayed services list changes
     setFormData(prev => ({ ...prev, selectedServices: [] }));
-  }, [formData.selectedBarber, allServices]);  // Update available slots when date or barber changes with debouncing
+  }, [formData.selectedBarber, allServices]);
+
+  // Load barber-specific recurring closures when barber changes
+  useEffect(() => {
+    const loadBarberClosures = async () => {      if (!formData.selectedBarber) {
+        setBarberClosedDays(new Set());
+        console.log('🔄 No barber selected, clearing barber closures');
+        return;
+      }
+
+      try {
+        console.log(`🔄 Loading recurring closures for barber: ${formData.selectedBarber.name} (ID: ${formData.selectedBarber.id})`);
+        const response = await fetch(`/api/barber-recurring-closures/public?barberId=${formData.selectedBarber.id}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const text = await response.text();
+        console.log('📄 Raw response from barber-recurring-closures API:', text);
+        
+        if (!text || text.trim() === '') {
+          console.warn('⚠️ Empty response from barber closures API');
+          setBarberClosedDays(new Set());
+          return;
+        }
+        
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error('❌ JSON parse error for barber closures:', parseError);
+          console.error('🔍 Response text was:', JSON.stringify(text));
+          setBarberClosedDays(new Set());
+          return;
+        }
+        
+        const closedDays = Array.isArray(data.closedDays) ? data.closedDays : [];
+        setBarberClosedDays(new Set(closedDays));
+        console.log(`✅ Loaded barber closures for ${formData.selectedBarber.name}:`, closedDays);
+        
+      } catch (error) {
+        console.error('❌ Error loading barber closures:', error);
+        setBarberClosedDays(new Set());
+      }
+    };
+
+    loadBarberClosures();
+  }, [formData.selectedBarber]);// Update available slots when date or barber changes with debouncing
   useEffect(() => {
     const fetchSlots = async () => {
       if (formData.selectedDate && formData.selectedBarber) {
@@ -229,7 +337,6 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     fetchSlots();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.selectedDate, formData.selectedBarber]);
-
   // Check if a date is closed (either weekly recurring closure or specific date closure)
   const isDateClosed = (dateString: string) => {
     try {
@@ -255,81 +362,105 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     }
   };
 
-  // Check if a date has available slots
-  const checkDayAvailability = async (dateString: string) => {
-    if (!formData.selectedBarber || isDateClosed(dateString)) {
-      return false;
-    }
+  // Check if the selected barber is closed on a specific date due to recurring closures
+  const isBarberClosedRecurring = (dateString: string) => {
+    if (!formData.selectedBarber) return false;
     
     try {
-      const cacheKey = `${dateString}-${formData.selectedBarber.id}`;
+      // Parse the date string to get the day of week
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      const dayOfWeek = date.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
       
-      // Check cache first
-      if (slotsCache[cacheKey]) {
-        return slotsCache[cacheKey].some(slot => slot.available);
-      }
-      
-      // Fetch from API
-      const slots = await BookingService.getAvailableSlots(dateString, formData.selectedBarber.id);
-      
-      // Cache the result
-      setSlotsCache(prev => ({
-        ...prev,
-        [cacheKey]: slots
-      }));
-      
-      return slots && slots.length > 0 && slots.some(slot => slot.available);
+      // Check if this day of the week is in the barber's closed days
+      return barberClosedDays.has(dayOfWeek);
     } catch (error) {
-      console.error('Error checking day availability:', error);
-      return false;
-    }
+      console.error('Error checking if barber is closed:', error);
+      return false;    }
   };
 
-  // Update unavailable dates when barber changes
+  // [DEPRECATED] Old function kept for compatibility - will be removed in next version
+  // const checkDayAvailability = async (dateString: string) => {
+  //   // This function is no longer used due to optimization with batch API
+  //   return false;
+  // };
+  // Update unavailable dates when barber changes (OPTIMIZED - Single API call)
   useEffect(() => {
     if (!formData.selectedBarber) {
       setUnavailableDates(new Set());
       return;
-    }
-
-    const updateUnavailableDates = async () => {
-      const today = new Date();
-      const newUnavailableDates = new Set<string>();
-      
-      // Check the next 30 days for availability
-      for (let i = 0; i < 30; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
+    }    const updateUnavailableDatesOptimized = async () => {
+      try {
+        if (!formData.selectedBarber) return; // Additional safety check
         
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`;
+        console.log('🚀 Starting optimized availability check for barber:', formData.selectedBarber.name);
         
-        const hasAvailableSlots = await checkDayAvailability(dateString);
-        if (!hasAvailableSlots && !isDateClosed(dateString)) {
-          newUnavailableDates.add(dateString);
+        const today = new Date();
+        const dates: string[] = [];
+        
+        // Generate the next 30 days
+        for (let i = 0; i < 30; i++) {
+          const date = new Date(today);
+          date.setDate(today.getDate() + i);
+          
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const dateString = `${year}-${month}-${day}`;
+          dates.push(dateString);
         }
+        
+        // Single API call for all dates
+        const batchAvailability = await BookingService.getBatchAvailability(
+          formData.selectedBarber.id, 
+          dates
+        );
+        
+        // Process results
+        const newUnavailableDates = new Set<string>();
+        for (const [dateString, availability] of Object.entries(batchAvailability)) {
+          if (!availability.hasSlots && !isDateClosed(dateString)) {
+            newUnavailableDates.add(dateString);
+          }
+        }
+        
+        setUnavailableDates(newUnavailableDates);
+        console.log(`✅ Optimized availability check completed: ${newUnavailableDates.size} unavailable dates found`);
+        
+      } catch (error) {
+        console.error('❌ Error in optimized availability check:', error);
+        setUnavailableDates(new Set()); // Fallback to empty set
       }
-      
-      setUnavailableDates(newUnavailableDates);
     };
 
     // Debounce the update to avoid too many API calls
-    const timeoutId = setTimeout(updateUnavailableDates, 1000);
+    const timeoutId = setTimeout(updateUnavailableDatesOptimized, 500);
     return () => clearTimeout(timeoutId);
-  }, [formData.selectedBarber, slotsCache]);
-
+  }, [formData.selectedBarber]);
   // Helper function to generate date buttons for the next 2 months (60 days)
   const generateDateButtons = () => {
     const dates = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
     
+    let lastMonth = today.getMonth();
+    
     for (let i = 0; i < 60; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-        const dayNames = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
+      
+      // Check if we've moved to a new month and add a month separator
+      if (date.getMonth() !== lastMonth && i > 0) {
+        const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+        dates.push({
+          type: 'monthSeparator',
+          monthName: monthNames[date.getMonth()],
+          year: date.getFullYear()
+        });
+        lastMonth = date.getMonth();
+      }
+        
+      const dayNames = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
       const monthNames = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC'];
       const isToday = i === 0;
       
@@ -342,24 +473,25 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       // Fix timezone issue by manually formatting the date instead of using toISOString()
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-        // Check if date is closed using the flexible closure system
-      const isClosed = isDateClosed(dateString);
+      const day = String(date.getDate()).padStart(2, '0');      const dateString = `${year}-${month}-${day}`;
       
-      // Check if date has no available slots (only if barber is selected)
-      const hasNoAvailableSlots = formData.selectedBarber && unavailableDates.has(dateString);
+      // Check different types of closures
+      const isGenerallyClosed = isDateClosed(dateString);
+      const isBarberClosed = isBarberClosedRecurring(dateString);
+      const hasNoAvailableSlots = formData.selectedBarber && unavailableDates.has(dateString) && !isGenerallyClosed && !isBarberClosed;
       
       dates.push({
+        type: 'dateButton',
         date: dateString,
         dayName: dayNames[date.getDay()],
         dayNumber: date.getDate(),
         monthName: monthNames[date.getMonth()],
-        disabled: isClosed || !!hasNoAvailableSlots,
+        disabled: isGenerallyClosed || isBarberClosed || !!hasNoAvailableSlots,
         isToday,
         isNextWeek,
         isNextMonth,
-        isClosed,
+        isClosed: isGenerallyClosed,
+        isBarberClosed,
         hasNoAvailableSlots
       });}
     
@@ -741,84 +873,118 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 Seleziona la data
               </label>              {/* Date buttons */}
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 max-h-96 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-                {generateDateButtons().map((dateButton) => (<motion.button
-                    key={dateButton.date}
-                    onClick={() => {
-                      if (dateButton.disabled) {
-                        if (dateButton.hasNoAvailableSlots) {
-                          alert('Tutti gli orari per questo giorno sono già occupati. Prova un altro giorno!');
-                        } else if (dateButton.isClosed) {
-                          alert('Siamo chiusi in questo giorno. Scegli un altro giorno!');
+                {generateDateButtons().map((item, index) => {
+                  // Render month separator
+                  if (item.type === 'monthSeparator') {
+                    return (
+                      <div key={`separator-${index}`} className="col-span-full my-4">
+                        <div className="flex items-center">
+                          <div className="flex-grow border-t border-gray-600"></div>
+                          <div className="px-4 py-2 bg-gray-700 rounded-full">
+                            <span className="text-amber-400 font-bold text-sm">
+                              {item.monthName} {item.year}
+                            </span>
+                          </div>
+                          <div className="flex-grow border-t border-gray-600"></div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  // Render date button
+                  const dateButton = item;
+                  return (
+                    <motion.button
+                      key={dateButton.date}
+                      onClick={() => {
+                        if (dateButton.disabled) {
+                          if (dateButton.hasNoAvailableSlots) {
+                            alert('Tutti gli orari per questo giorno sono già occupati. Prova un altro giorno!');
+                          } else if (dateButton.isBarberClosed) {
+                            alert(`${formData.selectedBarber?.name || 'Il barbiere'} è chiuso in questo giorno. Scegli un altro giorno!`);
+                          } else if (dateButton.isClosed) {
+                            alert('Il barbershop è chiuso in questo giorno. Scegli un altro giorno!');
+                          }
+                          return;
                         }
-                        return;
-                      }
-                      handleDateChange(dateButton.date);
-                    }}
-                    disabled={dateButton.disabled}                    className={`p-3 rounded-lg border-2 transition-all duration-200 min-h-[80px] flex flex-col items-center justify-center relative ${
-                      formData.selectedDate === dateButton.date                        ? 'border-yellow-400 bg-yellow-400 text-black shadow-lg'
-                        : dateButton.disabled
-                        ? dateButton.isClosed
-                          ? 'border-red-600 bg-red-900/30 text-red-400 cursor-not-allowed'
-                          : dateButton.hasNoAvailableSlots
-                          ? 'border-orange-600 bg-orange-900/30 text-orange-400 cursor-not-allowed'
-                          : 'border-gray-700 bg-gray-800 text-gray-500 cursor-not-allowed'
-                        : dateButton.isToday
-                        ? 'border-blue-400 bg-blue-900/30 hover:border-blue-500 hover:shadow-md text-blue-300'
-                        : dateButton.isNextWeek
-                        ? 'border-green-400 bg-green-900/30 hover:border-green-400 hover:shadow-md text-green-300'
-                        : dateButton.isNextMonth
-                        ? 'border-purple-400 bg-purple-900/30 hover:border-purple-400 hover:shadow-md text-purple-300'
-                        : 'border-gray-600 hover:border-yellow-400 bg-gray-900/50 hover:shadow-md text-gray-300'
-                    }`}
-                    whileHover={!dateButton.disabled ? { scale: 1.05 } : {}}
-                    whileTap={!dateButton.disabled ? { scale: 0.95 } : {}}
-                  >
-                    {dateButton.isToday && (
-                      <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full">
-                        OGGI
+                        handleDateChange(dateButton.date!);
+                      }}
+                      disabled={dateButton.disabled}                      className={`p-3 rounded-lg border-2 transition-all duration-200 min-h-[80px] flex flex-col items-center justify-center relative ${
+                        formData.selectedDate === dateButton.date
+                          ? 'border-yellow-400 bg-yellow-400 text-black shadow-lg'
+                          : dateButton.disabled
+                          ? dateButton.isClosed
+                            ? 'border-red-600 bg-red-900/30 text-red-400 cursor-not-allowed'
+                            : dateButton.isBarberClosed
+                            ? 'border-red-600 bg-red-900/30 text-red-400 cursor-not-allowed'
+                            : dateButton.hasNoAvailableSlots
+                            ? 'border-orange-600 bg-orange-900/30 text-orange-400 cursor-not-allowed'
+                            : 'border-gray-700 bg-gray-800 text-gray-500 cursor-not-allowed'
+                          : dateButton.isToday
+                          ? 'border-blue-400 bg-blue-900/30 hover:border-blue-500 hover:shadow-md text-blue-300'
+                          : dateButton.isNextWeek
+                          ? 'border-green-400 bg-green-900/30 hover:border-green-400 hover:shadow-md text-green-300'
+                          : dateButton.isNextMonth
+                          ? 'border-purple-400 bg-purple-900/30 hover:border-purple-400 hover:shadow-md text-purple-300'
+                          : 'border-gray-600 hover:border-yellow-400 bg-gray-900/50 hover:shadow-md text-gray-300'
+                      }`}
+                      whileHover={!dateButton.disabled ? { scale: 1.05 } : {}}
+                      whileTap={!dateButton.disabled ? { scale: 0.95 } : {}}
+                    >
+                      {dateButton.isToday && (
+                        <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full">
+                          OGGI
+                        </div>
+                      )}
+
+                      <div className={`text-xs font-medium ${
+                        formData.selectedDate === dateButton.date ? 'text-black' : 
+                        dateButton.disabled ? 'text-gray-500' : 
+                        dateButton.isToday ? 'text-blue-300' :
+                        dateButton.isNextWeek ? 'text-green-300' :
+                        dateButton.isNextMonth ? 'text-purple-300' :
+                        'text-gray-300'
+                      }`}>
+                        {dateButton.dayName}
                       </div>
-                    )}                    <div className={`text-xs font-medium ${
-                      formData.selectedDate === dateButton.date ? 'text-black' : 
-                      dateButton.disabled ? 'text-gray-500' : 
-                      dateButton.isToday ? 'text-blue-300' :
-                      dateButton.isNextWeek ? 'text-green-300' :
-                      dateButton.isNextMonth ? 'text-purple-300' :
-                      'text-gray-300'
-                    }`}>
-                      {dateButton.dayName}
-                    </div>
-                    <div className={`text-lg font-bold ${
-                      formData.selectedDate === dateButton.date ? 'text-black' : 
-                      dateButton.disabled ? 'text-gray-500' : 
-                      dateButton.isToday ? 'text-blue-300' :
-                      dateButton.isNextWeek ? 'text-green-300' :
-                      dateButton.isNextMonth ? 'text-purple-300' :
-                      'text-gray-300'
-                    }`}>
-                      {dateButton.dayNumber}
-                    </div>
-                    <div className={`text-xs ${
-                      formData.selectedDate === dateButton.date ? 'text-black' : 
-                      dateButton.disabled ? 'text-gray-500' : 
-                      dateButton.isToday ? 'text-blue-300' :
-                      dateButton.isNextWeek ? 'text-green-300' :
-                      dateButton.isNextMonth ? 'text-purple-300' :
-                      'text-gray-300'
-                    }`}>
-                      {dateButton.monthName}
-                    </div>                    {dateButton.disabled && (
-                      <div className="text-xs mt-1">
-                        {dateButton.isClosed ? (
-                          <span className="text-red-400">Chiuso</span>
-                        ) : dateButton.hasNoAvailableSlots ? (
-                          <span className="text-orange-400">Tutto occupato</span>
-                        ) : (
-                          <span className="text-red-400">Non disponibile</span>
-                        )}
+                      <div className={`text-lg font-bold ${
+                        formData.selectedDate === dateButton.date ? 'text-black' : 
+                        dateButton.disabled ? 'text-gray-500' : 
+                        dateButton.isToday ? 'text-blue-300' :
+                        dateButton.isNextWeek ? 'text-green-300' :
+                        dateButton.isNextMonth ? 'text-purple-300' :
+                        'text-gray-300'
+                      }`}>
+                        {dateButton.dayNumber}
                       </div>
-                    )}
-                  </motion.button>
-                ))}              </div>              {/* Legend for date colors */}
+                      <div className={`text-xs ${
+                        formData.selectedDate === dateButton.date ? 'text-black' : 
+                        dateButton.disabled ? 'text-gray-500' : 
+                        dateButton.isToday ? 'text-blue-300' :
+                        dateButton.isNextWeek ? 'text-green-300' :
+                        dateButton.isNextMonth ? 'text-purple-300' :
+                        'text-gray-300'
+                      }`}>
+                        {dateButton.monthName}
+                      </div>
+
+                      {dateButton.disabled && (
+                        <div className="text-xs mt-1">
+                          {dateButton.isClosed ? (
+                            <span className="text-red-500 font-medium">Chiuso</span>
+                          ) : dateButton.isBarberClosed ? (
+                            <span className="text-red-500 font-medium">Chiuso</span>
+                          ) : dateButton.hasNoAvailableSlots ? (
+                            <span className="text-orange-400">Tutto occupato</span>
+                          ) : (
+                            <span className="text-red-500 font-medium">Non disponibile</span>
+                          )}
+                        </div>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>{/* Legend for date colors */}
               <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-300">
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-blue-900/30 border border-blue-400 rounded mr-2"></div>
@@ -831,16 +997,21 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-purple-900/30 border border-purple-400 rounded mr-2"></div>
                   <span>Prossimo mese</span>
-                </div>
-                <div className="flex items-center">
+                </div>                <div className="flex items-center">
                   <div className="w-3 h-3 bg-red-900/30 border border-red-600 rounded mr-2"></div>
                   <span>Giorni di chiusura</span>
                 </div>
                 {formData.selectedBarber && (
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-orange-900/30 border border-orange-600 rounded mr-2"></div>
-                    <span>Tutto occupato</span>
-                  </div>
+                  <>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-red-900/30 border border-red-600 rounded mr-2"></div>
+                      <span>Chiuso</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-orange-900/30 border border-orange-600 rounded mr-2"></div>
+                      <span>Tutto occupato</span>
+                    </div>
+                  </>
                 )}
               </div>
               

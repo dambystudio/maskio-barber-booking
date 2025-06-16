@@ -76,53 +76,55 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {  return (    
-        <html lang="it">    
+}>) {  return (      <html lang="it">
         <head>
-        <link rel="preload" as="video" href="/videoLoopCompresso.mp4" type="video/mp4" />
-        <link rel="preload" as="image" href="/sediaOro.webp" />        
-        <link rel="preload" as="image" href="/LogoSimboloNome_BiancoOrizzontale_BUONO.png" />
-        
-        {/* PWA Meta Tags */}
-        <meta name="application-name" content="Maskio Barber" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-        <meta name="apple-mobile-web-app-title" content="Maskio Barber" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#000000" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#000000" />
+          <link rel="preload" as="video" href="/videoLoopCompresso.mp4" type="video/mp4" />
+          <link rel="preload" as="image" href="/sediaOro.webp" />        
+          <link rel="preload" as="image" href="/LogoSimboloNome_BiancoOrizzontale_BUONO.png" />
+          
+          {/* PWA Meta Tags */}
+          <meta name="application-name" content="Maskio Barber" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+          <meta name="apple-mobile-web-app-title" content="Maskio Barber" />
+          <meta name="format-detection" content="telephone=no" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="msapplication-config" content="/browserconfig.xml" />
+          <meta name="msapplication-TileColor" content="#000000" />
+          <meta name="msapplication-tap-highlight" content="no" />
+          <meta name="theme-color" content="#000000" />
+          
           {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" href="/icone/nero/180x180.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icone/nero/180x180.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icone/nero/180x180.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/icone/nero/180x180.png" />
-        
-        {/* Favicon */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/icone/nero/32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icone/nero/16x16.png" />
-        <link rel="shortcut icon" href="/icone/nero/32x32.png" />
-      </head>        <body className={inter.className}>
-        <SessionProvider>
-          <SecurityProvider>
-            <DynamicManifest />
-            <DailyUpdateManager />
-            <Navbar />
-            <main className="min-h-screen pt-[70px] standalone:pt-0"> {/* Rimuovi padding top in modalità standalone */}
-              {children}
-            </main>            <Footer />
-            <MobileBottomNav />
-            <PWAFloatingMenu />
-          </SecurityProvider>
-        </SessionProvider>
-        <AddToHomeBanner />
-        {/* Script per nascondere i blocchi di codice se non è attiva l'ispezione */}
-        <script src="/js/dev-tools-detector.js" defer></script>
-        {/* Schema.org JSON-LD script */}
-        <JsonLdScript />
-
-      </body></html>
+          <link rel="apple-touch-icon" href="/icone/nero/180x180.png" />
+          <link rel="apple-touch-icon" sizes="152x152" href="/icone/nero/180x180.png" />
+          <link rel="apple-touch-icon" sizes="180x180" href="/icone/nero/180x180.png" />
+          <link rel="apple-touch-icon" sizes="167x167" href="/icone/nero/180x180.png" />
+          
+          {/* Favicon */}
+          <link rel="icon" type="image/png" sizes="32x32" href="/icone/nero/32x32.png" />
+          <link rel="icon" type="image/png" sizes="16x16" href="/icone/nero/16x16.png" />
+          <link rel="shortcut icon" href="/icone/nero/32x32.png" />
+        </head>
+        <body className={inter.className}>
+          <SessionProvider>
+            <SecurityProvider>
+              <DynamicManifest />
+              <DailyUpdateManager />
+              <Navbar />
+              <main className="min-h-screen pt-[70px] standalone:pt-0">
+                {children}
+              </main>
+              <Footer />
+              <MobileBottomNav />
+              <PWAFloatingMenu />
+            </SecurityProvider>
+          </SessionProvider>
+          <AddToHomeBanner />
+          {/* Script per nascondere i blocchi di codice se non è attiva l'ispezione */}
+          <script src="/js/dev-tools-detector.js" defer></script>
+          {/* Schema.org JSON-LD script */}
+          <JsonLdScript />
+        </body>
+      </html>
   );
 }
