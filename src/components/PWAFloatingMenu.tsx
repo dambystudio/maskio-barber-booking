@@ -57,19 +57,18 @@ export default function PWAFloatingMenu() {
       href: '/chi-siamo',
       icon: InformationCircleIcon,
       description: 'La nostra storia'
-    },
-    {
+    },    {
       name: 'Servizi',
       href: '/servizi',
       icon: ScissorsIcon,
       description: 'I nostri servizi'
     },
-    {
-      name: 'Prodotti',
-      href: '/prodotti',
-      icon: ShoppingBagIcon,
-      description: 'Prodotti per capelli'
-    },
+    // {
+    //   name: 'Prodotti',
+    //   href: '/prodotti',
+    //   icon: ShoppingBagIcon,
+    //   description: 'Prodotti per capelli'
+    // }, // Temporaneamente nascosto
     {
       name: 'Location',
       href: '/location',
@@ -104,9 +103,8 @@ export default function PWAFloatingMenu() {
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 standalone-only"
           onClick={() => setIsOpen(false)}
         />
-      )}
-
-      {/* FAB Button */}      <button
+      )}      {/* FAB Button */}
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
           fixed top-4 right-4 z-50 w-16 h-16 rounded-full shadow-lg 
@@ -117,12 +115,16 @@ export default function PWAFloatingMenu() {
           }
           text-white standalone-only flex items-center justify-center
         `}
+        style={{ padding: 0 }}
         aria-label={isOpen ? 'Chiudi menu' : 'Altre informazioni'}
-      >        {isOpen ? (
-          <XMarkIcon className="w-8 h-8" />
-        ) : (
-          <Bars3Icon className="w-8 h-8" />
-        )}
+      >
+        <div className="flex items-center justify-center w-full h-full">
+          {isOpen ? (
+            <XMarkIcon className="w-8 h-8" style={{ margin: 0, padding: 0 }} />
+          ) : (
+            <Bars3Icon className="w-8 h-8" style={{ margin: 0, padding: 0 }} />
+          )}
+        </div>
       </button>
 
       {/* Menu dropdown */}

@@ -6,6 +6,47 @@ import { useState } from 'react';
 
 export default function Page() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(false);// Funzione per aprire la mappa nell'app predefinita del dispositivo
+  const openMaps = () => {
+    const address = "Via Sant'Agata 24, San Giovanni Rotondo, FG, Italy";
+    const coordinates = "41.7060835,15.7188087";
+    const placeName = "Maskio Barber Concept";
+    
+    // Rileva il dispositivo e apre l'app appropriata
+    const userAgent = navigator.userAgent;
+    
+    if (/iPad|iPhone|iPod/.test(userAgent)) {
+      // iOS - Apple Maps
+      window.open(`http://maps.apple.com/?q=${encodeURIComponent(placeName)}&ll=${coordinates}&address=${encodeURIComponent(address)}`, '_blank');
+    } else if (/Android/.test(userAgent)) {
+      // Android - Google Maps
+      window.open(`geo:${coordinates}?q=${encodeURIComponent(placeName + ", " + address)}`, '_blank');
+    } else {
+      // Desktop/Altro - Google Maps web
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeName + ", " + address)}`, '_blank');
+    }
+  };
+
+  // Funzione per aprire le indicazioni stradali
+  const openDirections = () => {
+    const address = "Via Sant'Agata 24, San Giovanni Rotondo, FG, Italy";
+    const coordinates = "41.7060835,15.7188087";
+    const placeName = "Maskio Barber Concept";
+    
+    const userAgent = navigator.userAgent;
+    
+    if (/iPad|iPhone|iPod/.test(userAgent)) {
+      // iOS - Apple Maps indicazioni
+      window.open(`http://maps.apple.com/?daddr=${coordinates}&dirflg=d`, '_blank');
+    } else if (/Android/.test(userAgent)) {
+      // Android - Google Maps indicazioni
+      window.open(`google.navigation:q=${coordinates}`, '_blank');
+    } else {
+      // Desktop - Google Maps indicazioni
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(placeName + ", " + address)}`, '_blank');
+    }
+  };
   
   // Professional Animation Variants
   const fadeInUp = {
@@ -197,12 +238,13 @@ export default function Page() {
               borderRadius: { duration: 8, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }
             }}
             className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 opacity-5 -z-10"
-          />          <motion.div variants={fadeInUp} className="text-center mb-16">
+          />          <motion.div variants={fadeInUp} className="text-center mb-4">
             <motion.h1 
               variants={fadeInUp}
               className="text-4xl md:text-6xl font-bold text-white mb-6"
               whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}            >
+              transition={{ duration: 0.3 }}
+            >
               La Nostra{" "}
               <motion.span 
                 className="text-amber-500 inline-block"
@@ -232,15 +274,13 @@ export default function Page() {
             </motion.p>
           </motion.div>
         </div>
-      </motion.section>
-
-      {/* Main Content */}
+      </motion.section>      {/* Main Content */}
       <motion.section
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
         variants={staggerContainer}
-        className="py-16 px-4"
+        className="pt-4 pb-8 px-4"
       >
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -698,9 +738,309 @@ export default function Page() {
                 ))}
               </motion.div>
             </motion.div>
+          </div>        </div>
+      </motion.section>
+
+      {/* Interactive Maps Section */}
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={staggerContainer}
+        className="py-20 px-4 bg-black relative overflow-hidden"
+      >
+        {/* Background decorative elements */}
+        <motion.div
+          className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-br from-gray-600/10 to-gray-500/10 rounded-full blur-xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [-10, 10, -10],
+            y: [-5, 5, -5],
+          }}
+          transition={{
+            duration: 8,
+            ease: "easeInOut",
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <motion.div variants={fadeInUp} className="text-center mb-16">
+            <motion.h2 
+              className="text-4xl md:text-5xl font-bold text-white mb-6"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              📍 Trova la Nostra Sede
+            </motion.h2>
+            <motion.p 
+              variants={fadeInUp}
+              className="text-xl text-gray-300 max-w-3xl mx-auto"
+            >
+              Siamo situati nel cuore di San Giovanni Rotondo, facilmente raggiungibili e con parcheggio disponibile
+            </motion.p>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            {/* Map Container */}
+            <motion.div
+              variants={fadeInLeft}
+              className="relative"
+              onMouseEnter={() => setHoveredCard('map')}
+              onMouseLeave={() => setHoveredCard(null)}
+            >
+              <motion.div
+                className="relative overflow-hidden rounded-3xl shadow-2xl bg-gray-900 border border-gray-800"
+                whileHover={{ 
+                  scale: 1.02,
+                  y: -5,
+                }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                {/* Map Header */}
+                <div className="bg-gradient-to-r from-gray-700 to-gray-800 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <motion.div
+                        className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"
+                        animate={hoveredCard === 'map' ? {
+                          rotate: [0, 360],
+                          scale: [1, 1.1, 1]
+                        } : {}}
+                        transition={{ duration: 0.8, ease: "easeInOut" }}
+                      >
+                        <span className="text-white text-sm">🗺️</span>
+                      </motion.div>
+                      <h3 className="text-white font-bold text-lg">Maskio Barber Concept</h3>
+                    </div>
+                    <div className="flex gap-2">
+                      <motion.button
+                        onClick={openMaps}
+                        className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-full text-sm font-medium transition-all duration-300"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        📍 Visualizza
+                      </motion.button>
+                      <motion.button
+                        onClick={openDirections}
+                        className="bg-amber-500/80 hover:bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-medium transition-all duration-300"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        🧭 Indicazioni
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>                {/* Interactive Map */}
+                <div className="h-96 relative bg-gray-800">
+                  {/* Loading/Error Fallback */}
+                  {!mapLoaded && !mapError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                      <div className="text-center">
+                        <motion.div
+                          className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full mx-auto mb-4"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        />
+                        <p className="text-gray-300">Caricamento mappa...</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Error Fallback with Static Map */}
+                  {mapError && (
+                    <motion.div 
+                      className="absolute inset-0 bg-gray-800 flex items-center justify-center cursor-pointer"
+                      onClick={openMaps}
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="text-center p-8">
+                        <div className="text-6xl mb-4">🗺️</div>
+                        <h3 className="text-white text-xl font-bold mb-2">Visualizza Mappa</h3>
+                        <p className="text-gray-300 mb-4">Clicca per aprire la mappa interattiva</p>
+                        <div className="bg-amber-500 text-white px-6 py-2 rounded-full font-medium">
+                          Apri Google Maps
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}                  <iframe
+                    src="https://maps.google.com/maps?width=100%25&height=600&hl=it&q=Via%20Sant'Agata%2024,%20San%20Giovanni%20Rotondo,%20FG,%20Italy&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen={true}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Mappa Maskio Barber Concept - Via Sant'Agata 24, San Giovanni Rotondo"
+                    className="filter hover:brightness-110 transition-all duration-300"
+                    onLoad={() => setMapLoaded(true)}
+                    onError={() => setMapError(true)}
+                  />
+                  
+                  {/* Map Overlay for better interaction */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-900/10 pointer-events-none"
+                    animate={hoveredCard === 'map' ? {
+                      opacity: [0, 0.3, 0]
+                    } : {}}
+                    transition={{ duration: 2, ease: "easeInOut" }}
+                  />
+                </div>
+
+                {/* Map Footer with Quick Actions */}
+                <div className="bg-gray-900 p-4 border-t border-gray-700">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2 text-gray-300">
+                      <span className="text-amber-500">📍</span>
+                      <span>Via Sant'Agata 24, San Giovanni Rotondo (FG)</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <motion.button
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium transition-all duration-300"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=Via+Sant'Agata+24,+San+Giovanni+Rotondo,+FG,+Italy`, '_blank')}
+                      >
+                        Indicazioni
+                      </motion.button>
+                      <motion.button
+                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium transition-all duration-300"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => window.open(`tel:+393317100730`)}
+                      >
+                        Chiama
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Floating map markers for visual appeal */}
+              <motion.div
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-lg"
+                animate={{
+                  y: [-3, 3, -3],
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 3,
+                  ease: "easeInOut",
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              >
+                <span className="text-white text-xs">📍</span>
+              </motion.div>
+            </motion.div>
+
+            {/* Location Information */}
+            <motion.div variants={fadeInRight} className="space-y-8">
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                variants={staggerContainer}
+                viewport={{ once: true }}
+                className="space-y-6"
+              >
+                <motion.div 
+                  variants={scaleIn}
+                  className="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-xl"
+                  whileHover={{ 
+                    y: -5,
+                    boxShadow: "0 25px 50px rgba(0, 0, 0, 0.25)"
+                  }}
+                >
+                  <div className="flex items-center gap-4 mb-6">
+                    <motion.div
+                      className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center"
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.8 }}
+                    >
+                      <span className="text-white text-xl">🏪</span>
+                    </motion.div>
+                    <h3 className="text-2xl font-bold text-white">Come Raggiungerci</h3>
+                  </div>
+                  
+                  <div className="space-y-4 text-gray-300">
+                    <div className="flex items-start gap-3">
+                      <span className="text-amber-500 mt-1">🚗</span>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">In Auto</h4>
+                        <p>Parcheggio disponibile nelle vicinanze. Facilmente raggiungibile dal centro città.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <span className="text-blue-500 mt-1">🚌</span>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Mezzi Pubblici</h4>
+                        <p>Fermata autobus nelle vicinanze. Linee urbane disponibili dal centro.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <span className="text-green-500 mt-1">🚶</span>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">A Piedi</h4>
+                        <p>Nel cuore della città, a pochi passi dalle principali attrazioni.</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  variants={scaleIn}
+                  className="bg-gray-900 border border-amber-500/20 rounded-2xl p-8"
+                  whileHover={{ 
+                    scale: 1.02,
+                    boxShadow: "0 15px 35px rgba(245, 158, 11, 0.2)"
+                  }}
+                >
+                  <div className="flex items-center gap-4 mb-6">
+                    <motion.div
+                      className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center"
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        rotate: [0, 5, -5, 0]
+                      }}
+                      transition={{
+                        duration: 4,
+                        ease: "easeInOut",
+                        repeat: Infinity,
+                        repeatType: "reverse"
+                      }}
+                    >
+                      <span className="text-white text-xl">💡</span>
+                    </motion.div>
+                    <h3 className="text-2xl font-bold text-white">Consigli Utili</h3>
+                  </div>
+                  
+                  <div className="space-y-3 text-gray-300">
+                    <p className="flex items-center gap-2">
+                      <span className="text-amber-500">✓</span>
+                      Prenota in anticipo per garantirti il tuo orario preferito
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-amber-500">✓</span>
+                      Arrivi 10 minuti prima per un'esperienza rilassante
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-amber-500">✓</span>
+                      Parcheggio gratuito disponibile nelle strade adiacenti
+                    </p>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
-      </motion.section>      {/* Enhanced Location Information Section */}
+      </motion.section>
+
+      {/* Enhanced Location Information Section */}
       <motion.section
         initial="hidden"
         whileInView="visible"
@@ -999,264 +1339,7 @@ export default function Page() {
                 transition={{ duration: 2, ease: "easeInOut", repeat: Infinity }}
               />
             </motion.div>
-          </div>
-        </div>
-      </motion.section>      {/* Interactive Maps Section */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        variants={staggerContainer}
-        className="py-20 px-4 bg-black relative overflow-hidden"
-      >
-        {/* Background decorative elements */}
-        <motion.div
-          className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-br from-gray-600/10 to-gray-500/10 rounded-full blur-xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [-10, 10, -10],
-            y: [-5, 5, -5],
-          }}
-          transition={{
-            duration: 8,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatType: "reverse"
-          }}
-        />
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <motion.div variants={fadeInUp} className="text-center mb-16">
-            <motion.h2 
-              className="text-4xl md:text-5xl font-bold text-white mb-6"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-            >
-              📍 Trova la Nostra Sede
-            </motion.h2>
-            <motion.p 
-              variants={fadeInUp}
-              className="text-xl text-gray-300 max-w-3xl mx-auto"
-            >
-              Siamo situati nel cuore di San Giovanni Rotondo, facilmente raggiungibili e con parcheggio disponibile
-            </motion.p>
-          </motion.div>
-
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            {/* Map Container */}
-            <motion.div
-              variants={fadeInLeft}
-              className="relative"
-              onMouseEnter={() => setHoveredCard('map')}
-              onMouseLeave={() => setHoveredCard(null)}
-            >              <motion.div
-                className="relative overflow-hidden rounded-3xl shadow-2xl bg-gray-900 border border-gray-800"
-                whileHover={{ 
-                  scale: 1.02,
-                  y: -5,
-                }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-              >
-                {/* Map Header */}
-                <div className="bg-gradient-to-r from-gray-700 to-gray-800 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <motion.div
-                        className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"
-                        animate={hoveredCard === 'map' ? {
-                          rotate: [0, 360],
-                          scale: [1, 1.1, 1]
-                        } : {}}
-                        transition={{ duration: 0.8, ease: "easeInOut" }}
-                      >
-                        <span className="text-white text-sm">🗺️</span>
-                      </motion.div>
-                      <h3 className="text-white font-bold text-lg">Maskio Barber Concept</h3>
-                    </div>
-                    <motion.a
-                      href={`https://www.google.com/maps/search/?api=1&query=Via+Sant'Agata+24,+San+Giovanni+Rotondo,+FG,+Italy`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-full text-sm font-medium transition-all duration-300"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Apri in Google Maps
-                    </motion.a>
-                  </div>
-                </div>
-
-                {/* Interactive Map */}
-                <div className="h-96 relative bg-gray-800">
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3033.5397688995833!2d15.6963892!3d41.7069444!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDHCsDQyJzI1LjAiTiAxNcKwNDEnNDcuMCJF!5e0!3m2!1sit!2sit!4v1640000000000!5m2!1sit!2sit"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen={true}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Mappa Maskio Barber Concept"
-                    className="filter hover:brightness-110 transition-all duration-300"
-                  />
-                  
-                  {/* Map Overlay for better interaction */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-900/10 pointer-events-none"
-                    animate={hoveredCard === 'map' ? {
-                      opacity: [0, 0.3, 0]
-                    } : {}}
-                    transition={{ duration: 2, ease: "easeInOut" }}
-                  />
-                </div>
-
-                {/* Map Footer with Quick Actions */}
-                <div className="bg-gray-900 p-4 border-t border-gray-700">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-gray-300">
-                      <span className="text-amber-500">📍</span>
-                      <span>Via Sant'Agata 24, San Giovanni Rotondo (FG)</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <motion.button
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium transition-all duration-300"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=Via+Sant'Agata+24,+San+Giovanni+Rotondo,+FG,+Italy`, '_blank')}
-                      >
-                        Indicazioni
-                      </motion.button>
-                      <motion.button
-                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium transition-all duration-300"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => window.open(`tel:+393317100730`)}
-                      >
-                        Chiama
-                      </motion.button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Floating map markers for visual appeal */}
-              <motion.div
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-lg"
-                animate={{
-                  y: [-3, 3, -3],
-                  scale: [1, 1.1, 1],
-                }}
-                transition={{
-                  duration: 3,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              >
-                <span className="text-white text-xs">📍</span>
-              </motion.div>
-            </motion.div>
-
-            {/* Location Information */}
-            <motion.div variants={fadeInRight} className="space-y-8">
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                variants={staggerContainer}
-                viewport={{ once: true }}
-                className="space-y-6"
-              >                <motion.div 
-                  variants={scaleIn}
-                  className="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-xl"
-                  whileHover={{ 
-                    y: -5,
-                    boxShadow: "0 25px 50px rgba(0, 0, 0, 0.25)"
-                  }}
-                >
-                  <div className="flex items-center gap-4 mb-6">
-                    <motion.div
-                      className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center"
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.8 }}
-                    >
-                      <span className="text-white text-xl">🏪</span>
-                    </motion.div>
-                    <h3 className="text-2xl font-bold text-white">Come Raggiungerci</h3>
-                  </div>
-                  
-                  <div className="space-y-4 text-gray-300">
-                    <div className="flex items-start gap-3">
-                      <span className="text-amber-500 mt-1">🚗</span>
-                      <div>
-                        <h4 className="font-semibold text-white mb-1">In Auto</h4>
-                        <p>Parcheggio disponibile nelle vicinanze. Facilmente raggiungibile dal centro città.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <span className="text-blue-500 mt-1">🚌</span>
-                      <div>
-                        <h4 className="font-semibold text-white mb-1">Mezzi Pubblici</h4>
-                        <p>Fermata autobus nelle vicinanze. Linee urbane disponibili dal centro.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <span className="text-green-500 mt-1">🚶</span>
-                      <div>
-                        <h4 className="font-semibold text-white mb-1">A Piedi</h4>
-                        <p>Nel cuore della città, a pochi passi dalle principali attrazioni.</p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div 
-                  variants={scaleIn}
-                  className="bg-gray-900 border border-amber-500/20 rounded-2xl p-8"
-                  whileHover={{ 
-                    scale: 1.02,
-                    boxShadow: "0 15px 35px rgba(245, 158, 11, 0.2)"
-                  }}
-                >
-                  <div className="flex items-center gap-4 mb-6">
-                    <motion.div
-                      className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center"
-                      animate={{
-                        scale: [1, 1.1, 1],
-                        rotate: [0, 5, -5, 0]
-                      }}
-                      transition={{
-                        duration: 4,
-                        ease: "easeInOut",
-                        repeat: Infinity,
-                        repeatType: "reverse"
-                      }}
-                    >
-                      <span className="text-white text-xl">💡</span>
-                    </motion.div>
-                    <h3 className="text-2xl font-bold text-white">Consigli Utili</h3>
-                  </div>
-                  
-                  <div className="space-y-3 text-gray-300">
-                    <p className="flex items-center gap-2">
-                      <span className="text-amber-500">✓</span>
-                      Prenota in anticipo per garantirti il tuo orario preferito
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-amber-500">✓</span>
-                      Arrivi 10 minuti prima per un'esperienza rilassante
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-amber-500">✓</span>
-                      Parcheggio gratuito disponibile nelle strade adiacenti
-                    </p>
-                  </div>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
+          </div>        </div>
       </motion.section>
 
       {/* CTA Section */}

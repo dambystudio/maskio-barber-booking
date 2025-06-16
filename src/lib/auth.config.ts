@@ -43,16 +43,19 @@ export const authOptions = {
             if (existingUser.length > 0) {
               throw new Error('User already exists');
             }
-            
-            const hashedPassword = credentials.password 
+              const hashedPassword = credentials.password 
               ? await bcrypt.hash(credentials.password as string, 10)
               : null;
-                const newUser = await db
+                // Default role for new registrations is 'customer'
+            // Roles can be changed later by admins through the database
+            const userRole = 'customer';
+                
+            const newUser = await db
               .insert(users)
               .values({
                 email: credentials.email as string,
                 name: credentials.name as string || 'User',
-                role: 'customer',
+                role: userRole,
                 phone: credentials.phone as string,
                 password: hashedPassword,
                 emailVerified: new Date(), // Segna come verificato automaticamente
@@ -121,8 +124,7 @@ export const authOptions = {
         }
       }
     })
-  ],  callbacks: {
-    async signIn({ user, account, profile }: { user: any; account: any; profile?: any }) {
+  ],  callbacks: {    async signIn({ user, account, profile }: { user: any; account: any; profile?: any }) {
       // Handle Google OAuth users
       if (account?.provider === 'google' && user.email) {
         try {
@@ -134,20 +136,20 @@ export const authOptions = {
             .limit(1);
             
           if (existingUser.length === 0) {
-            // Create new user for Google OAuth (without phone initially)
+            // Create new user for Google OAuth with default 'customer' role
             await db
               .insert(users)
               .values({
                 email: user.email,
                 name: user.name || 'Google User',
-                role: 'customer',
+                role: 'customer', // Default role for new users
                 image: user.image,
                 emailVerified: new Date(), // Google accounts are pre-verified
                 password: null, // No password for OAuth users
                 phone: null, // Will be requested in modal
               });
           } else {
-            // Update existing user with Google info if needed
+            // Update existing user with Google info and last login
             await db
               .update(users)
               .set({
@@ -162,7 +164,22 @@ export const authOptions = {
           return false;
         }
       }
-      return true;
+      
+      // Handle credentials login - just update last login
+      if (account?.provider === 'credentials' && user.email) {
+        try {
+          // Update user last login in database
+          await db
+            .update(users)
+            .set({
+              lastLogin: new Date(),
+            })
+            .where(eq(users.email, user.email));
+        } catch (error) {
+          console.error('Error updating user last login:', error);
+        }
+      }
+        return true;
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // Always redirect to home page after sign in/sign up

@@ -51,8 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         
         const isSignUp = credentials.isSignUp === 'true'
-        
-        if (isSignUp) {
+          if (isSignUp) {
           // Registration
           try {
             const existingUser = await db
@@ -63,6 +62,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               
             if (existingUser.length > 0) {
               throw new Error('User already exists')
+            }              // Get authorized emails from environment variables
+            const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
+            const barberEmails = process.env.BARBER_EMAILS?.split(',').map(email => email.trim()) || [];
+            
+            // Determine user role based on email
+            const isAdmin = adminEmails.includes(credentials.email as string);
+            const isBarber = barberEmails.includes(credentials.email as string);
+            
+            let userRole = 'user'; // default
+            if (isAdmin) {
+              userRole = 'admin';
+            } else if (isBarber) {
+              userRole = 'barber';
             }
             
             const hashedPassword = credentials.password 
@@ -74,7 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               .values({
                 email: credentials.email as string,
                 name: credentials.name as string || 'User',
-                role: 'customer',
+                role: userRole,
                 phone: credentials.phone as string,
                 password: hashedPassword,
               })
@@ -145,8 +157,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],  callbacks: {
     async signIn({ user, account, profile }) {
       // For Google OAuth
-      if (account?.provider === 'google' && user?.email) {
-        try {
+      if (account?.provider === 'google' && user?.email) {        try {
+          // Get authorized emails from environment variables
+          const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
+          const barberEmails = process.env.BARBER_EMAILS?.split(',').map(email => email.trim()) || [];
+          
+          // Determine user role based on email
+          const isAdmin = adminEmails.includes(user.email);
+          const isBarber = barberEmails.includes(user.email);
+          
+          let userRole = 'user'; // default
+          if (isAdmin) {
+            userRole = 'admin';
+          } else if (isBarber) {
+            userRole = 'barber';
+          }
+          
           // Check if user already exists
           const existingUser = await db
             .select()
@@ -161,16 +187,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               .values({
                 email: user.email,
                 name: user.name || 'Google User',
-                role: 'customer',
+                role: userRole,
                 image: user.image,
                 password: null, // No password for OAuth users
               })
           } else {
-            // Update existing user with Google image if available
+            // Update existing user with Google image if available and ensure correct role
+            const updateData: any = {};
             if (user.image && existingUser[0].image !== user.image) {
+              updateData.image = user.image;
+            }
+            // Always ensure barber emails have the correct role
+            if (isBarber && existingUser[0].role !== 'barber') {
+              updateData.role = 'barber';
+            }
+            
+            if (Object.keys(updateData).length > 0) {
               await db
                 .update(users)
-                .set({ image: user.image })
+                .set(updateData)
                 .where(eq(users.email, user.email))
             }
           }

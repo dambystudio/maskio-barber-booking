@@ -172,7 +172,7 @@ export default function SignUp() {
         <div className="text-center mb-8">
           <Image
             src="/logo.jpg"
-            alt="Maskio Barber"
+            alt="Maskio Barber Concept"
             width={80}
             height={80}
             className="mx-auto rounded-full mb-4 border-2 border-gray-600"
@@ -303,7 +303,7 @@ export default function SignUp() {
             type="submit"
             disabled={loading}            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 px-4 rounded-lg font-medium hover:from-amber-600 hover:to-amber-700 transition-colors disabled:opacity-50 shadow-lg"
           >
-            {loading ? 'Invio codice verifica...' : '📧 Invia Codice di Verifica'}
+            {loading ? 'Registrazione in corso...' : '� Registrati'}
           </motion.button>
         </form>
 

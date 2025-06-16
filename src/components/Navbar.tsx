@@ -26,7 +26,7 @@ const navigation = [
   { name: 'Home', href: '/', icon: HomeIcon },
   { name: 'Chi Siamo', href: '/chi-siamo', icon: UserGroupIcon },
   { name: 'Servizi', href: '/servizi', icon: ScissorsIcon },
-  { name: 'Prodotti', href: '/prodotti', icon: ShoppingBagIcon },
+  // { name: 'Prodotti', href: '/prodotti', icon: ShoppingBagIcon }, // Temporaneamente nascosto
   { name: 'Location', href: '/location', icon: MapPinIcon },
   { name: 'Contatti', href: '/contatti', icon: PhoneIcon },
   { name: 'Cosa dicono di noi', href: '/testimonianze', icon: StarIcon },
@@ -39,7 +39,10 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const userButtonRef = useRef<HTMLButtonElement>(null);// Chiudi il menu mobile quando si passa al desktop
+  const userButtonRef = useRef<HTMLButtonElement>(null);
+  // Check user roles
+  const isBarber = session?.user?.role === 'barber';
+  const isAdmin = session?.user?.role === 'admin';// Chiudi il menu mobile quando si passa al desktop
   useEffect(() => {
     const handleResize = () => {
       if (typeof window !== 'undefined' && window.innerWidth >= 1024) { // lg breakpoint
@@ -118,12 +121,23 @@ export default function Navbar() {
               </Link>
             </div>
               {/* Right side with booking button and user menu */}
-            <div className="flex items-center space-x-3">
-              {/* Desktop booking button */}
+            <div className="flex items-center space-x-3">              {/* Desktop booking/panel button */}
               <div className="hidden lg:block">
-                <BookingButton className="px-4 py-2 text-sm">
-                  Prenota
-                </BookingButton>
+                {isBarber ? (
+                  <Link
+                    href="/pannello-prenotazioni"
+                    className="bg-amber-500 hover:bg-amber-600 text-black px-4 py-2 text-sm rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z" />
+                    </svg>
+                    Pannello Prenotazioni
+                  </Link>
+                ) : (
+                  <BookingButton className="px-4 py-2 text-sm">
+                    Prenota
+                  </BookingButton>
+                )}
               </div>
                 {/* User menu (desktop) */}
               {session && (
@@ -152,8 +166,7 @@ export default function Navbar() {
                           maxHeight: '200px',
                           overflow: 'visible'
                         }}
-                      >
-                        <Link
+                      >                        <Link
                           href="/area-personale"
                           className="block px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors"
                           onClick={() => setUserMenuOpen(false)}
@@ -167,6 +180,15 @@ export default function Navbar() {
                         >
                           👤 Profilo
                         </Link>
+                        {(isAdmin || isBarber) && (
+                          <Link
+                            href="/admin/users"
+                            className="block px-4 py-2 text-sm text-amber-400 hover:bg-gray-700 transition-colors font-medium"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            🛠️ {isAdmin ? 'Pannello Admin' : 'Gestione Utenti'}
+                          </Link>
+                        )}
                         <button
                           onClick={() => {
                             setUserMenuOpen(false);
@@ -289,8 +311,7 @@ export default function Navbar() {
                           >
                             <UserIcon className="h-5 w-5" />
                             Area Personale
-                          </Link>
-                          <Link
+                          </Link>                          <Link
                             href="/area-personale/profilo"
                             className="flex items-center gap-3 px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
                             onClick={() => setMobileMenuOpen(false)}
@@ -298,6 +319,18 @@ export default function Navbar() {
                             <UserIcon className="h-5 w-5" />
                             Profilo
                           </Link>
+                          {(isAdmin || isBarber) && (
+                            <Link
+                              href="/admin/users"
+                              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-amber-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                              </svg>
+                              {isAdmin ? 'Pannello Admin' : 'Gestione Utenti'}
+                            </Link>
+                          )}
                           <button
                             onClick={() => {
                               setMobileMenuOpen(false);
@@ -326,14 +359,26 @@ export default function Navbar() {
                       </div>
                     )}
                   </nav>
-                </div>
-                
-                {/* Booking Button - Fixed at bottom */}
+                </div>                  {/* Booking/Panel Button - Fixed at bottom */}
                 <div className="px-6 pb-6 border-t border-gray-900 mt-2">
                   <div className="pt-4" onClick={() => setMobileMenuOpen(false)}>
-                    <BookingButton className="w-full block text-base font-semibold">
-                      Prenota
-                    </BookingButton>
+                    {isBarber ? (
+                      <Link
+                        href="/pannello-prenotazioni"
+                        className="w-full block text-base font-semibold bg-amber-500 hover:bg-amber-600 text-black px-6 py-3 rounded-lg transition-all duration-300 text-center"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z" />
+                          </svg>
+                          Pannello Prenotazioni
+                        </div>
+                      </Link>
+                    ) : (
+                      <BookingButton className="w-full block text-base font-semibold">
+                        Prenota
+                      </BookingButton>
+                    )}
                   </div>
                 </div>
               </div>

@@ -9,20 +9,25 @@ import {
   InformationCircleIcon, 
   ScissorsIcon, 
   MapPinIcon, 
-  UserIcon 
+  UserIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 import {
   HomeIcon as HomeIconSolid,
   InformationCircleIcon as InformationCircleIconSolid,
   ScissorsIcon as ScissorsIconSolid,
   MapPinIcon as MapPinIconSolid,
-  UserIcon as UserIconSolid
+  UserIcon as UserIconSolid,
+  ClipboardDocumentListIcon as ClipboardDocumentListIconSolid
 } from '@heroicons/react/24/solid';
 
 export default function MobileBottomNav() {
   const [isStandalone, setIsStandalone] = useState(false);
   const pathname = usePathname();
   const { data: session } = useSession();
+  
+  // Verifica se l'utente è un barbiere
+  const isBarber = session?.user?.role === 'barber';
 
   useEffect(() => {
     // Rileva se l'app è in modalità standalone (PWA installata)
@@ -48,19 +53,26 @@ export default function MobileBottomNav() {
   if (!isStandalone) {
     return null;
   }
-
   const navItems = [
     {
       name: 'Home',
       href: '/',
       icon: HomeIcon,
       iconSolid: HomeIconSolid,
-    },    {
+    },
+    {
       name: 'Chi Siamo',
       href: '/chi-siamo',
       icon: InformationCircleIcon,
       iconSolid: InformationCircleIconSolid,
-    },    {
+    },    // Bottone centrale che cambia in base al ruolo
+    isBarber ? {
+      name: 'Pannello',
+      href: '/pannello-prenotazioni',
+      icon: ClipboardDocumentListIcon,
+      iconSolid: ClipboardDocumentListIconSolid,
+      isHighlight: true,
+    } : {
       name: 'Prenota',
       href: '/prenota',
       icon: ScissorsIcon,
@@ -79,7 +91,7 @@ export default function MobileBottomNav() {
       icon: UserIcon,
       iconSolid: UserIconSolid,
     },
-  ];  return (    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-xl dark:bg-gray-900/90 dark:border-gray-700 standalone-only pb-6">
+  ];return (    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-xl dark:bg-gray-900/90 dark:border-gray-700 standalone-only pb-6">
       <div className="grid grid-cols-5 h-24 px-4">
         {navItems.map((item) => {
           const isActive = pathname === item.href;

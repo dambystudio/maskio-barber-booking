@@ -8,13 +8,15 @@ interface BookingButtonProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   children?: React.ReactNode;
+  disableAnimation?: boolean;
 }
 
 export default function BookingButton({ 
   variant = 'primary', 
   size = 'md', 
   className = '',
-  children = 'Prenota Ora'
+  children = 'Prenota Ora',
+  disableAnimation = false
 }: BookingButtonProps) {
   const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 relative z-10 opacity-100 visible';
   
@@ -31,14 +33,13 @@ export default function BookingButton({
   };
 
   const buttonClasses = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
-
   return (
     <Link href="/prenota">
       <motion.button
         className={buttonClasses}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, y: 20 }}
+        initial={disableAnimation ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         style={{ zIndex: 10, position: 'relative' }}

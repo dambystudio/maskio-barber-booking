@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService } from '@/lib/database';
+import { isDateClosed, getClosureSettings } from '../../closure-settings/route';
 
 interface TimeSlot {
   time: string;
@@ -19,8 +20,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Verifica se la data è chiusa
+    const dateIsClosed = await isDateClosed(date);
+    if (dateIsClosed) {
+      console.log(`Date ${date} is closed according to closure settings`);
+      return NextResponse.json([]);
+    }
+
     // Generate all possible time slots for the day
-    const allTimeSlots = generateAllTimeSlots(date);
+    const allTimeSlots = await generateAllTimeSlots(date);
     
     // Get available slots from database
     const availableSlotTimes = await DatabaseService.getAvailableSlots(barberId, date);
@@ -41,15 +49,17 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function generateAllTimeSlots(dateString: string): string[] {
+async function generateAllTimeSlots(dateString: string): Promise<string[]> {
   const slots: string[] = [];
   const date = new Date(dateString);
   const dayOfWeek = date.getDay();
   
-  // Sunday closed
-  if (dayOfWeek === 0) {
-    return slots;
+  // Verifica se il giorno è chiuso secondo le impostazioni di chiusura
+  const dateIsClosed = await isDateClosed(dateString);
+  if (dateIsClosed) {
+    return slots; // Ritorna array vuoto se il giorno è chiuso
   }
+
   // Saturday has same hours as weekdays (9:00-12:30, 15:00-17:30)
   if (dayOfWeek === 6) {
     // Morning slots 9:00-12:30

@@ -42,9 +42,9 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   const [closedDates, setClosedDates] = useState<Set<string>>(new Set()); // Specific closed dates
   // Add state for tracking days with no available slots
   const [unavailableDates, setUnavailableDates] = useState<Set<string>>(new Set());
-
-  // Load closure settings from localStorage
+  // Load closure settings from localStorage and server
   useEffect(() => {
+    // Prima carica dal localStorage per un'esperienza più veloce
     const savedClosedDays = localStorage.getItem('maskio-closed-days');
     if (savedClosedDays) {
       try {
@@ -63,7 +63,34 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       } catch (error) {
         console.error('Error parsing closed dates from localStorage:', error);
       }
-    }  }, []);
+    }
+
+    // Poi carica dal server per avere i dati più aggiornati
+    fetchClosureSettingsFromServer();
+  }, []);
+
+  // Funzione per caricare le impostazioni di chiusura dal server
+  const fetchClosureSettingsFromServer = async () => {
+    try {
+      const response = await fetch('/api/closure-settings');
+      if (response.ok) {
+        const settings = await response.json();
+        setClosedDays(new Set(settings.closedDays));
+        setClosedDates(new Set(settings.closedDates));
+        
+        // Aggiorna anche il localStorage con i dati del server
+        localStorage.setItem('maskio-closed-days', JSON.stringify(settings.closedDays));
+        localStorage.setItem('maskio-closed-dates', JSON.stringify(settings.closedDates));
+        
+        console.log('✅ Closure settings loaded from server in BookingForm:', settings);
+      } else {
+        console.warn('Failed to load closure settings from server, using localStorage');
+      }
+    } catch (error) {
+      console.error('Error loading closure settings from server:', error);
+      console.warn('Using localStorage closure settings as fallback');
+    }
+  };
 
   // Load user profile data
   useEffect(() => {
@@ -1019,31 +1046,54 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           className="text-center space-y-6"
         >          <motion.div variants={fadeInUp}>
             <svg className="w-16 h-16 mx-auto text-amber-500" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          </motion.div>
-          <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-amber-600">
+          </motion.div>          <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-amber-400">
             Prenotazione Confermata!
-          </motion.h2>          <motion.div variants={fadeInUp} className="bg-amber-50 border-2 border-amber-200 p-6 rounded-lg shadow-lg text-left space-y-2">
-            <p className="text-amber-900"><strong>ID Prenotazione:</strong> {bookingResponse.id || bookingResponse.booking?.id}</p>
-            <p className="text-amber-900"><strong>Barbiere:</strong> {formData.selectedBarber?.name}</p>
-            <p className="text-amber-900"><strong>Servizi:</strong> {formData.selectedServices.map(s => s.name).join(', ')}</p>
-            <p className="text-amber-900"><strong>Data:</strong> {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
-            <p className="text-amber-900"><strong>Cliente:</strong> {formData.customerInfo.name}</p>
-              {/* Resoconto finale */}
-            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <h4 className="font-semibold text-amber-800 mb-2">🎉 Resoconto della prenotazione</h4>
-              <div className="text-sm text-amber-700 space-y-1">
-                <p>✅ <strong>Prenotazione confermata</strong> nel nostro sistema</p>
-                <p>📧 <strong>Email di conferma inviata</strong> (se disponibile)</p>
-                <p>📱 <strong>Promemoria automatico</strong> 24h prima dell'appuntamento</p>
-                <p>🏪 <strong>Ti aspettiamo</strong> presso Maskio Barber</p>
+          </motion.h2>
+
+          <motion.div variants={fadeInUp} className="bg-gray-900 border-2 border-amber-500 p-6 rounded-lg shadow-lg text-left space-y-2">
+            <p className="text-white"><strong className="text-amber-400">ID Prenotazione:</strong> {bookingResponse.id || bookingResponse.booking?.id}</p>
+            <p className="text-white"><strong className="text-amber-400">Barbiere:</strong> {formData.selectedBarber?.name}</p>
+            <p className="text-white"><strong className="text-amber-400">Servizi:</strong> {formData.selectedServices.map(s => s.name).join(', ')}</p>
+            <p className="text-white"><strong className="text-amber-400">Data:</strong> {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
+            <p className="text-white"><strong className="text-amber-400">Cliente:</strong> {formData.customerInfo.name}</p>
+              
+            {/* Resoconto finale */}
+            <div className="mt-4 p-4 bg-gray-800 border border-amber-400 rounded-lg">
+              <h4 className="font-semibold text-amber-300 mb-3 flex items-center gap-2">
+                🎉 Resoconto della prenotazione
+              </h4>
+              <div className="text-sm text-gray-300 space-y-2">
+                <p className="flex items-start gap-2">
+                  <span className="text-green-400">✅</span>
+                  <span><strong className="text-white">Prenotazione confermata</strong> nel nostro sistema</span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="text-purple-400">📱</span>
+                  <span><strong className="text-white">Promemoria</strong> prima dell'appuntamento</span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="text-amber-400">🏪</span>
+                  <span><strong className="text-white">Ti aspettiamo</strong> presso Maskio Barber Concept</span>
+                </p>
                 {formData.customerInfo.notes && (
-                  <p>📝 <strong>Le tue note speciali</strong> sono state salvate per il barbiere</p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-cyan-400">📝</span>
+                    <span><strong className="text-white">Le tue note speciali</strong> sono state salvate per il barbiere</span>
+                  </p>
                 )}
-                <p className="mt-2 font-medium">💡 <em>In caso di imprevisti, contattaci almeno 2 ore prima dell'appuntamento</em></p>
+                <div className="mt-3 pt-3 border-t border-gray-600">
+                  <p className="flex items-start gap-2 font-medium text-amber-300">
+                    <span className="text-yellow-400">💡</span>
+                    <em>In caso di imprevisti, contattaci almeno 48 ore prima dell'appuntamento</em>
+                  </p>
+                </div>
               </div>
-            </div>            
-            <p className="mt-4 font-medium text-amber-800">Grazie per aver scelto Maskio Barber! 🙏</p>
-          </motion.div><motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            </div>
+            
+            <p className="mt-4 font-medium text-amber-300 text-center">
+              Grazie per aver scelto Maskio Barber Concept! 🙏
+            </p>
+          </motion.div>          <motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => {
                 // Redirect alla home page
@@ -1051,10 +1101,20 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               }}
               className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
             >
-              Continua
+              🏠 Torna alla Home
             </button>
             <button
               onClick={() => {
+                // Redirect all'area personale
+                window.location.href = '/area-personale';
+              }}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
+            >
+              📅 Visualizza i tuoi appuntamenti
+            </button>
+            <button
+              onClick={() => {
+                // Reset completo del form per una nuova prenotazione
                 setCurrentStep(1);
                 setFormData({
                   selectedBarber: null,
@@ -1065,11 +1125,15 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 });
                 setBookingResponse(null);
                 setAvailableSlots([]);
+                setUnavailableDates(new Set());
                 setError(null);
+                
+                // Scroll to top per una migliore UX
+                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
             >
-              Effettua Nuova Prenotazione
+              ➕ Effettua Nuova Prenotazione
             </button>
           </motion.div>
         </motion.div>

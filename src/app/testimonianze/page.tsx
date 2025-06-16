@@ -64,17 +64,7 @@ const mockReviews: GoogleReview[] = [
     rating: 5,
     text: 'Taglio perfetto e rasatura impeccabile. Consigliatissimo a tutti!',
     time: baseTimestamp - 86400000 * 45,
-    relative_time_description: '1 mese fa',
-    profile_photo_url: '/api/placeholder/40/40'
-  },
-  {
-    id: '6',
-    author_name: 'Davide Gialli',
-    rating: 5,
-    text: 'Esperienza top! Ambiente elegante e personale super professionale.',
-    time: baseTimestamp - 86400000 * 60,
-    relative_time_description: '2 mesi fa',
-    profile_photo_url: '/api/placeholder/40/40'
+    relative_time_description: '1 mese fa',    profile_photo_url: '/api/placeholder/40/40'
   }
 ];
 
@@ -105,6 +95,9 @@ export default function TestimonianzePage() {
   const [averageRating, setAverageRating] = useState(0);
   const [isDemo, setIsDemo] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const initialReviewsCount = 3;
+
   useEffect(() => {
     // Carica le recensioni di Google tramite API
     const loadReviews = async () => {
@@ -302,67 +295,242 @@ export default function TestimonianzePage() {
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               />
               <p className="mt-4 text-gray-300">Caricamento recensioni...</p>
-            </div>
-          ) : (
-            <motion.div 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              variants={staggerContainer}
-            >
-              {reviews.map((review, index) => (
-                <motion.div
-                  key={review.id}
-                  variants={cardVariant}
-                  className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 hover:from-white/15 hover:to-white/10 transition-all duration-300 cursor-pointer"
-                  whileHover={{ 
-                    y: -5,
-                    scale: 1.02,
-                    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)"
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {/* Header with profile and rating */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {review.author_name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white text-lg">
-                        {review.author_name}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <StarRating rating={review.rating} />
-                        <span className="text-gray-400 text-sm">
-                          {review.relative_time_description}
-                        </span>
+            </div>          ) : (
+            <div className="relative">
+              {/* Reviews Grid */}
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative"
+                variants={staggerContainer}
+              >
+                {reviews.map((review, index) => (
+                  <motion.div
+                    key={review.id}
+                    variants={cardVariant}
+                    className={`bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 hover:from-white/15 hover:to-white/10 transition-all duration-300 cursor-pointer ${
+                      !showAllReviews && index >= 3 
+                        ? 'filter blur-sm opacity-50 pointer-events-none' 
+                        : ''
+                    }`}
+                    whileHover={(!showAllReviews && index >= 3) ? {} : { 
+                      y: -5,
+                      scale: 1.02,
+                      boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)"
+                    }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {/* ...existing code... */}
+                    {/* Header with profile and rating */}
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        {review.author_name.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-white text-lg">
+                          {review.author_name}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <StarRating rating={review.rating} />
+                          <span className="text-gray-400 text-sm">
+                            {review.relative_time_description}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Review text */}
-                  <p className="text-gray-300 leading-relaxed mb-4">
-                    "{review.text}"
-                  </p>
+                    {/* Review text */}
+                    <p className="text-gray-300 leading-relaxed mb-4">
+                      "{review.text}"
+                    </p>
 
-                  {/* Google logo */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                      </svg>
-                      <span>Google</span>
+                    {/* Google logo */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>Google</span>
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {/* Show More/Less Button */}              {/* Show More Button */}
+              {reviews.length > 3 && (
+                <motion.div 
+                  className="text-center mt-12"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <motion.button
+                    onClick={() => setShowAllReviews(!showAllReviews)}
+                    className="bg-gradient-to-r from-amber-500 to-amber-600 text-black px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-300 flex items-center justify-center gap-3 mx-auto"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <span>
+                      {showAllReviews ? 'Mostra Meno' : `Mostra Altre ${reviews.length - 3} Recensioni`}
+                    </span>
+                    <motion.svg 
+                      className="w-5 h-5" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                      animate={{ rotate: showAllReviews ? 180 : 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </motion.svg>
+                  </motion.button>
+
+                  {!showAllReviews && (
+                    <p className="text-gray-400 text-sm mt-3">
+                      Le recensioni sottostanti sono offuscate - clicca per vederle tutte chiaramente
+                    </p>
+                  )}
                 </motion.div>
-              ))}
-            </motion.div>
+              )}
+            </div>
           )}
         </div>
       </motion.section>
 
-      {/* Call to Action */}
+      {/* Leave a Review Section */}
+      <motion.section 
+        className="py-20 bg-gray-900"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={fadeInUp}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            className="text-center mb-16"
+            variants={fadeInUp}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              ⭐ Lascia la Tua Recensione
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              La tua opinione è importante per noi! Aiuta altri clienti a scoprire la qualità dei nostri servizi
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Left side - Info */}
+            <motion.div
+              variants={fadeInUp}
+              className="space-y-6"
+            >
+              <div className="bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center">
+                    <span className="text-3xl">💬</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Condividi la Tua Esperienza</h3>
+                    <p className="text-gray-300">Racconta agli altri della tua visita</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-amber-500 text-xl">✓</span>
+                    <span className="text-gray-300">Aiuti altri clienti nella scelta</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-amber-500 text-xl">✓</span>
+                    <span className="text-gray-300">Supporti la nostra attività locale</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-amber-500 text-xl">✓</span>
+                    <span className="text-gray-300">Ci aiuti a migliorare sempre di più</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right side - Google Review Button */}
+            <motion.div
+              variants={fadeInUp}
+              className="text-center"
+            >
+              <motion.div
+                className="bg-gray-800 p-10 rounded-2xl shadow-2xl border border-gray-700"
+                whileHover={{ y: -10, scale: 1.02 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <div className="mb-8">
+                  <div className="flex justify-center mb-4">
+                    <svg className="w-16 h-16" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">Recensisci su Google</h3>
+                  <p className="text-gray-300 mb-6">
+                    Clicca qui per lasciare una recensione sulla nostra pagina Google Business
+                  </p>
+                  
+                  {/* Star Rating Display */}
+                  <div className="flex justify-center gap-1 mb-6">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <motion.div
+                        key={star}
+                        whileHover={{ scale: 1.2, rotate: 15 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <StarIcon className="w-8 h-8 text-amber-400" />
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>                <motion.button
+                  onClick={() => {
+                    // URL ottimizzato per Google Business Profile reviews con Place ID reale
+                    const placeId = "ChIJJxigKx51NxMRN_cHtkuYN-M"; // Place ID reale di Maskio Barber Concept
+                    
+                    // URL diretto per le recensioni che dovrebbe mantenere la sessione
+                    const reviewUrl = `https://search.google.com/local/writereview?placeid=${placeId}`;
+                    
+                    // Apre in una nuova scheda mantenendo il context
+                    window.open(reviewUrl, '_blank', 'noopener,noreferrer');
+                  }}
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-black px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-300 flex items-center justify-center gap-3"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  Scrivi una Recensione
+                </motion.button>                <p className="text-sm text-gray-400 mt-4">                  💡 <strong>Nota:</strong> Ti verrà richiesto di accedere al tuo account Google per lasciare la recensione
+                </p>
+              </motion.div>
+            </motion.div>
+          </div>
+
+          {/* Bottom Note */}
+          <motion.div
+            variants={fadeInUp}
+            className="text-center mt-12"
+          >
+            <p className="text-gray-300 text-lg">
+              💡 <strong>Suggerimento:</strong> Menziona i servizi che hai ricevuto e il barbiere che ti ha seguito per aiutare altri clienti!
+            </p>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Call to Action - Moved after review section */}
       <motion.section 
         className="py-20 bg-gradient-to-br from-amber-600 via-amber-500 to-orange-600 text-white"
         initial="hidden"

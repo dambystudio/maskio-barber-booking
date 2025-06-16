@@ -278,16 +278,15 @@ export default function Home() {
             >              <div className="relative">
                 {/* Static glow effect for better performance */}
                 <div className="absolute -inset-16 opacity-10 blur-[80px] bg-gradient-radial from-amber-400/20 via-amber-400/5 to-transparent" />
-                <div className="absolute -inset-12 opacity-15 blur-[60px] bg-gradient-radial from-amber-400/15 via-amber-400/3 to-transparent" />
-                
-                {/* Logo */}
+                <div className="absolute -inset-12 opacity-15 blur-[60px] bg-gradient-radial from-amber-400/15 via-amber-400/3 to-transparent" />                {/* Logo */}
                 <Image
                   src="/LogoSimboloNome_Bianco(1).png"
                   alt="Maskio Barber Concept"
-                  width={220}
-                  height={22}
-                  className="mb-1 relative z-10 drop-shadow-lg"
-                  priority                />
+                  width={320}
+                  height={32}
+                  className="mb-1 relative z-10 drop-shadow-lg w-64 h-auto sm:w-72 md:w-80 lg:w-96"
+                  priority
+                />
               </div>
               
               {/* Decorative line under logo */}
@@ -853,7 +852,7 @@ export default function Home() {
                 description: 'Colore capelli o servizi su richiesta',
                 icon: '💇‍♂️',
                 image: '/servizi-altri.jpg', // Immagine per altri servizi
-                price: 'Contattare Maskio',
+                price: 'Contattare Maskio Barber Concept',
                 gradient: 'from-blue-100/20 to-gray-100/25'
               }
             ].map((service, index) => (
@@ -1068,7 +1067,7 @@ export default function Home() {
                   repeatType: "reverse"
                 }}
               >
-                Maskio
+                Maskio Barber Concept
               </motion.span>
             </motion.h2>            <motion.p 
               className="text-lg text-gray-200 max-w-3xl mx-auto font-medium"
@@ -1303,8 +1302,7 @@ export default function Home() {
           <motion.div 
             className="grid grid-cols-2 md:grid-cols-4 gap-6"
             variants={staggerContainer}
-          >
-            {[
+          >            {[
               { src: '/taglio1.jpg', title: 'Taglio Moderno' },
               { src: '/taglio2.jpg', title: 'Styling Classico' },
               { src: '/sediaOro.jpg', title: 'Ambiente Premium' },

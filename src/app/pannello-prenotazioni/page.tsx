@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { format, parseISO, addDays, isToday, getDay } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { motion } from 'framer-motion';
 
 interface Booking {
   id: string;
@@ -27,10 +29,54 @@ interface Stats {
 }
 
 export default function PannelloPrenotazioni() {
+  const { data: session, status } = useSession();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDebouncing, setIsDebouncing] = useState(false);
+  const [isDebouncing, setIsDebouncing] = useState(false);  // Check if user is authorized (barber or admin role)
+  const isAuthorized = session?.user?.role === 'barber' || session?.user?.role === 'admin';
+
+  // If still loading session, show loading
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
+          <p className="text-white text-lg">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not logged in or not authorized, show access denied
+  if (!session || !isAuthorized) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <motion.div 
+          className="text-center max-w-md mx-auto p-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="text-6xl mb-6">🔒</div>
+          <h1 className="text-2xl font-bold text-white mb-4">
+            Accesso Negato
+          </h1>
+          <p className="text-gray-400 text-lg mb-6">
+            Solo i barbieri autorizzati possono accedere a questo pannello.
+          </p>
+          <motion.a
+            href="/"
+            className="inline-block bg-amber-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-amber-600 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Torna alla Home
+          </motion.a>
+        </motion.div>
+      </div>
+    );
+  }
 
   // Cache per prenotazioni e statistiche separate
   const [bookingsCache, setBookingsCache] = useState<{[key: string]: Booking[]}>({});
@@ -55,7 +101,7 @@ export default function PannelloPrenotazioni() {
   const [newClosureReason, setNewClosureReason] = useState('');
 
   // Nomi dei giorni della settimana
-  const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];  // Carica i giorni di chiusura dal localStorage
+  const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];  // Carica i giorni di chiusura dal localStorage e sincronizza con il server
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedClosedDays = localStorage.getItem('maskio-closed-days');
@@ -78,37 +124,79 @@ export default function PannelloPrenotazioni() {
         }
       }
     }
+    
+    // Carica le impostazioni dal server
+    loadClosureSettingsFromServer();
   }, []);
-
-  // Salva i giorni di chiusura nel localStorage quando cambiano
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('maskio-closed-days', JSON.stringify(Array.from(closedDays)));
-    }
-  }, [closedDays]);
-
-  // Salva le date di chiusura nel localStorage quando cambiano
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('maskio-closed-dates', JSON.stringify(Array.from(closedDates)));
-    }
-  }, [closedDates]);
-
-  // Funzione per toggle dei giorni di chiusura
-  const toggleClosedDay = (dayIndex: number) => {
-    setClosedDays(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(dayIndex)) {
-        newSet.delete(dayIndex);
+  // Funzione per caricare le impostazioni dal server
+  const loadClosureSettingsFromServer = async () => {
+    try {
+      const response = await fetch('/api/closure-settings');
+      if (response.ok) {
+        const settings = await response.json();
+        setClosedDays(new Set(settings.closedDays));
+        setClosedDates(new Set(settings.closedDates));
+        
+        // Sincronizza anche il localStorage
+        localStorage.setItem('maskio-closed-days', JSON.stringify(settings.closedDays));
+        localStorage.setItem('maskio-closed-dates', JSON.stringify(settings.closedDates));
+        
+        console.log('✅ Closure settings loaded from server:', settings);
       } else {
-        newSet.add(dayIndex);
+        console.error('Failed to load closure settings from server:', response.status);
       }
-      return newSet;
-    });
+    } catch (error) {
+      console.error('Error loading closure settings from server:', error);
+    }
+  };
+  // Funzione per salvare le impostazioni sul server
+  const saveClosureSettingsToServer = async (newClosedDays: Set<number>, newClosedDates: Set<string>) => {
+    try {
+      const response = await fetch('/api/closure-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          closedDays: Array.from(newClosedDays),
+          closedDates: Array.from(newClosedDates),
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Closure settings saved to server successfully:', result);
+        return true;
+      } else {
+        console.error('❌ Failed to save closure settings to server:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error saving closure settings to server:', error);
+      return false;    }
   };
 
+  // Funzione per toggle dei giorni di chiusura
+  const toggleClosedDay = async (dayIndex: number) => {
+    const newClosedDays = new Set(closedDays);
+    if (newClosedDays.has(dayIndex)) {
+      newClosedDays.delete(dayIndex);
+    } else {
+      newClosedDays.add(dayIndex);
+    }
+    
+    // Salva immediatamente sul server
+    const success = await saveClosureSettingsToServer(newClosedDays, closedDates);
+    if (success) {
+      setClosedDays(newClosedDays);
+      console.log(`✅ Day ${dayIndex} toggled successfully`);
+    } else {
+      console.error(`❌ Failed to toggle day ${dayIndex}`);
+      alert('Errore nel salvare le impostazioni. Riprova.');
+    }
+  };
   // Funzione per aggiungere date specifiche di chiusura
-  const addClosureDates = () => {
+  const addClosureDates = async () => {
     if (!newClosureDate) return;
 
     if (newClosureEndDate && newClosureEndDate < newClosureDate) {
@@ -134,17 +222,34 @@ export default function PannelloPrenotazioni() {
       newDates.add(newClosureDate);
     }
 
-    setClosedDates(newDates);
-    setNewClosureDate('');
-    setNewClosureEndDate('');
-    setNewClosureReason('');
+    // Salva immediatamente sul server
+    const success = await saveClosureSettingsToServer(closedDays, newDates);
+    if (success) {
+      setClosedDates(newDates);
+      setNewClosureDate('');
+      setNewClosureEndDate('');
+      setNewClosureReason('');
+      console.log('✅ Closure dates added successfully');
+    } else {
+      console.error('❌ Failed to add closure dates');
+      alert('Errore nel salvare le date di chiusura. Riprova.');
+    }
   };
 
   // Funzione per rimuovere una data di chiusura
-  const removeClosureDate = (dateStr: string) => {
+  const removeClosureDate = async (dateStr: string) => {
     const newDates = new Set(closedDates);
     newDates.delete(dateStr);
-    setClosedDates(newDates);
+    
+    // Salva immediatamente sul server
+    const success = await saveClosureSettingsToServer(closedDays, newDates);
+    if (success) {
+      setClosedDates(newDates);
+      console.log(`✅ Closure date ${dateStr} removed successfully`);
+    } else {
+      console.error(`❌ Failed to remove closure date ${dateStr}`);
+      alert('Errore nel rimuovere la data di chiusura. Riprova.');
+    }
   };
 
   // Controlla se una data è chiusa (sia per giorno della settimana che per data specifica)
@@ -349,6 +454,43 @@ export default function PannelloPrenotazioni() {
     }
   };
 
+  // Funzioni helper per contattare i clienti
+  const openWhatsApp = (phone: string, customerName: string, serviceName: string, bookingDate: string, bookingTime: string) => {
+    // Rimuovi tutti i caratteri non numerici dal numero di telefono
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    // Aggiungi il prefisso internazionale per l'Italia se necessario
+    let whatsappPhone = cleanPhone;
+    if (cleanPhone.startsWith('3') && cleanPhone.length === 10) {
+      whatsappPhone = '39' + cleanPhone;
+    } else if (!cleanPhone.startsWith('39') && cleanPhone.length === 10) {
+      whatsappPhone = '39' + cleanPhone;
+    }
+    
+    // Crea il messaggio personalizzato
+    const message = `Ciao ${customerName}! 👋
+
+Ti contatto da Maskio Barber Concept per la tua prenotazione:
+
+📅 *Data:* ${format(parseISO(bookingDate), 'dd/MM/yyyy', { locale: it })}
+🕐 *Orario:* ${bookingTime}
+✂️ *Servizio:* ${serviceName}
+
+Se hai domande o hai bisogno di modificare l'appuntamento, fammi sapere!
+
+Grazie per averci scelto 💈`;
+
+    // Apri WhatsApp Web o l'app
+    const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const makePhoneCall = (phone: string) => {
+    // Rimuovi spazi e caratteri speciali, mantieni solo numeri e il +
+    const cleanPhone = phone.replace(/[^\d+]/g, '');
+    window.open(`tel:${cleanPhone}`, '_self');
+  };
+
   // Genera array di date per la selezione orizzontale
   const generateDates = () => {
     const dates = [];
@@ -384,39 +526,42 @@ export default function PannelloPrenotazioni() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
       </div>
     );
-  }
-  return (
-    <div className="space-y-6">      {/* Statistiche */}
+  }  return (
+    <div className="space-y-4 md:space-y-6 pb-20 md:pb-6">
+      {/* Statistiche - Ottimizzate per Mobile */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
-            <div className="text-2xl font-bold text-white">{stats.totalBookings}</div>
-            <div className="text-gray-300">Prenotazioni Totali</div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+          <div className="bg-gray-900 border border-gray-800 p-4 md:p-6 rounded-lg shadow-lg">
+            <div className="text-lg md:text-2xl font-bold text-white">{stats.totalBookings}</div>
+            <div className="text-xs md:text-sm text-gray-300 leading-tight">Prenotazioni Totali</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
-            <div className="text-2xl font-bold text-amber-400">{stats.todayBookings}</div>
-            <div className="text-gray-300">Prenotazioni Oggi</div>
+          <div className="bg-gray-900 border border-gray-800 p-4 md:p-6 rounded-lg shadow-lg">
+            <div className="text-lg md:text-2xl font-bold text-amber-400">{stats.todayBookings}</div>
+            <div className="text-xs md:text-sm text-gray-300 leading-tight">Oggi</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
-            <div className="text-2xl font-bold text-blue-400">{stats.selectedDateBookings}</div>
-            <div className="text-gray-300">
-              Prenotazioni {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM', { locale: it })}
+          <div className="bg-gray-900 border border-gray-800 p-4 md:p-6 rounded-lg shadow-lg">
+            <div className="text-lg md:text-2xl font-bold text-blue-400">{stats.selectedDateBookings}</div>
+            <div className="text-xs md:text-sm text-gray-300 leading-tight">
+              {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM', { locale: it })}
             </div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
-            <div className="text-2xl font-bold text-green-400">€{stats.dailyRevenue.toFixed(2)}</div>
-            <div className="text-gray-300">
+          <div className="bg-gray-900 border border-gray-800 p-4 md:p-6 rounded-lg shadow-lg">
+            <div className="text-lg md:text-2xl font-bold text-green-400">€{stats.dailyRevenue.toFixed(2)}</div>
+            <div className="text-xs md:text-sm text-gray-300 leading-tight">
               Ricavi {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM', { locale: it })}
             </div>
           </div>
-        </div>      )}      {/* Gestione Giorni di Chiusura */}
-      <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
+        </div>
+      )}      {/* Gestione Giorni di Chiusura - Ottimizzata per Mobile */}
+      <div className="bg-gray-900 border border-gray-800 p-4 md:p-6 rounded-lg shadow-lg">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-white">🗓️ Gestione Chiusure</h2>
+          <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+            🗓️ <span className="hidden sm:inline">Gestione</span> Chiusure
+          </h2>
           <button
             type="button"
             onClick={() => setShowClosureSettings(!showClosureSettings)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            className={`px-3 py-2 md:px-4 md:py-2 rounded-lg font-medium transition-all duration-200 text-sm ${
               showClosureSettings
                 ? 'bg-amber-600 text-white hover:bg-amber-700'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -427,16 +572,17 @@ export default function PannelloPrenotazioni() {
         </div>
         
         {showClosureSettings && (
-          <div className="space-y-8 border-t pt-6">            {/* Chiusure Ricorrenti - Giorni della Settimana */}
+          <div className="space-y-6 md:space-y-8 border-t border-gray-700 pt-4 md:pt-6">
+            {/* Chiusure Ricorrenti - Giorni della Settimana */}
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4 flex items-center gap-2">
                 🔄 Chiusure Ricorrenti
               </h3>
-              <p className="text-sm text-gray-300 mb-4">
+              <p className="text-xs md:text-sm text-gray-300 mb-3 md:mb-4">
                 Seleziona i giorni della settimana in cui vuoi essere sempre chiuso.
               </p>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3">
                 {dayNames.map((dayName, index) => {
                   const isClosed = closedDays.has(index);
                   return (
@@ -444,17 +590,18 @@ export default function PannelloPrenotazioni() {
                       key={index}
                       type="button"
                       onClick={() => toggleClosedDay(index)}
-                      className={`p-4 rounded-xl border-2 transition-all duration-200 text-center ${
+                      className={`p-3 md:p-4 rounded-xl border-2 transition-all duration-200 text-center touch-manipulation ${
                         isClosed
-                          ? 'border-red-300 bg-red-50 text-red-800 shadow-lg transform scale-105'
-                          : 'border-green-200 bg-green-50 text-green-800 hover:border-green-300 hover:bg-green-100'
+                          ? 'border-red-400 bg-red-900/50 text-red-300 shadow-lg'
+                          : 'border-green-400 bg-green-900/30 text-green-300 hover:border-green-300 hover:bg-green-900/50'
                       }`}
                     >
-                      <div className="text-2xl mb-2">
+                      <div className="text-xl md:text-2xl mb-1 md:mb-2">
                         {isClosed ? '🔒' : '🟢'}
                       </div>
-                      <div className="font-semibold text-sm">
-                        {dayName}
+                      <div className="font-semibold text-xs md:text-sm">
+                        {dayName.substring(0, 3)}
+                        <span className="hidden sm:inline">{dayName.substring(3)}</span>
                       </div>
                       <div className="text-xs mt-1">
                         {isClosed ? 'CHIUSO' : 'Aperto'}
@@ -463,20 +610,20 @@ export default function PannelloPrenotazioni() {
                   );
                 })}
               </div>
-            </div>            {/* Chiusure Specifiche - Date */}
-            <div className="border-t border-gray-700 pt-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            </div>            {/* Chiusure Specifiche - Date - Ottimizzate per Mobile */}
+            <div className="border-t border-gray-700 pt-4 md:pt-6">
+              <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4 flex items-center gap-2">
                 📅 Chiusure Specifiche
               </h3>
-              <p className="text-sm text-gray-300 mb-6">
+              <p className="text-xs md:text-sm text-gray-300 mb-4 md:mb-6">
                 Aggiungi date specifiche di chiusura (es. 2 Giugno, ferie estive, ecc.)
               </p>
 
-              {/* Form per aggiungere nuove chiusure */}
-              <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl mb-6">
-                <div className="grid md:grid-cols-4 gap-4 items-end">
-                  <div>
-                    <label htmlFor="newClosureDate" className="block text-sm font-medium text-gray-300 mb-2">
+              {/* Form per aggiungere nuove chiusure - Mobile Friendly */}
+              <div className="bg-gray-800 border border-gray-700 p-4 md:p-6 rounded-xl mb-4 md:mb-6">
+                <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-4 md:gap-4 md:items-end">
+                  <div className="space-y-2">
+                    <label htmlFor="newClosureDate" className="block text-xs md:text-sm font-medium text-gray-300">
                       Data Inizio *
                     </label>
                     <input
@@ -485,13 +632,13 @@ export default function PannelloPrenotazioni() {
                       value={newClosureDate}
                       onChange={(e) => setNewClosureDate(e.target.value)}
                       min={getTodayString()}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-3 py-3 md:py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base md:text-sm"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label htmlFor="newClosureEndDate" className="block text-sm font-medium text-gray-300 mb-2">
+                  <div className="space-y-2">
+                    <label htmlFor="newClosureEndDate" className="block text-xs md:text-sm font-medium text-gray-300">
                       Data Fine (opzionale)
                     </label>
                     <input
@@ -500,14 +647,14 @@ export default function PannelloPrenotazioni() {
                       value={newClosureEndDate}
                       onChange={(e) => setNewClosureEndDate(e.target.value)}
                       min={newClosureDate || getTodayString()}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-3 py-3 md:py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base md:text-sm"
                       placeholder="Per intervallo di date"
                     />
-                    <p className="text-xs text-gray-400 mt-1">Lascia vuoto per una singola data</p>
+                    <p className="text-xs text-gray-400">Lascia vuoto per una singola data</p>
                   </div>
 
-                  <div>
-                    <label htmlFor="newClosureReason" className="block text-sm font-medium text-gray-300 mb-2">
+                  <div className="space-y-2">
+                    <label htmlFor="newClosureReason" className="block text-xs md:text-sm font-medium text-gray-300">
                       Motivo (opzionale)
                     </label>
                     <input
@@ -516,7 +663,7 @@ export default function PannelloPrenotazioni() {
                       value={newClosureReason}
                       onChange={(e) => setNewClosureReason(e.target.value)}
                       placeholder="Es. Festa nazionale, ferie"
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full px-3 py-3 md:py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base md:text-sm"
                     />
                   </div>
 
@@ -525,17 +672,19 @@ export default function PannelloPrenotazioni() {
                       type="button"
                       onClick={addClosureDates}
                       disabled={!newClosureDate}
-                      className="w-full px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:bg-gray-600 disabled:cursor-not-allowed font-medium transition-colors"
+                      className="w-full px-4 py-3 md:py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:bg-gray-600 disabled:cursor-not-allowed font-medium transition-colors touch-manipulation"
                     >
                       ➕ Aggiungi
                     </button>
                   </div>
                 </div>
-              </div>              {/* Lista date chiuse */}
+              </div>
+
+              {/* Lista date chiuse - Mobile Friendly */}
               {closedDates.size > 0 && (
                 <div>
                   <h4 className="font-medium text-white mb-3">Date Attualmente Chiuse:</h4>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {Array.from(closedDates)
                       .sort()
                       .map((dateStr) => (
@@ -543,13 +692,13 @@ export default function PannelloPrenotazioni() {
                           key={dateStr}
                           className="flex items-center justify-between p-3 bg-red-900/50 border border-red-500 rounded-lg"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="text-red-400">🔒</div>
-                            <div>
-                              <div className="font-medium text-red-300">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="text-red-400 text-lg">🔒</div>
+                            <div className="min-w-0">
+                              <div className="font-medium text-red-300 text-sm">
                                 {format(parseISO(dateStr + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}
                               </div>
-                              <div className="text-xs text-red-400">
+                              <div className="text-xs text-red-400 truncate">
                                 {format(parseISO(dateStr + 'T00:00:00'), 'EEEE', { locale: it })}
                               </div>
                             </div>
@@ -557,7 +706,7 @@ export default function PannelloPrenotazioni() {
                           <button
                             type="button"
                             onClick={() => removeClosureDate(dateStr)}
-                            className="text-red-400 hover:text-red-300 hover:bg-red-800 p-1 rounded transition-colors"
+                            className="text-red-400 hover:text-red-300 hover:bg-red-800 p-2 rounded transition-colors touch-manipulation ml-2"
                             title="Rimuovi questa chiusura"
                           >
                             ❌
@@ -585,17 +734,19 @@ export default function PannelloPrenotazioni() {
             </div>
           </div>
         )}
-      </div>      {/* Filtri */}
-      <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow">
-        <div className="flex flex-col gap-4">
-          <h2 className="text-xl font-bold text-white">Gestione Prenotazioni</h2>
+      </div>      {/* Filtri - Ottimizzati per Mobile */}
+      <div className="bg-gray-900 border border-gray-800 p-4 md:p-6 rounded-lg shadow">
+        <div className="flex flex-col gap-4 md:gap-6">
+          <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+            📋 Gestione Prenotazioni
+          </h2>
           
-          {/* Selezione data orizzontale */}
+          {/* Selezione data orizzontale - Migliorata per mobile */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
-              Seleziona Data
+            <label className="block text-sm md:text-base font-medium text-gray-300 mb-3">
+              📅 Seleziona Data
             </label>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">{datesList.map((date) => {
+            <div className="flex gap-2 md:gap-3 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 -mx-1 px-1">{datesList.map((date) => {
                 const dateStr = format(date, 'yyyy-MM-dd');
                 const isSelected = selectedDate === dateStr;
                 const isDateToday = isToday(date);
@@ -605,33 +756,35 @@ export default function PannelloPrenotazioni() {
                   <button
                     key={dateStr}
                     type="button"
-                    onClick={() => setSelectedDate(dateStr)}                    className={`flex-shrink-0 px-4 py-3 rounded-lg border-2 transition-all duration-200 min-w-[100px] relative ${
+                    onClick={() => setSelectedDate(dateStr)}
+                    className={`flex-shrink-0 px-3 py-3 md:px-4 md:py-3 rounded-xl border-2 transition-all duration-200 min-w-[90px] md:min-w-[100px] relative touch-manipulation ${
                       isSelected
                         ? isClosedDay
-                          ? 'border-red-500 bg-red-900/50 text-red-300 shadow-md'
-                          : 'border-amber-500 bg-amber-900/50 text-amber-300 shadow-md'
+                          ? 'border-red-500 bg-red-900/50 text-red-300 shadow-lg scale-105'
+                          : 'border-amber-500 bg-amber-900/50 text-amber-300 shadow-lg scale-105'
                         : isClosedDay
-                        ? 'border-red-500 bg-red-900/30 text-red-400 hover:border-red-400'
+                        ? 'border-red-500 bg-red-900/30 text-red-400 hover:border-red-400 hover:scale-105'
                         : isDateToday
-                        ? 'border-blue-500 bg-blue-900/50 text-blue-300 hover:border-blue-400'
-                        : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500 hover:bg-gray-700'
+                        ? 'border-blue-500 bg-blue-900/50 text-blue-300 hover:border-blue-400 hover:scale-105'
+                        : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500 hover:bg-gray-700 hover:scale-105'
                     }`}
                   >
                     {isClosedDay && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-red-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs">🔒</span>
                       </div>
                     )}
                     <div className="text-center">
-                      <div className="text-sm font-medium">
+                      <div className="text-xs md:text-sm font-medium">
                         {format(date, 'EEE', { locale: it }).toUpperCase()}
                       </div>
-                      <div className="text-lg font-bold">
+                      <div className="text-lg md:text-xl font-bold">
                         {format(date, 'dd')}
                       </div>
                       <div className="text-xs">
                         {format(date, 'MMM', { locale: it })}
-                      </div>                      {isClosedDay && (
+                      </div>
+                      {isClosedDay && (
                         <div className="text-xs mt-1 font-semibold text-red-400">
                           CHIUSO
                         </div>
@@ -641,41 +794,44 @@ export default function PannelloPrenotazioni() {
                 );
               })}
             </div>
-          </div>          {/* Filtro Status */}
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-1">
-                Filtra per Status
+          </div>          {/* Filtro Status e Azioni - Ottimizzati per Mobile */}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+            <div className="flex-1 min-w-0">
+              <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-2">
+                🔍 Filtra per Status
               </label>
               <select
                 id="status"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-md focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-3 py-3 md:py-2 bg-gray-800 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base md:text-sm touch-manipulation"
               >
                 <option value="all">Tutte le prenotazioni</option>
                 <option value="pending">In Attesa</option>
                 <option value="confirmed">Confermate</option>
                 <option value="cancelled">Annullate</option>
               </select>
-            </div>              {/* Reset filtri */}
+            </div>
+
+            {/* Reset filtri - Mobile Friendly */}
             <button
               type="button"
               onClick={() => {
                 setSelectedDate(getTodayString());
                 setFilterStatus('all');
               }}
-              className="px-4 py-2 text-sm text-gray-300 hover:text-white border border-gray-600 rounded-md hover:bg-gray-700"
+              className="px-4 py-3 md:py-2 text-sm text-gray-300 hover:text-white border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors whitespace-nowrap touch-manipulation"
             >
-              Reset Filtri
+              🔄 Reset Filtri
             </button>
           </div>
         </div>
-      </div>      {/* Lista prenotazioni */}
+      </div>      {/* Lista prenotazioni - Responsive: Card su mobile, Table su desktop */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg shadow overflow-hidden">
         {bookings.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="text-gray-400 text-lg">
+          <div className="p-8 md:p-12 text-center">
+            <div className="text-4xl md:text-6xl mb-4">📅</div>
+            <div className="text-gray-400 text-base md:text-lg mb-2">
               Nessuna prenotazione trovata per il {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}
               {filterStatus !== 'all' && ` con status "${filterStatus}"`}
             </div>
@@ -684,87 +840,269 @@ export default function PannelloPrenotazioni() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-700">
-              <thead className="bg-gray-800">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Cliente
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Servizio
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Barbiere
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Data & Ora
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Note Aggiuntive
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Azioni
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-gray-900 divide-y divide-gray-700">
-                {bookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-gray-800">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-white">
+          <>
+            {/* Vista Mobile - Cards */}
+            <div className="block md:hidden">
+              <div className="divide-y divide-gray-700">
+                {bookings.map((booking, index) => (
+                  <motion.div
+                    key={booking.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    className="p-4 hover:bg-gray-800 transition-colors"
+                  >
+                    {/* Header della card */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-white font-semibold text-lg truncate">
                           {booking.customer_name}
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          {booking.customer_phone}
-                        </div>
+                        </h3>
+                        <p className="text-gray-400 text-sm">
+                          📞 {booking.customer_phone}
+                        </p>
                         {booking.customer_email && (
+                          <p className="text-gray-400 text-sm truncate">
+                            ✉️ {booking.customer_email}
+                          </p>
+                        )}
+                      </div>
+                      <div className="ml-3">
+                        {getStatusBadge(booking.status)}
+                      </div>
+                    </div>
+
+                    {/* Dettagli servizio */}
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">✂️ Servizio</div>
+                        <div className="text-white font-medium text-sm">{booking.service_name}</div>
+                      </div>
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">👨‍💼 Barbiere</div>
+                        <div className="text-white font-medium text-sm">{booking.barber_name}</div>
+                      </div>
+                    </div>
+
+                    {/* Data e ora */}
+                    <div className="bg-blue-900/30 border border-blue-500 p-3 rounded-lg mb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-blue-300 font-semibold">
+                            📅 {format(parseISO(booking.booking_date), 'dd/MM/yyyy', { locale: it })}
+                          </div>
+                          <div className="text-blue-400 text-sm">
+                            🕐 {booking.booking_time}
+                          </div>
+                        </div>
+                        <div className="text-blue-300 text-2xl">
+                          ⏰
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Note */}
+                    {booking.notes && (
+                      <div className="bg-amber-900/30 border border-amber-500 p-3 rounded-lg mb-4">
+                        <div className="text-amber-300 text-xs font-medium mb-1">📝 Note</div>
+                        <div className="text-amber-100 text-sm">{booking.notes}</div>
+                      </div>
+                    )}                    {/* Azioni */}
+                    <div className="space-y-3">
+                      {/* Pulsanti di contatto - Sempre visibili */}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openWhatsApp(
+                            booking.customer_phone, 
+                            booking.customer_name, 
+                            booking.service_name, 
+                            booking.booking_date, 
+                            booking.booking_time
+                          )}
+                          className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
+                          title="Contatta via WhatsApp"
+                        >
+                          📱 WhatsApp
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => makePhoneCall(booking.customer_phone)}
+                          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
+                          title="Chiama il cliente"
+                        >
+                          📞 Chiama
+                        </button>
+                      </div>
+
+                      {/* Pulsanti di gestione prenotazione */}
+                      <div className="flex gap-2 flex-wrap">{booking.status === 'pending' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                            className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
+                          >
+                            ✅ Conferma
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                            className="flex-1 min-w-[120px] bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
+                          >
+                            ❌ Annulla
+                          </button>
+                        </>
+                      )}
+
+                      {booking.status === 'confirmed' && (
+                        <button
+                          type="button"
+                          onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                          className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
+                        >
+                          ❌ Annulla Prenotazione
+                        </button>
+                      )}
+
+                      {booking.status === 'cancelled' && (
+                        <button
+                          type="button"
+                          onClick={() => deleteBooking(booking.id)}
+                          className="w-full bg-red-800 hover:bg-red-900 text-red-200 px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
+                          title="Elimina definitivamente questa prenotazione"
+                        >
+                          🗑️ Elimina Definitivamente
+                        </button>
+                      )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Vista Desktop - Tabella */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-700">                <thead className="bg-gray-800">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Cliente
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Servizio
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Barbiere
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Data & Ora
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Note Aggiuntive
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Contatti
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Azioni
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-gray-900 divide-y divide-gray-700">
+                  {bookings.map((booking) => (
+                    <tr key={booking.id} className="hover:bg-gray-800">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-white">
+                            {booking.customer_name}
+                          </div>
                           <div className="text-sm text-gray-400">
-                            {booking.customer_email}
+                            {booking.customer_phone}
                           </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-white">{booking.service_name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-white">{booking.barber_name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-white">
-                        {format(parseISO(booking.booking_date), 'dd/MM/yyyy', { locale: it })}
-                      </div>
-                      <div className="text-sm text-gray-400">{booking.booking_time}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-white max-w-xs">
-                        {booking.notes ? (
-                          <div className="bg-blue-900/50 border border-blue-500 p-2 rounded text-xs border-l-4 border-l-blue-400">
-                            {booking.notes}
-                          </div>
-                        ) : (
-                          <span className="text-gray-500 italic">Nessuna nota</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(booking.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex gap-2 flex-wrap">                        {booking.status === 'pending' && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => updateBookingStatus(booking.id, 'confirmed')}
-                              className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50"
-                            >
-                              Conferma
-                            </button>
+                          {booking.customer_email && (
+                            <div className="text-sm text-gray-400">
+                              {booking.customer_email}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-white">{booking.service_name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-white">{booking.barber_name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-white">
+                          {format(parseISO(booking.booking_date), 'dd/MM/yyyy', { locale: it })}
+                        </div>
+                        <div className="text-sm text-gray-400">{booking.booking_time}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-white max-w-xs">
+                          {booking.notes ? (
+                            <div className="bg-blue-900/50 border border-blue-500 p-2 rounded text-xs border-l-4 border-l-blue-400">
+                              {booking.notes}
+                            </div>
+                          ) : (
+                            <span className="text-gray-500 italic">Nessuna nota</span>
+                          )}
+                        </div>
+                      </td>                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(booking.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openWhatsApp(
+                              booking.customer_phone, 
+                              booking.customer_name, 
+                              booking.service_name, 
+                              booking.booking_date, 
+                              booking.booking_time
+                            )}
+                            className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50 text-xs"
+                            title="Contatta via WhatsApp"
+                          >
+                            📱 WhatsApp
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => makePhoneCall(booking.customer_phone)}
+                            className="text-blue-400 hover:text-blue-300 px-2 py-1 border border-blue-500 rounded hover:bg-blue-900/50 text-xs"
+                            title="Chiama il cliente"
+                          >
+                            📞 Chiama
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex gap-2 flex-wrap">
+                          {booking.status === 'pending' && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                                className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50"
+                              >
+                                Conferma
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                className="text-red-400 hover:text-red-300 px-2 py-1 border border-red-500 rounded hover:bg-red-900/50"
+                              >
+                                Annulla
+                              </button>
+                            </>
+                          )}
+
+                          {booking.status === 'confirmed' && (
                             <button
                               type="button"
                               onClick={() => updateBookingStatus(booking.id, 'cancelled')}
@@ -772,31 +1110,26 @@ export default function PannelloPrenotazioni() {
                             >
                               Annulla
                             </button>
-                          </>
-                        )}                        {booking.status === 'confirmed' && (
-                          <button
-                            type="button"
-                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                            className="text-red-400 hover:text-red-300 px-2 py-1 border border-red-500 rounded hover:bg-red-900/50"
-                          >
-                            Annulla
-                          </button>
-                        )}                        {booking.status === 'cancelled' && (
-                          <button
-                            type="button"
-                            onClick={() => deleteBooking(booking.id)}
-                            className="text-red-300 hover:text-red-200 px-2 py-1 bg-red-900/50 border border-red-500 rounded hover:bg-red-800/70 font-medium"
-                            title="Elimina definitivamente questa prenotazione"
-                          >
-                            🗑️ Elimina
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>                ))}
-              </tbody>
-            </table>
-          </div>
+                          )}
+
+                          {booking.status === 'cancelled' && (
+                            <button
+                              type="button"
+                              onClick={() => deleteBooking(booking.id)}
+                              className="text-red-300 hover:text-red-200 px-2 py-1 bg-red-900/50 border border-red-500 rounded hover:bg-red-800/70 font-medium"
+                              title="Elimina definitivamente questa prenotazione"
+                            >
+                              🗑️ Elimina
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

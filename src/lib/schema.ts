@@ -116,6 +116,27 @@ export const userPreferences = pgTable('user_preferences', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Closure Settings Table (Impostazioni giorni di chiusura)
+export const closureSettings = pgTable('closure_settings', {
+  id: varchar('id', { length: 50 }).primaryKey().default('shop_closures'), // Sempre lo stesso ID
+  closedDays: text('closed_days').notNull().default('[0]'), // JSON array di numeri (0=domenica, 1=lunedì, ecc.)
+  closedDates: text('closed_dates').notNull().default('[]'), // JSON array di date specifiche in formato YYYY-MM-DD
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  updatedBy: uuid('updated_by').references(() => users.id), // Chi ha fatto l'ultima modifica
+});
+
+// Authorized Roles Table (for dynamic role management)
+export const authorizedRoles = pgTable('authorized_roles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  role: varchar('role', { length: 20 }).notNull(), // 'admin', 'barber', 'user'
+  addedBy: uuid('added_by').references(() => users.id), // Who added this authorization
+  reason: text('reason'), // Reason for authorization
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -135,3 +156,7 @@ export type Booking = typeof bookings.$inferSelect;
 export type NewBooking = typeof bookings.$inferInsert;
 export type BarberSchedule = typeof barberSchedules.$inferSelect;
 export type NewBarberSchedule = typeof barberSchedules.$inferInsert;
+export type ClosureSettings = typeof closureSettings.$inferSelect;
+export type NewClosureSettings = typeof closureSettings.$inferInsert;
+export type AuthorizedRole = typeof authorizedRoles.$inferSelect;
+export type NewAuthorizedRole = typeof authorizedRoles.$inferInsert;

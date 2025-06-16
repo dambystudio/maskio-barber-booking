@@ -32,7 +32,18 @@ export default function AreaPersonale() {
   const [error, setError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<TabType>('appointments');
-    // Hook per gestire il telefono richiesto
+  
+  // Verifica se l'utente è un barbiere
+  const isBarber = session?.user?.role === 'barber';
+  
+  // Aggiorna il tab iniziale in base al ruolo
+  useEffect(() => {
+    if (isBarber) {
+      setActiveTab('profile'); // I barbieri iniziano dal profilo
+    }
+  }, [isBarber]);
+  
+  // Hook per gestire il telefono richiesto
   const { showPhoneModal, handlePhoneComplete, userEmail, userName } = usePhoneRequired();
 
   const fetchUserBookings = useCallback(async () => {
@@ -174,22 +185,22 @@ export default function AreaPersonale() {
             <p className="text-gray-400 text-xs md:text-sm">
               La tua area personale
             </p>
-          </div>
-
-          {/* Tab Navigation */}
+          </div>          {/* Tab Navigation */}
           <div className="flex justify-center pb-3">
             <div className="flex bg-gray-800/50 rounded-xl p-1 space-x-1">
-              <button
-                onClick={() => setActiveTab('appointments')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  activeTab === 'appointments' 
-                    ? 'bg-amber-600 text-black shadow-lg' 
-                    : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
-                }`}
-              >
-                <span>📅</span>
-                <span className="hidden sm:inline">Appuntamenti</span>
-              </button>
+              {!isBarber && (
+                <button
+                  onClick={() => setActiveTab('appointments')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    activeTab === 'appointments' 
+                      ? 'bg-amber-600 text-black shadow-lg' 
+                      : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                  }`}
+                >
+                  <span>📅</span>
+                  <span className="hidden sm:inline">Appuntamenti</span>
+                </button>
+              )}
               
               <button
                 onClick={() => setActiveTab('profile')}
@@ -206,7 +217,7 @@ export default function AreaPersonale() {
               <button
                 onClick={() => setActiveTab('account')}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  activeTab === 'account' 
+                  activeTab === 'account'
                     ? 'bg-amber-600 text-black shadow-lg' 
                     : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
                 }`}
@@ -220,9 +231,8 @@ export default function AreaPersonale() {
       </div>
 
       {/* Tab Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Appointments Tab */}
-        {activeTab === 'appointments' && (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">        {/* Appointments Tab - Solo per clienti */}
+        {activeTab === 'appointments' && !isBarber && (
           <motion.div
             key="appointments"
             variants={tabVariants}
@@ -245,17 +255,25 @@ export default function AreaPersonale() {
                 <h3 className="text-2xl md:text-3xl font-bold text-green-500 mb-1">{bookings.filter(b => b.status === 'confirmed').length}</h3>
                 <p className="text-gray-300 text-sm">Confermati</p>
               </div>
-            </div>
-
-            {/* Quick Action */}
+            </div>            {/* Quick Action */}
             <div className="mb-8">
-              <Link
-                href="/prenota"
-                className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-black font-bold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg"
-              >
-                <span>✨</span>
-                <span>Prenota Nuovo Appuntamento</span>
-              </Link>
+              {isBarber ? (
+                <Link
+                  href="/prenotazioni"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg"
+                >
+                  <span>⚙️</span>
+                  <span>Pannello Gestione</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/prenota"
+                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-black font-bold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg"
+                >
+                  <span>✨</span>
+                  <span>Prenota Nuovo Appuntamento</span>
+                </Link>
+              )}
             </div>
 
             {/* Upcoming Bookings */}
@@ -373,20 +391,44 @@ export default function AreaPersonale() {
             animate="visible"
             exit="exit"
             transition={{ duration: 0.3 }}
-          >
-            {userProfile ? (
+          >            {userProfile ? (
               <div className="space-y-6">
                 {/* Profile Header */}
-                <div className="bg-gradient-to-r from-amber-600/10 to-amber-500/10 border border-amber-500/20 rounded-xl p-6">
+                <div className={`bg-gradient-to-r ${isBarber ? 'from-blue-600/10 to-blue-500/10 border-blue-500/20' : 'from-amber-600/10 to-amber-500/10 border-amber-500/20'} border rounded-xl p-6`}>
                   <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center text-2xl font-bold text-black">
-                      {userProfile.name?.charAt(0) || '👤'}
+                    <div className={`w-16 h-16 ${isBarber ? 'bg-blue-500' : 'bg-amber-500'} rounded-full flex items-center justify-center text-2xl font-bold text-${isBarber ? 'white' : 'black'}`}>
+                      {isBarber ? '✂️' : (userProfile.name?.charAt(0) || '👤')}
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-white">{userProfile.name}</h2>
-                      <p className="text-amber-400">Cliente dal {userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'MMMM yyyy', { locale: it }) : 'N/A'}</p>
+                      <p className={`${isBarber ? 'text-blue-400' : 'text-amber-400'}`}>
+                        {isBarber ? 'Barbiere' : `Cliente dal ${userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'MMMM yyyy', { locale: it }) : 'N/A'}`}
+                      </p>
                     </div>
                   </div>
+                  
+                  {/* Pannello di accesso rapido per barbieri */}
+                  {isBarber && (
+                    <div className="mt-6 pt-6 border-t border-blue-500/20">
+                      <h3 className="text-lg font-semibold text-white mb-4">Accesso Rapido</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Link
+                          href="/prenotazioni"
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
+                        >
+                          <span>📊</span>
+                          <span>Gestione Prenotazioni</span>
+                        </Link>
+                        <Link
+                          href="/calendario"
+                          className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
+                        >
+                          <span>📅</span>
+                          <span>Calendario</span>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Profile Info */}
@@ -556,7 +598,7 @@ export default function AreaPersonale() {
               <div className="space-y-2 text-sm text-gray-400">
                 <p>Versione: 1.0.0</p>
                 <p>Ultimo aggiornamento: {new Date().toLocaleDateString('it-IT')}</p>
-                <p>Sviluppato con ❤️ per Maskio Barber</p>
+                <p>Sviluppato con ❤️ per Maskio Barber Concept</p>
               </div>
             </div>
           </motion.div>
