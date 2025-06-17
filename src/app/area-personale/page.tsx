@@ -306,19 +306,7 @@ export default function AreaPersonale() {
             </p>
           </div>
 
-          {/* Debug Info - Solo per davide431@outlook.it */}
-          {session?.user?.email === 'davide431@outlook.it' && (
-            <div className="mb-4 p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-              <div className="text-xs text-purple-200 space-y-1">
-                <div><strong>Debug Info:</strong></div>
-                <div>Session Role: {session?.user?.role || 'None'}</div>
-                <div>Real Admin: {realPermissions.isAdmin ? 'Yes' : 'No'}</div>
-                <div>Real Barber: {realPermissions.isBarber ? 'Yes' : 'No'}</div>
-                <div>Effective Management: {effectiveHasManagementAccess ? 'Yes' : 'No'}</div>
-                <div>Permissions Checked: {realPermissions.checked ? 'Yes' : 'No'}</div>
-              </div>
-            </div>
-          )}          {/* Tab Navigation */}
+          {/* Tab Navigation */}
           <div className="flex justify-center pb-3">            <div className="flex bg-gray-800/50 rounded-xl p-1 space-x-1">
               <button
                 onClick={() => setActiveTab('appointments')}
@@ -387,23 +375,13 @@ export default function AreaPersonale() {
               </div>
             </div>            {/* Quick Action */}
             <div className="mb-8">
-              {effectiveHasManagementAccess ? (
-                <Link
-                  href="/pannello-prenotazioni"
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg"
-                >
-                  <span>⚙️</span>
-                  <span>Pannello {effectiveIsAdmin ? 'Admin' : 'Gestione'}</span>
-                </Link>
-              ) : (
-                <Link
-                  href="/prenota"
-                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-black font-bold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg"
-                >
-                  <span>✨</span>
-                  <span>Prenota Nuovo Appuntamento</span>
-                </Link>
-              )}
+              <Link
+                href="/prenota"
+                className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-black font-bold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg"
+              >
+                <span>✨</span>
+                <span>Prenota Nuovo Appuntamento</span>
+              </Link>
             </div>
 
             {/* Upcoming Bookings */}
@@ -466,10 +444,9 @@ export default function AreaPersonale() {
                                   booking.booking_time
                                 )}
                                 target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-4 py-2 rounded-lg transition duration-300 text-sm font-medium flex items-center justify-center space-x-2"
+                                rel="noopener noreferrer"                                className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-4 py-2 rounded-lg transition duration-300 text-sm font-medium flex items-center justify-center space-x-2"
                               >
-                                <span>💬</span>
+                                <span>�</span>
                                 <span>Contatta {booking.barber_name}</span>
                               </a>
                             )}
@@ -552,32 +529,7 @@ export default function AreaPersonale() {
                       <h2 className="text-2xl font-bold text-white">{userProfile.name}</h2>                      <p className={`${effectiveHasManagementAccess ? 'text-blue-400' : 'text-amber-400'}`}>
                         {effectiveIsAdmin ? 'Amministratore' : effectiveIsBarber ? 'Barbiere' : `Cliente dal ${userProfile.createdAt ? format(parseISO(userProfile.createdAt), 'MMMM yyyy', { locale: it }) : 'N/A'}`}
                       </p>
-                    </div>
-                  </div>
-                  
-                  {/* Pannello di accesso rapido per barbieri e admin */}
-                  {effectiveHasManagementAccess && (                    <div className="mt-6 pt-6 border-t border-blue-500/20">
-                      <h3 className="text-lg font-semibold text-white mb-4">Accesso Rapido</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <Link
-                          href="/pannello-prenotazioni"
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
-                        >
-                          <span>📊</span>
-                          <span>Gestione Prenotazioni</span>
-                        </Link>
-                        {effectiveIsAdmin && (
-                          <Link
-                            href="/admin/users"
-                            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
-                          >
-                            <span>👥</span>
-                            <span>Gestione Utenti</span>
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                    </div>                  </div>
                 </div>
 
                 {/* Profile Info */}

@@ -179,14 +179,13 @@ export default function Navbar() {
                           onClick={() => setUserMenuOpen(false)}
                         >
                           👤 Profilo
-                        </Link>
-                        {(isAdmin || isBarber) && (
+                        </Link>                        {isAdmin && (
                           <Link
                             href="/admin/users"
                             className="block px-4 py-2 text-sm text-amber-400 hover:bg-gray-700 transition-colors font-medium"
                             onClick={() => setUserMenuOpen(false)}
                           >
-                            🛠️ {isAdmin ? 'Pannello Admin' : 'Gestione Utenti'}
+                            🛠️ Pannello Admin
                           </Link>
                         )}
                         <button
@@ -318,8 +317,7 @@ export default function Navbar() {
                           >
                             <UserIcon className="h-5 w-5" />
                             Profilo
-                          </Link>
-                          {(isAdmin || isBarber) && (
+                          </Link>                          {isAdmin && (
                             <Link
                               href="/admin/users"
                               className="flex items-center gap-3 px-4 py-3 text-base font-medium text-amber-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
@@ -328,7 +326,7 @@ export default function Navbar() {
                               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                               </svg>
-                              {isAdmin ? 'Pannello Admin' : 'Gestione Utenti'}
+                              Pannello Admin
                             </Link>
                           )}
                           <button

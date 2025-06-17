@@ -80,14 +80,13 @@ export default function PannelloPrenotazioni() {
   const [showClosureSettings, setShowClosureSettings] = useState(false);
   const [newClosureDate, setNewClosureDate] = useState('');
   const [newClosureEndDate, setNewClosureEndDate] = useState('');
-  const [newClosureReason, setNewClosureReason] = useState('');
-  const [selectedClosureBarber, setSelectedClosureBarber] = useState('all'); // 'all', 'fabio.cassano97@icloud.com', 'micheleprova@gmail.com'
+  const [newClosureReason, setNewClosureReason] = useState('');  const [selectedClosureBarber, setSelectedClosureBarber] = useState('all'); // 'all', 'fabio.cassano97@icloud.com', 'michelebiancofiore0230@gmail.com'
   const [selectedClosureType, setSelectedClosureType] = useState('full'); // 'full', 'morning', 'afternoon'
 
   // Mapping barbieri
   const barberMapping = {
     'fabio.cassano97@icloud.com': 'Fabio Cassano',
-    'micheleprova@gmail.com': 'Michele Prova'
+    'michelebiancofiore0230@gmail.com': 'Michele Biancofiore'
   };
 
   // Nomi dei giorni della settimana
@@ -959,7 +958,7 @@ Grazie! 😊`;
                       >
                         <option value="all">Tutti i barbieri</option>
                         <option value="fabio.cassano97@icloud.com">Fabio Cassano</option>
-                        <option value="micheleprova@gmail.com">Michele Prova</option>
+                        <option value="michelebiancofiore0230@gmail.com">Michele Biancofiore</option>
                       </select>
                     </div>
                   )}
@@ -1326,11 +1325,9 @@ Grazie! 😊`;
                               booking.service_name, 
                               booking.booking_date, 
                               booking.booking_time
-                            )}
-                            className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
-                            title="Contatta cliente via WhatsApp"
+                            )}                            className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"                            title="Contatta cliente via WhatsApp"
                           >
-                            📱 WhatsApp
+                            <span>�</span> Contatta cliente su WhatsApp
                           </button>
                           <button
                             type="button"
@@ -1357,11 +1354,9 @@ Grazie! 😊`;
                                 booking.service_name, 
                                 booking.booking_date, 
                                 booking.booking_time
-                              )}
-                              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
-                              title="Contatta barbiere via WhatsApp"
+                              )}                              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"                              title="Contatta barbiere via WhatsApp"
                             >
-                              📱 WhatsApp
+                              <span>�</span> Contatta barbiere su WhatsApp
                             </button>
                             <button
                               type="button"
@@ -1508,11 +1503,9 @@ Grazie! 😊`;
                               booking.service_name, 
                               booking.booking_date, 
                               booking.booking_time
-                            )}
-                            className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50 text-xs"
-                            title="Contatta cliente via WhatsApp"
+                            )}                            className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50 text-xs"                            title="Contatta cliente via WhatsApp"
                           >
-                            📱 Cliente
+                            <span>�</span> Cliente
                           </button>
                           <button
                             type="button"
@@ -1535,11 +1528,8 @@ Grazie! 😊`;
                                   booking.service_name, 
                                   booking.booking_date, 
                                   booking.booking_time
-                                )}
-                                className="text-orange-400 hover:text-orange-300 px-2 py-1 border border-orange-500 rounded hover:bg-orange-900/50 text-xs"
-                                title="Contatta barbiere via WhatsApp"
-                              >
-                                📱 Barbiere
+                                )}                                className="text-orange-400 hover:text-orange-300 px-2 py-1 border border-orange-500 rounded hover:bg-orange-900/50 text-xs"                                title="Contatta barbiere via WhatsApp"                              >
+                                <span>�</span> Barbiere
                               </button>
                               <button
                                 type="button"
