@@ -7,10 +7,9 @@ dotenv.config({ path: '.env.local' });
 async function testSlotsAPI() {
     console.log('🧪 Testing Slots API...\n');
     
-    try {
-        // Get barbers first to have a valid barberId
+    try {        // Get barbers first to have a valid barberId
         console.log('1. Getting barbers...');
-        const barbersResponse = await fetch('http://localhost:3002/api/barbers');
+        const barbersResponse = await fetch('http://localhost:3000/api/barbers');
         const barbers = await barbersResponse.json();
         
         if (!barbers || barbers.length === 0) {
@@ -27,9 +26,8 @@ async function testSlotsAPI() {
         const testDate = tomorrow.toISOString().split('T')[0]; // YYYY-MM-DD format
         
         console.log(`\n2. Testing slots for date: ${testDate}`);
-        
-        // Test slots API
-        const slotsUrl = `http://localhost:3002/api/bookings/slots?barberId=${barberId}&date=${testDate}`;
+          // Test slots API
+        const slotsUrl = `http://localhost:3000/api/bookings/slots?barberId=${barberId}&date=${testDate}`;
         console.log(`📡 Calling: ${slotsUrl}`);
         
         const slotsResponse = await fetch(slotsUrl);

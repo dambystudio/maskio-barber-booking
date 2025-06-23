@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, password } = await request.json();
+    const { name, email, phone, password, phoneVerified } = await request.json();
 
     // Validation dei campi obbligatori
     if (!name || name.trim().length < 2) {
@@ -44,14 +44,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validation formato telefono (almeno 10 cifre)
-    const phoneRegex = /^[\+]?[\d\s\-\(\)]{10,}$/;
+    // Validation formato telefono - solo numeri italiani (+39)
+    const phoneRegex = /^(\+39|0039|39)?[\s]?3[0-9]{2}[\s]?[0-9]{3}[\s]?[0-9]{3,4}$/;
     if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
       return NextResponse.json(
-        { error: 'Formato numero di telefono non valido (minimo 10 cifre)' },
+        { error: 'Inserisci un numero di cellulare italiano valido (es. +39 333 123 4567)' },
         { status: 400 }
       );
     }
+
+    // Verifica che il telefono sia stato verificato (tranne per Google OAuth)
+    if (!phoneVerified) {
+      return NextResponse.json(
+        { error: 'Il numero di telefono deve essere verificato prima della registrazione' },
+        { status: 400 }
+      );
+    }    // Normalizza il numero di telefono per assicurarsi che abbia il prefisso +39
+    const normalizePhoneNumber = (phone: string) => {
+      const cleaned = phone.replace(/\s/g, '');
+      if (cleaned.startsWith('39') && !cleaned.startsWith('+39')) {
+        return '+' + cleaned;
+      }
+      if (cleaned.startsWith('0039')) {
+        return '+' + cleaned.substring(2);
+      }
+      if (!cleaned.startsWith('+39')) {
+        return '+39' + cleaned;
+      }
+      return cleaned;
+    };
+
+    const normalizedPhone = normalizePhoneNumber(phone.trim());
 
     // Check if email already exists
     const existingUserByEmail = await DatabaseService.getUserByEmail(email.trim().toLowerCase());
@@ -63,18 +86,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if phone already exists
-    const existingUserByPhone = await DatabaseService.getUserByPhone(phone.trim());
+    const existingUserByPhone = await DatabaseService.getUserByPhone(normalizedPhone);
     if (existingUserByPhone) {
       return NextResponse.json(
         { error: 'Un utente con questo numero di telefono esiste già' },
         { status: 400 }
       );
-    }    // Hash password
+    }// Hash password
     const hashedPassword = await bcrypt.hash(password, 12);    // Create user with normalized data
     const newUser = await DatabaseService.createUser({
       name: name.trim(),
       email: email.trim().toLowerCase(),
-      phone: phone.trim(),
+      phone: normalizedPhone,
       role: 'customer',
       password: hashedPassword,
       emailVerified: new Date(), // Segna come verificato automaticamente

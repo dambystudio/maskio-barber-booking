@@ -3,7 +3,7 @@
 ## RIEPILOGO DELL'ANALISI EFFETTUATA
 
 ### ✅ STATO ATTUALE SISTEMA:
-- **Email attiva di Michele**: `micheleprova@gmail.com`
+- **Email attiva di Michele**: `michelebiancofiore0230@gmail.com`
 - **Presente nel database**: Sì (tabella `barbers` e `barber_recurring_closures`)
 - **Configurazione chiusure**: Domenica e Giovedì
 - **Prenotazioni**: 1 prenotazione confermata trovata
@@ -74,7 +74,7 @@ Aggiornare manualmente questi file TypeScript:
 ```
 
 ### PASSO 5: AGGIORNARE SCRIPT DI TEST
-Sostituire `micheleprova@gmail.com` con la nuova email in:
+Sostituire `michelebiancofiore0230@gmail.com` con la nuova email in:
 - `add-thursday-closure-michele.mjs`
 - `check-recurring-closures.mjs`
 - `check-recurring-closures-correct.mjs`
@@ -98,7 +98,7 @@ node analyze-michele-state.mjs
 
 ### Trova e Sostituisci in tutti i file:
 ```
-Cerca: micheleprova@gmail.com
+Cerca: michelebiancofiore0230@gmail.com
 Sostituisci: nuova.email.michele@domain.com
 ```
 
@@ -131,11 +131,11 @@ In caso di problemi:
 2. Eseguire query SQL per ripristinare email nel database:
 ```sql
 UPDATE barber_recurring_closures 
-SET barber_email = 'micheleprova@gmail.com' 
+SET barber_email = 'michelebiancofiore0230@gmail.com' 
 WHERE barber_email = 'nuova.email';
 
 UPDATE barbers 
-SET email = 'micheleprova@gmail.com' 
+SET email = 'michelebiancofiore0230@gmail.com' 
 WHERE email = 'nuova.email';
 ```
 3. Ripristinare file TypeScript dal backup

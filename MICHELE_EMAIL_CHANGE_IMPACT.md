@@ -1,10 +1,10 @@
 # ANALISI IMPATTO CAMBIO EMAIL MICHELE - REPORT COMPLETO
 
 ## RIEPILOGO SITUAZIONE ATTUALE
-Michele attualmente usa l'email `micheleprova@gmail.com` nel sistema, ma nella configurazione dei barbieri nel database usa `michele@maskiobarber.com`. Questo crea una situazione di mismatch che richiede attenzione.
+Michele attualmente usa l'email `michelebiancofiore0230@gmail.com` nel sistema, ma nella configurazione dei barbieri nel database usa `michele@maskiobarber.com`. Questo crea una situazione di mismatch che richiede attenzione.
 
 ## EMAIL ATTUALI DI MICHELE NEL SISTEMA:
-1. **Email reale (autenticazione)**: `micheleprova@gmail.com` - usata in `.env.local` BARBER_EMAILS
+1. **Email reale (autenticazione)**: `michelebiancofiore0230@gmail.com` - usata in `.env.local` BARBER_EMAILS
 2. **Email fittizia (database)**: `michele@maskiobarber.com` - usata negli script di setup database
 
 ## IMPATTO CAMBIO EMAIL - COSA CAMBIARE
@@ -13,9 +13,9 @@ Michele attualmente usa l'email `micheleprova@gmail.com` nel sistema, ma nella c
 **File**: `.env.local`
 **Linea**: 10
 ```bash
-BARBER_EMAILS=fabio.cassano97@icloud.com,micheleprova@gmail.com
+BARBER_EMAILS=fabio.cassano97@icloud.com,michelebiancofiore0230@gmail.com
 ```
-**AZIONE**: Sostituire `micheleprova@gmail.com` con la nuova email
+**AZIONE**: Sostituire `michelebiancofiore0230@gmail.com` con la nuova email
 
 ### 2. PANNELLO PRENOTAZIONI (Frontend)
 **File**: `src/app/pannello-prenotazioni/page.tsx`
@@ -24,23 +24,23 @@ BARBER_EMAILS=fabio.cassano97@icloud.com,micheleprova@gmail.com
 Mapping hardcoded dell'email nel frontend:
 ```typescript
 // Linea 83
-const [selectedClosureBarber, setSelectedClosureBarber] = useState('all'); // 'all', 'fabio.cassano97@icloud.com', 'micheleprova@gmail.com'
+const [selectedClosureBarber, setSelectedClosureBarber] = useState('all'); // 'all', 'fabio.cassano97@icloud.com', 'michelebiancofiore0230@gmail.com'
 
 // Linea 89
 const barberEmailToName = {
   'fabio.cassano97@icloud.com': 'Fabio Cassano',
-  'micheleprova@gmail.com': 'Michele Prova'  // <- CAMBIARE QUI
+  'michelebiancofiore0230@gmail.com': 'Michele Prova'  // <- CAMBIARE QUI
 };
 
 // Linea 924
-<option value="micheleprova@gmail.com">Michele Prova</option>  // <- CAMBIARE QUI
+<option value="michelebiancofiore0230@gmail.com">Michele Prova</option>  // <- CAMBIARE QUI
 ```
 
 ### 3. PANNELLO PRENOTAZIONI BACKUP (page_new.tsx)
 **File**: `src/app/pannello-prenotazioni/page_new.tsx`
 **Linea**: 87
 ```typescript
-'micheleprova@gmail.com': 'Michele Prova'  // <- CAMBIARE QUI
+'michelebiancofiore0230@gmail.com': 'Michele Prova'  // <- CAMBIARE QUI
 ```
 
 ### 4. BACKUP DEL PANNELLO PRENOTAZIONI
@@ -53,24 +53,24 @@ Tutti questi script hanno l'email hardcoded e vanno aggiornati:
 
 **check-recurring-closures.mjs** (linea 35)
 ```javascript
-WHERE barber_email = 'micheleprova@gmail.com'
+WHERE barber_email = 'michelebiancofiore0230@gmail.com'
 ```
 
 **check-recurring-closures-correct.mjs** (linea 25)
 ```javascript
-WHERE barber_email = 'micheleprova@gmail.com'
+WHERE barber_email = 'michelebiancofiore0230@gmail.com'
 ```
 
 **add-thursday-closure-michele.mjs** (linee 13, 34, 46, 55)
 ```javascript
-WHERE barber_email = 'micheleprova@gmail.com'
+WHERE barber_email = 'michelebiancofiore0230@gmail.com'
 // e
-VALUES ('micheleprova@gmail.com', '[0,4]', 'admin')
+VALUES ('michelebiancofiore0230@gmail.com', '[0,4]', 'admin')
 ```
 
 **test-profile-api.mjs** (linea 18)
 ```javascript
-const testEmails = ['davide431@outlook.it', 'micheleprova@gmail.com'];
+const testEmails = ['davide431@outlook.it', 'michelebiancofiore0230@gmail.com'];
 ```
 
 ### 6. SCRIPT SETUP DATABASE (OPZIONALI)
@@ -100,7 +100,7 @@ email: 'michele@maskiobarber.com',
 2. Aggiornare la tabella `barbers` se contiene l'email
 
 ### STEP 4: Aggiornare Script di Test
-1. Cercare e sostituire `micheleprova@gmail.com` in tutti i file .mjs
+1. Cercare e sostituire `michelebiancofiore0230@gmail.com` in tutti i file .mjs
 
 ### STEP 5: Test
 1. Verificare che Michele possa ancora accedere al pannello
