@@ -7,6 +7,7 @@ import { Service, Barber, BookingFormData } from '../types/booking';
 import { BookingService, validateBookingData } from '../services/bookingService';
 import { fabioSpecificServices, micheleSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
 import { Session } from 'next-auth';
+import PhoneVerification from './PhoneVerification';
 
 const steps = ['Barbiere', 'Servizi', 'Data e Ora', 'Dati Personali', 'Conferma'];
 
@@ -18,15 +19,19 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [allServices, setAllServices] = useState<Service[]>([]); // All services from API
   const [displayedServices, setDisplayedServices] = useState<Service[]>([]); // Services to show based on barber
-  const [barbers, setBarbers] = useState<Barber[]>([]);  const [formData, setFormData] = useState<BookingFormData>({
+  const [barbers, setBarbers] = useState<Barber[]>([]);  // Check if current user is a barber
+  const isBarber = userSession?.user?.role === 'barber' || userSession?.user?.role === 'admin';
+
+  const [formData, setFormData] = useState<BookingFormData>({
     selectedBarber: null,
     selectedServices: [],
     selectedDate: '',
     selectedTime: '',
     customerInfo: {
-      name: userSession.user.name || '',
-      email: userSession.user.email || '',
-      phone: '', // Will be loaded from profile
+      // If user is barber, start with empty fields for manual input
+      name: isBarber ? '' : (userSession.user.name || ''),
+      email: isBarber ? '' : (userSession.user.email || ''),
+      phone: '', // Will be loaded from profile or left empty for manual input
       notes: ''
     }
   });
@@ -34,6 +39,11 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookingResponse, setBookingResponse] = useState<any>(null);
+  
+  // Phone verification states
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [pendingPhone, setPendingPhone] = useState('');
     // Add debouncing state and cache for rate limiting protection
   const [isDebouncing, setIsDebouncing] = useState(false);
   const [slotsCache, setSlotsCache] = useState<{[key: string]: {time: string, available: boolean}[]}>({});  // Closure system state
@@ -140,8 +150,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         console.log('🔧 Using absolute default closure settings');
       }
     }
-  };
-  // Load user profile data
+  };  // Load user profile data (only for regular users, not barbers)
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -152,15 +161,19 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         if (response.ok) {
           const data = await response.json();
           console.log('✅ Profile data received:', data);
-          setFormData(prev => ({
-            ...prev,
-            customerInfo: {
-              ...prev.customerInfo,
-              name: data.profile.name || userSession.user.name || '',
-              email: data.profile.email || userSession.user.email || '',
-              phone: data.profile.phone || '',
-            }
-          }));
+          
+          // For barbers, don't overwrite manually entered customer data
+          if (!isBarber) {
+            setFormData(prev => ({
+              ...prev,
+              customerInfo: {
+                ...prev.customerInfo,
+                name: data.profile.name || userSession.user.name || '',
+                email: data.profile.email || userSession.user.email || '',
+                phone: data.profile.phone || '',
+              }
+            }));
+          }
           console.log('📞 Phone set to:', data.profile.phone || 'empty');
         } else {
           console.error('❌ Profile API error:', response.status, response.statusText);
@@ -172,13 +185,15 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       }
     };
 
-    if (userSession?.user?.id) {
+    if (userSession?.user?.id && !isBarber) {
       console.log('👤 User session found, fetching profile for:', userSession.user.email);
       fetchUserProfile();
+    } else if (isBarber) {
+      console.log('💼 Barber detected, skipping profile fetch - using manual input');
     } else {
       console.log('⚠️ No user session or user ID found');
     }
-  }, [userSession]);
+  }, [userSession, isBarber]);
 
   // Load services and barbers from API
   useEffect(() => {
@@ -552,7 +567,6 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   const handleTimeChange = (time: string) => {
     setFormData(prev => ({ ...prev, selectedTime: time }));
   };
-
   // Handle customer info change
   const handleCustomerInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -563,6 +577,50 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         [name]: value
       }
     }));
+    
+    // Reset phone verification if phone number changes
+    if (name === 'phone' && value !== pendingPhone) {
+      setPhoneVerified(false);
+    }
+  };
+
+  // Handle phone verification request
+  const handlePhoneVerification = () => {
+    const phone = formData.customerInfo.phone.trim();
+    if (!phone) {
+      setError('Inserisci un numero di telefono prima di verificarlo');
+      return;
+    }
+    
+    // Basic phone validation
+    const phoneRegex = /^\+39\s?\d{3}\s?\d{3}\s?\d{4}$/;
+    if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+      setError('Formato numero non valido. Usa: +39 XXX XXX XXXX');
+      return;
+    }
+    
+    setPendingPhone(phone);
+    setShowPhoneVerification(true);
+    setError(null);
+  };
+
+  // Handle phone verification success
+  const handlePhoneVerified = () => {
+    setPhoneVerified(true);
+    setShowPhoneVerification(false);
+    setError(null);
+  };
+
+  // Handle phone verification cancel
+  const handlePhoneVerificationCancel = () => {
+    setShowPhoneVerification(false);
+  };
+
+  // Handle change phone number
+  const handleChangePhone = () => {
+    setShowPhoneVerification(false);
+    setPhoneVerified(false);
+    setPendingPhone('');
   };
 
   // Calculate total duration and price
@@ -585,12 +643,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       const userId = (userSession.user as any)?.id;
       if (!userId) {
         throw new Error('Sessione utente non valida. Prova a fare logout e login di nuovo.');
-      }
-
-      // Verifica che il telefono sia presente
-      if (!formData.customerInfo.phone || formData.customerInfo.phone.trim().length === 0) {
-        throw new Error('Il numero di telefono è obbligatorio per le prenotazioni. Aggiorna il tuo profilo.');
-      }      const bookingPayload = {
+      }      // Per i barbieri, il telefono non è obbligatorio
+      if (!isBarber && (!formData.customerInfo.phone || formData.customerInfo.phone.trim().length === 0)) {
+        throw new Error('Il numero di telefono è obbligatorio per le prenotazioni.');
+      }const bookingPayload = {
         userId: userId,
         barberId: formData.selectedBarber!.id,
         serviceIds: formData.selectedServices.map(s => s.id), // Keep for API compatibility
@@ -618,8 +674,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     } finally {
       setLoading(false);
     }
-  };
-  // Check if current step is valid
+  };  // Check if current step is valid
   const isStepValid = (step: number) => {
     switch (step) {
       case 1:
@@ -627,11 +682,17 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       case 2:
         return formData.selectedServices.length > 0;
       case 3:
-        return formData.selectedDate && formData.selectedTime;
-      case 4:
-        // Step 4 now only requires that customer info is available (pre-populated from session)
-        // Notes are optional, so step 4 is always valid if we reach it
-        return formData.customerInfo.name && formData.customerInfo.email;
+        return formData.selectedDate && formData.selectedTime;      case 4:
+        // For barbers: only name is required (email and phone are optional, no verification needed)
+        // For regular users: name, email, phone required and phone must be verified
+        if (isBarber) {
+          return formData.customerInfo.name && formData.customerInfo.name.trim() !== '';
+        } else {
+          return formData.customerInfo.name && 
+                 formData.customerInfo.email &&
+                 formData.customerInfo.phone &&
+                 phoneVerified;
+        }
       default:
         return false;
     }
@@ -1090,8 +1151,20 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           animate="visible"
           className="space-y-6"
         >          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-white mb-6">
-            Riepilogo e Note Aggiuntive
+            {isBarber ? 'Riepilogo e Dati Cliente' : 'Riepilogo e Note Aggiuntive'}
           </motion.h2>
+
+          {/* Info for barbers */}
+          {isBarber && (
+            <motion.div variants={fadeInUp} className="bg-gradient-to-r from-blue-900/20 to-indigo-900/20 p-4 rounded-lg border border-blue-600/30 mb-6">
+              <h4 className="text-blue-300 font-semibold mb-2 flex items-center">
+                💼 Modalità Barbiere Attiva
+              </h4>
+              <p className="text-sm text-gray-300">
+                Stai prenotando un appuntamento per un cliente. Controlla i dettagli del servizio e inserisci manualmente i dati del cliente nella sezione sottostante.
+              </p>
+            </motion.div>
+          )}
 
           {/* Booking Summary */}
           <motion.div variants={fadeInUp} className="bg-gradient-to-r from-gray-800 to-gray-900 p-6 rounded-lg border border-gray-700">
@@ -1135,25 +1208,105 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                   <p className="text-2xl font-bold text-yellow-400">€{totalPrice}</p>
                 </div>
               </div>
-            </div>
-
-            {/* Customer Info Display (Read-only) */}
+            </div>            {/* Customer Info - Display for regular users / Input for barbers */}
             <div className="mt-6 pt-4 border-t border-gray-600">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">👤 Informazioni Cliente</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div className="bg-gray-800/30 p-3 rounded">
-                  <span className="text-gray-400">Nome:</span>
-                  <p className="text-white font-medium">{formData.customerInfo.name}</p>
+              <h4 className="text-sm font-medium text-gray-300 mb-3">
+                👤 Informazioni Cliente
+                {isBarber && <span className="text-yellow-400 ml-2">(Inserisci manualmente)</span>}
+              </h4>
+              
+              {isBarber ? (
+                /* Editable fields for barbers */
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Nome *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.customerInfo.name}
+                      onChange={handleCustomerInfoChange}
+                      placeholder="Nome del cliente"
+                      className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                      required
+                    />
+                  </div>                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Email (opzionale)</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.customerInfo.email}
+                      onChange={handleCustomerInfoChange}
+                      placeholder="email@cliente.com (opzionale)"
+                      className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                    />
+                  </div>                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Telefono (opzionale)</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.customerInfo.phone}
+                      onChange={handleCustomerInfoChange}
+                      placeholder="+39 123 456 7890 (opzionale)"
+                      className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                    />
+                  </div>
+                </div>              ) : (
+                /* Editable phone for regular users + read-only name/email */
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="bg-gray-800/30 p-3 rounded">
+                      <span className="text-gray-400">Nome:</span>
+                      <p className="text-white font-medium">{formData.customerInfo.name}</p>
+                    </div>
+                    <div className="bg-gray-800/30 p-3 rounded">
+                      <span className="text-gray-400">Email:</span>
+                      <p className="text-white font-medium">{formData.customerInfo.email}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Editable phone field for regular users */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Telefono *</label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.customerInfo.phone}
+                        onChange={handleCustomerInfoChange}
+                        placeholder="+39 123 456 7890"
+                        className="flex-1 px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={handlePhoneVerification}
+                        disabled={!formData.customerInfo.phone || phoneVerified}
+                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                          phoneVerified
+                            ? 'bg-green-600 text-white cursor-default'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-600 disabled:cursor-not-allowed'
+                        }`}
+                      >
+                        {phoneVerified ? '✓' : 'Verifica'}
+                      </button>
+                    </div>
+                    {phoneVerified && (
+                      <p className="text-xs text-green-400 mt-1">✓ Numero verificato</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Il numero di telefono è necessario per confermare la prenotazione
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-gray-800/30 p-3 rounded">
-                  <span className="text-gray-400">Email:</span>
-                  <p className="text-white font-medium">{formData.customerInfo.email}</p>
-                </div>
-                <div className="bg-gray-800/30 p-3 rounded">
-                  <span className="text-gray-400">Telefono:</span>
-                  <p className="text-white font-medium">{formData.customerInfo.phone || 'Da aggiungere'}</p>
-                </div>
-              </div>
+              )}                {isBarber ? (
+                <p className="text-xs text-yellow-300 mt-2 bg-yellow-900/20 p-2 rounded border border-yellow-600/30">
+                  💼 <strong>Modalità Barbiere:</strong> Stai prenotando per un cliente. Solo il nome è obbligatorio, email e telefono sono opzionali.
+                </p>
+              ) : (
+                <p className="text-xs text-blue-300 mt-2 bg-blue-900/20 p-2 rounded border border-blue-600/30">
+                  📱 <strong>Verifica Telefono:</strong> Per completare la prenotazione è necessario verificare il numero di telefono tramite SMS.
+                </p>
+              )}
             </div>
           </motion.div>
 
@@ -1344,10 +1497,19 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           }`}
           whileHover={{ scale: isStepValid(currentStep) && !loading ? 1.05 : 1 }}
           whileTap={{ scale: isStepValid(currentStep) && !loading ? 0.95 : 1 }}        >          {loading ? 'Caricamento...' : currentStep === 4 ? 'Conferma Prenotazione' : 'Continua'}
-        </motion.button>
-        </div>
+        </motion.button>        </div>
       )}
         </>
+      )}
+      
+      {/* Phone Verification Modal */}
+      {showPhoneVerification && (
+        <PhoneVerification
+          phone={pendingPhone}
+          onVerified={handlePhoneVerified}
+          onCancel={handlePhoneVerificationCancel}
+          onChangePhone={handleChangePhone}
+        />
       )}
     </div>
   );

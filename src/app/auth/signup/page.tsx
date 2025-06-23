@@ -5,11 +5,19 @@ import { useRouter } from 'next/navigation';
 import { signIn, getSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import PhoneVerification from '../../../components/PhoneVerification';
 
 export default function SignUp() {
-  const router = useRouter();  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [temporaryUserId] = useState(() => {
+    // Generate a temporary ID for signup flow verification
+    return 'temp_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -67,12 +75,10 @@ export default function SignUp() {
       setError('Il numero di telefono è obbligatorio');
       setLoading(false);
       return;
-    }
-
-    // Phone format validation
-    const phoneRegex = /^[\+]?[\d\s\-\(\)]{10,}$/;
+    }    // Phone format validation - solo numeri italiani (+39)
+    const phoneRegex = /^(\+39|0039|39)?[\s]?3[0-9]{2}[\s]?[0-9]{3}[\s]?[0-9]{3,4}$/;
     if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
-      setError('Formato numero di telefono non valido (minimo 10 cifre)');
+      setError('Inserisci un numero di cellulare italiano valido (es. +39 333 123 4567)');
       setLoading(false);
       return;
     }
@@ -81,14 +87,29 @@ export default function SignUp() {
       setError('Le password non corrispondono');
       setLoading(false);
       return;
-    }
-
-    if (formData.password.length < 6) {
+    }    if (formData.password.length < 6) {
       setError('La password deve essere di almeno 6 caratteri');
       setLoading(false);
       return;
-    }    try {
-      // Registrazione diretta senza verifica email
+    }
+
+    // Se il telefono non è ancora verificato, mostra la schermata di verifica
+    if (!phoneVerified) {
+      setLoading(false);
+      setShowPhoneVerification(true);
+      return;
+    }
+
+    // Se arriviamo qui, il telefono è verificato, procediamo con la registrazione
+    await performRegistration();
+  };
+
+  const performRegistration = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Registrazione con telefono verificato
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -99,8 +120,9 @@ export default function SignUp() {
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
+          phoneVerified: true, // Aggiungiamo il flag di verifica
         }),
-      });      if (!response.ok) {
+      });if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Errore durante la registrazione');
       }
@@ -134,14 +156,65 @@ export default function SignUp() {
         setTimeout(() => {
           router.push('/auth/signin');
         }, 2000);
-      }
-
-    } catch (err: any) {
+      }    } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };// Success screen
+  };
+
+  // Gestori per la verifica telefono
+  const handlePhoneVerified = () => {
+    setPhoneVerified(true);
+    setShowPhoneVerification(false);
+    // Procediamo automaticamente con la registrazione dopo la verifica
+    performRegistration();
+  };
+
+  const handleCancelVerification = () => {
+    setShowPhoneVerification(false);
+    setPhoneVerified(false);
+  };
+
+  const handleChangePhone = () => {
+    setShowPhoneVerification(false);
+    setPhoneVerified(false);
+    // Il form rimane aperto per permettere la modifica del numero
+  };
+
+  // Normalizza il numero di telefono per assicurarsi che abbia il prefisso +39
+  const normalizePhoneNumber = (phone: string) => {
+    const cleaned = phone.replace(/\s/g, '');
+    if (cleaned.startsWith('39') && !cleaned.startsWith('+39')) {
+      return '+' + cleaned;
+    }
+    if (cleaned.startsWith('0039')) {
+      return '+' + cleaned.substring(2);
+    }
+    if (!cleaned.startsWith('+39')) {
+      return '+39' + cleaned;
+    }
+    return cleaned;
+  };
+
+  // Se stiamo mostrando la verifica del telefono
+  if (showPhoneVerification) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
+        <div className="w-full max-w-md">          <PhoneVerification
+            phone={normalizePhoneNumber(formData.phone)}
+            onVerified={handlePhoneVerified}
+            onCancel={handleCancelVerification}
+            onChangePhone={handleChangePhone}
+            userId={temporaryUserId}
+            isSignupFlow={true}
+          />
+        </div>
+      </div>
+    );
+  }
+
+// Success screen
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
@@ -262,7 +335,7 @@ export default function SignUp() {
               className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder-gray-400"
               placeholder="+39 123 456 7890"
             />
-            <p className="text-xs text-gray-400 mt-1">Inserisci un numero valido (minimo 10 cifre)</p>
+            <p className="text-xs text-gray-400 mt-1">Inserisci un numero di cellulare italiano (es. +39 333 123 4567)</p>
           </div>
 
           <div>

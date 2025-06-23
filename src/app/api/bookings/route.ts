@@ -217,9 +217,11 @@ export async function POST(request: NextRequest) {  try {    // Check authentica
       duration: requestData.totalDuration || requestData.duration || totalDuration,
       status: 'confirmed',      notes: requestData.customerInfo?.notes || requestData.notes || '',
     };
+      // Verifica se chi sta prenotando è un barbiere
+    const isBarber = session.user.role === 'barber' || session.user.role === 'admin';
     
     // Validazione completa
-    const validationErrors = validateBookingData(bookingData);
+    const validationErrors = validateBookingData(bookingData, isBarber);
       if (validationErrors.length > 0) {
       return NextResponse.json(
         { error: validationErrors.join(', ') },
@@ -530,24 +532,36 @@ function calculatePrice(services: any): number {
   return services.price || 25;
 }
 
-function validateBookingData(data: any): string[] {
+function validateBookingData(data: any, isBarber: boolean = false): string[] {
   const errors: string[] = [];
 
   if (!data.customerName || data.customerName.trim().length < 2) {
     errors.push('Nome cliente deve essere di almeno 2 caratteri');
   }
 
-  if (!data.customerEmail) {
-    errors.push('Email cliente è obbligatoria');
-  } else {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.customerEmail)) {
-      errors.push('Formato email non valido');
+  // Per i barbieri, email e telefono sono opzionali
+  if (!isBarber) {
+    if (!data.customerEmail) {
+      errors.push('Email cliente è obbligatoria');
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.customerEmail)) {
+        errors.push('Formato email non valido');
+      }
     }
-  }
 
-  if (!data.customerPhone) {
-    errors.push('Telefono cliente è obbligatorio');
+    if (!data.customerPhone) {
+      errors.push('Telefono cliente è obbligatorio');
+    }
+  } else {
+    // Per i barbieri, valida email solo se fornita
+    if (data.customerEmail && data.customerEmail.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.customerEmail)) {
+        errors.push('Formato email non valido');
+      }
+    }
+    // Telefono opzionale per barbieri - nessuna validazione se vuoto
   }
 
   if (!data.barberId) {
