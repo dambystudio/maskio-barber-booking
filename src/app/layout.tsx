@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Maskio Barber Concept | Barbiere di Qualità a San Giovanni Rotondo',
     description: 'Una nuova concezione del barbiere: tagli moderni, trattamenti professionali, esperienza premium a San Giovanni Rotondo.',
-    url: 'https://maskio-barber-booking.vercel.app',
+    url: 'https://maskiobarberconcept.it',
     siteName: 'Maskio Barber',
     images: [
       {
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   },
   // Canonical URL per prevenire contenuti duplicati
   alternates: {
-    canonical: 'https://maskio-barber-booking.vercel.app',
+    canonical: 'https://maskiobarberconcept.it',
   },
   
   // Security and caching headers
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     'Expires': '0'
   },
     // Base URL per i metadati
-  metadataBase: new URL('https://maskio-barber-booking.vercel.app')
+  metadataBase: new URL('https://maskiobarberconcept.it')
 };
 
 export default function RootLayout({

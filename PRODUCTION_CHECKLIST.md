@@ -8,9 +8,9 @@
 3. Vai su "Credentials" → OAuth 2.0 Client IDs
 4. Clicca sul tuo Client ID esistente
 5. Aggiungi negli "Authorized JavaScript origins":
-   - https://maskio-barber-booking.vercel.app
+   - https://maskiobarberconcept.it
 6. Aggiungi negli "Authorized redirect URIs":
-   - https://maskio-barber-booking.vercel.app/api/auth/callback/google
+   - https://maskiobarberconcept.it/api/auth/callback/google
 
 ### 2. Verifica Database Connectivity
 Il database Neon è già configurato per accettare connessioni esterne.

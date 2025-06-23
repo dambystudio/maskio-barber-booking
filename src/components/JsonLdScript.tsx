@@ -9,9 +9,8 @@ export default function JsonLdScript() {
       const jsonLdData = {
         "@context": "https://schema.org",
         "@type": "HairSalon",
-        "name": "Maskio Barber Concept",
-        "image": "https://maskio-barber-booking.vercel.app/logo.png",
-        "url": "https://maskio-barber-booking.vercel.app",
+        "name": "Maskio Barber Concept",        "image": "https://maskiobarberconcept.it/logo.png",
+        "url": "https://maskiobarberconcept.it",
         "telephone": "+39 02 1234567",
         "address": {
           "@type": "PostalAddress",

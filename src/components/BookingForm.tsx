@@ -7,7 +7,6 @@ import { Service, Barber, BookingFormData } from '../types/booking';
 import { BookingService, validateBookingData } from '../services/bookingService';
 import { fabioSpecificServices, micheleSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
 import { Session } from 'next-auth';
-import PhoneVerification from './PhoneVerification';
 
 const steps = ['Barbiere', 'Servizi', 'Data e Ora', 'Dati Personali', 'Conferma'];
 
@@ -37,16 +36,11 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   });
   const [availableSlots, setAvailableSlots] = useState<{time: string, available: boolean}[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [bookingResponse, setBookingResponse] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);  const [bookingResponse, setBookingResponse] = useState<any>(null);
   
-  // Phone verification states
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [pendingPhone, setPendingPhone] = useState('');
-    // Add debouncing state and cache for rate limiting protection
+  // Add debouncing state and cache for rate limiting protection
   const [isDebouncing, setIsDebouncing] = useState(false);
-  const [slotsCache, setSlotsCache] = useState<{[key: string]: {time: string, available: boolean}[]}>({});  // Closure system state
+  const [slotsCache, setSlotsCache] = useState<{[key: string]: {time: string, available: boolean}[]}>({});// Closure system state
   const [closedDays, setClosedDays] = useState<Set<number>>(new Set([0])); // Sunday closed by default
   const [closedDates, setClosedDates] = useState<Set<string>>(new Set()); // Specific closed dates
   const [barberClosedDays, setBarberClosedDays] = useState<Set<number>>(new Set()); // Barber-specific recurring closures
@@ -572,55 +566,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      customerInfo: {
-        ...prev.customerInfo,
+      customerInfo: {        ...prev.customerInfo,
         [name]: value
       }
     }));
-    
-    // Reset phone verification if phone number changes
-    if (name === 'phone' && value !== pendingPhone) {
-      setPhoneVerified(false);
-    }
-  };
-
-  // Handle phone verification request
-  const handlePhoneVerification = () => {
-    const phone = formData.customerInfo.phone.trim();
-    if (!phone) {
-      setError('Inserisci un numero di telefono prima di verificarlo');
-      return;
-    }
-    
-    // Basic phone validation
-    const phoneRegex = /^\+39\s?\d{3}\s?\d{3}\s?\d{4}$/;
-    if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
-      setError('Formato numero non valido. Usa: +39 XXX XXX XXXX');
-      return;
-    }
-    
-    setPendingPhone(phone);
-    setShowPhoneVerification(true);
-    setError(null);
-  };
-
-  // Handle phone verification success
-  const handlePhoneVerified = () => {
-    setPhoneVerified(true);
-    setShowPhoneVerification(false);
-    setError(null);
-  };
-
-  // Handle phone verification cancel
-  const handlePhoneVerificationCancel = () => {
-    setShowPhoneVerification(false);
-  };
-
-  // Handle change phone number
-  const handleChangePhone = () => {
-    setShowPhoneVerification(false);
-    setPhoneVerified(false);
-    setPendingPhone('');
   };
 
   // Calculate total duration and price
@@ -682,16 +631,14 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       case 2:
         return formData.selectedServices.length > 0;
       case 3:
-        return formData.selectedDate && formData.selectedTime;      case 4:
-        // For barbers: only name is required (email and phone are optional, no verification needed)
-        // For regular users: name, email, phone required and phone must be verified
+        return formData.selectedDate && formData.selectedTime;      case 4:        // For barbers: only name is required (email and phone are optional)
+        // For regular users: name, email, phone required
         if (isBarber) {
           return formData.customerInfo.name && formData.customerInfo.name.trim() !== '';
         } else {
           return formData.customerInfo.name && 
                  formData.customerInfo.email &&
-                 formData.customerInfo.phone &&
-                 phoneVerified;
+                 formData.customerInfo.phone;
         }
       default:
         return false;
@@ -1269,42 +1216,26 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                     <label className="block text-sm text-gray-400 mb-1">Telefono *</label>
                     <div className="flex space-x-2">
                       <input
-                        type="tel"
-                        name="phone"
+                        type="tel"                        name="phone"
                         value={formData.customerInfo.phone}
                         onChange={handleCustomerInfoChange}
                         placeholder="+39 123 456 7890"
-                        className="flex-1 px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                        className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                         required
                       />
-                      <button
-                        type="button"
-                        onClick={handlePhoneVerification}
-                        disabled={!formData.customerInfo.phone || phoneVerified}
-                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                          phoneVerified
-                            ? 'bg-green-600 text-white cursor-default'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-600 disabled:cursor-not-allowed'
-                        }`}
-                      >
-                        {phoneVerified ? '✓' : 'Verifica'}
-                      </button>
                     </div>
-                    {phoneVerified && (
-                      <p className="text-xs text-green-400 mt-1">✓ Numero verificato</p>
-                    )}
                     <p className="text-xs text-gray-500 mt-1">
                       Il numero di telefono è necessario per confermare la prenotazione
                     </p>
                   </div>
                 </div>
-              )}                {isBarber ? (
+              )}              {isBarber ? (
                 <p className="text-xs text-yellow-300 mt-2 bg-yellow-900/20 p-2 rounded border border-yellow-600/30">
                   💼 <strong>Modalità Barbiere:</strong> Stai prenotando per un cliente. Solo il nome è obbligatorio, email e telefono sono opzionali.
                 </p>
               ) : (
                 <p className="text-xs text-blue-300 mt-2 bg-blue-900/20 p-2 rounded border border-blue-600/30">
-                  📱 <strong>Verifica Telefono:</strong> Per completare la prenotazione è necessario verificare il numero di telefono tramite SMS.
+                  📱 <strong>Dati Personali:</strong> Inserisci i tuoi dati per completare la prenotazione.
                 </p>
               )}
             </div>
@@ -1495,21 +1426,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-amber-500 text-white hover:bg-amber-600'
           }`}
-          whileHover={{ scale: isStepValid(currentStep) && !loading ? 1.05 : 1 }}
-          whileTap={{ scale: isStepValid(currentStep) && !loading ? 0.95 : 1 }}        >          {loading ? 'Caricamento...' : currentStep === 4 ? 'Conferma Prenotazione' : 'Continua'}
+          whileHover={{ scale: isStepValid(currentStep) && !loading ? 1.05 : 1 }}          whileTap={{ scale: isStepValid(currentStep) && !loading ? 0.95 : 1 }}        >          {loading ? 'Caricamento...' : currentStep === 4 ? 'Conferma Prenotazione' : 'Continua'}
         </motion.button>        </div>
       )}
         </>
-      )}
-      
-      {/* Phone Verification Modal */}
-      {showPhoneVerification && (
-        <PhoneVerification
-          phone={pendingPhone}
-          onVerified={handlePhoneVerified}
-          onCancel={handlePhoneVerificationCancel}
-          onChangePhone={handleChangePhone}
-        />
       )}
     </div>
   );

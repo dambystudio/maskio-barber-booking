@@ -5,4 +5,4 @@ Disallow: /auth/
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://maskio-barber-booking.vercel.app/sitemap.xml
+Sitemap: https://maskiobarberconcept.it/sitemap.xml
