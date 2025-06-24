@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 import SecurityProvider from '../components/SecurityProvider';
 import DailyUpdateManager from '../components/DailyUpdateManager';
 import SessionProvider from '../components/SessionProvider';
+import { GoogleAnalytics } from '../components/GoogleAnalytics';
 
 import MobileBottomNav from '../components/MobileBottomNav';
 import PWAFloatingMenu from '../components/PWAFloatingMenu';
@@ -19,38 +20,80 @@ import JsonLdScript from '../components/JsonLdScript';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Maskio Barber Concept',
-  description: 'Una nuova concezione del barbiere - Barbiere di qualità a San Giovanni Rotondo',
-  robots: 'index, follow', // Allow indexing by search engines
-  keywords: 'barbiere, barbiere San Giovanni Rotondo, taglio capelli, barba, Maskio, trattamenti capelli',
+  metadataBase: new URL('https://maskiobarberconcept.it'),
+  title: {
+    default: 'Maskio Barber Concept | Barbiere a San Giovanni Rotondo',
+    template: '%s | Maskio Barber Concept'
+  },
+  description: 'Barbiere professionale a San Giovanni Rotondo. Tagli moderni, trattamenti barba, prenotazione online. Esperienza premium dal 2024.',
+  applicationName: 'Maskio Barber Concept',
+  authors: [{ name: 'Maskio Barber Concept' }],
+  generator: 'Next.js',
+  keywords: [
+    'barbiere',
+    'barbiere San Giovanni Rotondo', 
+    'taglio capelli uomo',
+    'trattamenti barba',
+    'Maskio',
+    'barber shop',
+    'prenotazione online',
+    'taglio moderno',
+    'fade',
+    'rasatura tradizionale',
+    'San Giovanni Rotondo parrucchiere',
+    'barbiere professionale'
+  ],
+  referrer: 'origin-when-cross-origin',
+  creator: 'Maskio Barber Concept',
+  publisher: 'Maskio Barber Concept',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   manifest: '/api/manifest',
   
-  // Open Graph meta tags per migliorare la condivisione sui social media
+  // Open Graph avanzato
   openGraph: {
-    title: 'Maskio Barber Concept | Barbiere di Qualità a San Giovanni Rotondo',
-    description: 'Una nuova concezione del barbiere: tagli moderni, trattamenti professionali, esperienza premium a San Giovanni Rotondo.',
+    type: 'website',
+    locale: 'it_IT',
     url: 'https://maskiobarberconcept.it',
-    siteName: 'Maskio Barber',
+    siteName: 'Maskio Barber Concept',
+    title: 'Maskio Barber Concept | Barbiere Professionale a San Giovanni Rotondo',
+    description: 'Scopri una nuova concezione del barbiere: tagli moderni, trattamenti barba professionali, atmosfera accogliente. Prenota online il tuo appuntamento.',
     images: [
       {
-        url: '/og-image.jpg', // Sostituisci con il percorso della tua immagine
+        url: '/og-image-1200x630.jpg',
         width: 1200,
         height: 630,
-        alt: 'Maskio Barber Concept - San Giovanni Rotondo',
+        alt: 'Maskio Barber Concept - Interno del negozio a San Giovanni Rotondo',
+        type: 'image/jpeg',
+      },
+      {
+        url: '/og-image-square.jpg',
+        width: 400,
+        height: 400,
+        alt: 'Logo Maskio Barber Concept',
+        type: 'image/jpeg',
       }
     ],
-    locale: 'it_IT',
-    type: 'website',
   },
-  
-  // Twitter Card meta tags per ottimizzare la condivisione su Twitter
+    // Twitter Cards ottimizzato
   twitter: {
     card: 'summary_large_image',
+    site: '@maskiobarber',
+    creator: '@maskiobarber',
     title: 'Maskio Barber Concept | San Giovanni Rotondo',
-    description: 'Una nuova concezione del barbiere a San Giovanni Rotondo. Prenota ora!',
-    images: ['/twitter-image.jpg'], // Sostituisci con il percorso della tua immagine
-    creator: '@maskiobarber', // Sostituisci con il vostro handle Twitter
+    description: 'Barbiere professionale a San Giovanni Rotondo. Prenota online il tuo taglio di capelli e trattamenti barba.',
+    images: ['/twitter-image.jpg'],
   },
+  
   // Canonical URL per prevenire contenuti duplicati
   alternates: {
     canonical: 'https://maskiobarberconcept.it',
@@ -68,8 +111,6 @@ export const metadata: Metadata = {
     'Pragma': 'no-cache',
     'Expires': '0'
   },
-    // Base URL per i metadati
-  metadataBase: new URL('https://maskiobarberconcept.it')
 };
 
 export default function RootLayout({
@@ -103,8 +144,8 @@ export default function RootLayout({
           <link rel="icon" type="image/png" sizes="32x32" href="/icone/predefinita/32x32.png" />
           <link rel="icon" type="image/png" sizes="16x16" href="/icone/predefinita/16x16.png" />
           <link rel="shortcut icon" href="/icone/predefinita/32x32.png" />
-        </head>
-        <body className={inter.className}>
+        </head>        <body className={inter.className}>
+          <GoogleAnalytics />
           <SessionProvider>
             <SecurityProvider>
               <DynamicManifest />

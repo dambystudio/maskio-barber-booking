@@ -7,6 +7,7 @@ import { Service, Barber, BookingFormData } from '../types/booking';
 import { BookingService, validateBookingData } from '../services/bookingService';
 import { fabioSpecificServices, micheleSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
 import { Session } from 'next-auth';
+import { trackEvent, trackConversion } from './GoogleAnalytics';
 
 const steps = ['Barbiere', 'Servizi', 'Data e Ora', 'Dati Personali', 'Conferma'];
 
@@ -601,9 +602,8 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       if (!userId) {
         throw new Error('Sessione utente non valida. Prova a fare logout e login di nuovo.');
       }      // For users who can make bookings for others, phone is optional
-      // For regular users, phone is required but comes from profile (not editable in booking form)
       if (!canMakeBookingsForOthers && (!formData.customerInfo.phone || formData.customerInfo.phone.trim().length === 0)) {
-        throw new Error('Il numero di telefono è obbligatorio per le prenotazioni. Completa il tuo profilo nell\'area personale per aggiungere il numero di telefono.');
+        throw new Error('Il numero di telefono è obbligatorio per le prenotazioni.');
       }const bookingPayload = {
         userId: userId,
         barberId: formData.selectedBarber!.id,
@@ -619,10 +619,27 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       
       console.log('🚀 Booking payload being sent:', JSON.stringify(bookingPayload, null, 2));
       console.log('📋 About to call BookingService.createBooking...');
-      
-      const response = await BookingService.createBooking(bookingPayload);
+        const response = await BookingService.createBooking(bookingPayload);
       console.log('✅ BookingService.createBooking completed successfully');
       console.log('📥 Booking response:', response);
+      
+      // Track successful booking conversion
+      trackConversion('booking_completed', {
+        currency: 'EUR',
+        value: totalPrice,
+        transaction_id: response?.id || 'unknown',
+        items: formData.selectedServices.map(service => ({
+          item_id: service.id,
+          item_name: service.name,
+          category: 'barber_service',
+          quantity: 1,
+          price: service.price
+        }))
+      });
+      
+      // Track individual events
+      trackEvent('booking_submit', 'engagement', 'booking_form', totalPrice);
+      trackEvent('purchase', 'ecommerce', `${formData.selectedBarber?.name} - ${formData.selectedServices.map(s => s.name).join(', ')}`, totalPrice);
       
       setBookingResponse(response); // Store full response
       setCurrentStep(5); // Move to confirmation step
@@ -654,10 +671,22 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         return false;
     }
   };
-
   const nextStep = () => {
     if (isStepValid(currentStep)) {
-      setCurrentStep(currentStep + 1);
+      // Track step progression
+      trackEvent('booking_step_completed', 'engagement', `step_${currentStep}`, currentStep);
+      
+      const nextStepNumber = currentStep + 1;
+      setCurrentStep(nextStepNumber);
+      
+      // Track specific milestones
+      if (nextStepNumber === 2) {
+        trackEvent('barber_selected', 'engagement', formData.selectedBarber?.name || 'unknown');
+      } else if (nextStepNumber === 3) {
+        trackEvent('services_selected', 'engagement', formData.selectedServices.map(s => s.name).join(', '));
+      } else if (nextStepNumber === 4) {
+        trackEvent('datetime_selected', 'engagement', `${formData.selectedDate} ${formData.selectedTime}`);
+      }
     }
   };
 
@@ -1207,9 +1236,9 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                     />
                   </div>
                 </div>              ) : (
-                /* Read-only fields for regular users */
+                /* Editable phone for regular users + read-only name/email */
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="bg-gray-800/30 p-3 rounded">
                       <span className="text-gray-400">Nome:</span>
                       <p className="text-white font-medium">{formData.customerInfo.name}</p>
@@ -1217,27 +1246,26 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                     <div className="bg-gray-800/30 p-3 rounded">
                       <span className="text-gray-400">Email:</span>
                       <p className="text-white font-medium">{formData.customerInfo.email}</p>
-                    </div>                    <div className="bg-gray-800/30 p-3 rounded">
-                      <span className="text-gray-400">Telefono:</span>
-                      {formData.customerInfo.phone ? (
-                        <p className="text-white font-medium">{formData.customerInfo.phone}</p>
-                      ) : (
-                        <p className="text-red-400 font-medium">Non specificato</p>
-                      )}
                     </div>
                   </div>
                   
-                  {!formData.customerInfo.phone && (
-                    <div className="bg-red-900/20 p-3 rounded border border-red-600/30">
-                      <p className="text-red-300 text-sm flex items-center">
-                        ⚠️ <strong className="ml-1">Telefono mancante:</strong> <span className="ml-1">Il numero di telefono è obbligatorio per completare la prenotazione. <a href="/area-personale/profilo" className="text-red-400 hover:text-red-300 underline ml-1">Aggiungilo nel tuo profilo</a>.</span>
-                      </p>
+                  {/* Editable phone field for regular users */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Telefono *</label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="tel"                        name="phone"
+                        value={formData.customerInfo.phone}
+                        onChange={handleCustomerInfoChange}
+                        placeholder="+39 123 456 7890"
+                        className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                        required
+                      />
                     </div>
-                  )}
-                  
-                  <p className="text-xs text-blue-300 bg-blue-900/20 p-2 rounded border border-blue-600/30">
-                    ℹ️ <strong>Dati Personali:</strong> I tuoi dati vengono caricati automaticamente dal profilo. Per modificarli, vai all'<a href="/area-personale/profilo" className="text-blue-400 hover:text-blue-300 underline">area personale</a>.
-                  </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Il numero di telefono è necessario per confermare la prenotazione
+                    </p>
+                  </div>
                 </div>
               )}              {canMakeBookingsForOthers ? (
                 <p className="text-xs text-yellow-300 mt-2 bg-yellow-900/20 p-2 rounded border border-yellow-600/30">
