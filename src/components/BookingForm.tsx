@@ -15,21 +15,32 @@ interface BookingFormProps {
 }
 
 export default function BookingForm({ userSession }: BookingFormProps) {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [allServices, setAllServices] = useState<Service[]>([]); // All services from API
+  const [currentStep, setCurrentStep] = useState(1);  const [allServices, setAllServices] = useState<Service[]>([]); // All services from API
   const [displayedServices, setDisplayedServices] = useState<Service[]>([]); // Services to show based on barber
-  const [barbers, setBarbers] = useState<Barber[]>([]);  // Check if current user is a barber
-  const isBarber = userSession?.user?.role === 'barber' || userSession?.user?.role === 'admin';
+  const [barbers, setBarbers] = useState<Barber[]>([]);  
+  
+  // Distinguish between actual barbers and those who can make bookings for others
+  const isBarber = userSession?.user?.role === 'barber';
+  const isAdmin = userSession?.user?.role === 'admin';
+  const canMakeBookingsForOthers = isBarber || isAdmin;
+  
+  // Debug logging - DA RIMUOVERE DOPO IL TEST
+  console.log('🔍 BookingForm Debug:');
+  console.log('  userSession:', userSession);
+  console.log('  userSession.user:', userSession?.user);
+  console.log('  userSession.user.role:', userSession?.user?.role);
+  console.log('  isBarber:', isBarber);
+  console.log('  isAdmin:', isAdmin);
+  console.log('  canMakeBookingsForOthers:', canMakeBookingsForOthers);
 
   const [formData, setFormData] = useState<BookingFormData>({
     selectedBarber: null,
     selectedServices: [],
     selectedDate: '',
-    selectedTime: '',
-    customerInfo: {
-      // If user is barber, start with empty fields for manual input
-      name: isBarber ? '' : (userSession.user.name || ''),
-      email: isBarber ? '' : (userSession.user.email || ''),
+    selectedTime: '',    customerInfo: {
+      // If user can make bookings for others, start with empty fields for manual input
+      name: canMakeBookingsForOthers ? '' : (userSession.user.name || ''),
+      email: canMakeBookingsForOthers ? '' : (userSession.user.email || ''),
       phone: '', // Will be loaded from profile or left empty for manual input
       notes: ''
     }
@@ -155,9 +166,8 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         if (response.ok) {
           const data = await response.json();
           console.log('✅ Profile data received:', data);
-          
-          // For barbers, don't overwrite manually entered customer data
-          if (!isBarber) {
+            // For users who can make bookings for others, don't overwrite manually entered customer data
+          if (!canMakeBookingsForOthers) {
             setFormData(prev => ({
               ...prev,
               customerInfo: {
@@ -177,17 +187,15 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       } catch (error) {
         console.error('❌ Error fetching user profile:', error);
       }
-    };
-
-    if (userSession?.user?.id && !isBarber) {
+    };    if (userSession?.user?.id && !canMakeBookingsForOthers) {
       console.log('👤 User session found, fetching profile for:', userSession.user.email);
       fetchUserProfile();
-    } else if (isBarber) {
-      console.log('💼 Barber detected, skipping profile fetch - using manual input');
+    } else if (canMakeBookingsForOthers) {
+      console.log('💼 User can make bookings for others, skipping profile fetch - using manual input');
     } else {
       console.log('⚠️ No user session or user ID found');
     }
-  }, [userSession, isBarber]);
+  }, [userSession, canMakeBookingsForOthers]);
 
   // Load services and barbers from API
   useEffect(() => {
@@ -592,9 +600,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       const userId = (userSession.user as any)?.id;
       if (!userId) {
         throw new Error('Sessione utente non valida. Prova a fare logout e login di nuovo.');
-      }      // Per i barbieri, il telefono non è obbligatorio
-      if (!isBarber && (!formData.customerInfo.phone || formData.customerInfo.phone.trim().length === 0)) {
-        throw new Error('Il numero di telefono è obbligatorio per le prenotazioni.');
+      }      // For users who can make bookings for others, phone is optional
+      // For regular users, phone is required but comes from profile (not editable in booking form)
+      if (!canMakeBookingsForOthers && (!formData.customerInfo.phone || formData.customerInfo.phone.trim().length === 0)) {
+        throw new Error('Il numero di telefono è obbligatorio per le prenotazioni. Completa il tuo profilo nell\'area personale per aggiungere il numero di telefono.');
       }const bookingPayload = {
         userId: userId,
         barberId: formData.selectedBarber!.id,
@@ -631,9 +640,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       case 2:
         return formData.selectedServices.length > 0;
       case 3:
-        return formData.selectedDate && formData.selectedTime;      case 4:        // For barbers: only name is required (email and phone are optional)
+        return formData.selectedDate && formData.selectedTime;      case 4:
+        // For users who can make bookings for others: only name is required (email and phone are optional)
         // For regular users: name, email, phone required
-        if (isBarber) {
+        if (canMakeBookingsForOthers) {
           return formData.customerInfo.name && formData.customerInfo.name.trim() !== '';
         } else {
           return formData.customerInfo.name && 
@@ -1157,12 +1167,11 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               </div>
             </div>            {/* Customer Info - Display for regular users / Input for barbers */}
             <div className="mt-6 pt-4 border-t border-gray-600">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">
-                👤 Informazioni Cliente
-                {isBarber && <span className="text-yellow-400 ml-2">(Inserisci manualmente)</span>}
+              <h4 className="text-sm font-medium text-gray-300 mb-3">                👤 Informazioni Cliente
+                {canMakeBookingsForOthers && <span className="text-yellow-400 ml-2">(Inserisci manualmente)</span>}
               </h4>
               
-              {isBarber ? (
+              {canMakeBookingsForOthers ? (
                 /* Editable fields for barbers */
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
@@ -1198,9 +1207,9 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                     />
                   </div>
                 </div>              ) : (
-                /* Editable phone for regular users + read-only name/email */
+                /* Read-only fields for regular users */
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div className="bg-gray-800/30 p-3 rounded">
                       <span className="text-gray-400">Nome:</span>
                       <p className="text-white font-medium">{formData.customerInfo.name}</p>
@@ -1208,30 +1217,31 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                     <div className="bg-gray-800/30 p-3 rounded">
                       <span className="text-gray-400">Email:</span>
                       <p className="text-white font-medium">{formData.customerInfo.email}</p>
+                    </div>                    <div className="bg-gray-800/30 p-3 rounded">
+                      <span className="text-gray-400">Telefono:</span>
+                      {formData.customerInfo.phone ? (
+                        <p className="text-white font-medium">{formData.customerInfo.phone}</p>
+                      ) : (
+                        <p className="text-red-400 font-medium">Non specificato</p>
+                      )}
                     </div>
                   </div>
                   
-                  {/* Editable phone field for regular users */}
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Telefono *</label>
-                    <div className="flex space-x-2">
-                      <input
-                        type="tel"                        name="phone"
-                        value={formData.customerInfo.phone}
-                        onChange={handleCustomerInfoChange}
-                        placeholder="+39 123 456 7890"
-                        className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                        required
-                      />
+                  {!formData.customerInfo.phone && (
+                    <div className="bg-red-900/20 p-3 rounded border border-red-600/30">
+                      <p className="text-red-300 text-sm flex items-center">
+                        ⚠️ <strong className="ml-1">Telefono mancante:</strong> <span className="ml-1">Il numero di telefono è obbligatorio per completare la prenotazione. <a href="/area-personale/profilo" className="text-red-400 hover:text-red-300 underline ml-1">Aggiungilo nel tuo profilo</a>.</span>
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Il numero di telefono è necessario per confermare la prenotazione
-                    </p>
-                  </div>
+                  )}
+                  
+                  <p className="text-xs text-blue-300 bg-blue-900/20 p-2 rounded border border-blue-600/30">
+                    ℹ️ <strong>Dati Personali:</strong> I tuoi dati vengono caricati automaticamente dal profilo. Per modificarli, vai all'<a href="/area-personale/profilo" className="text-blue-400 hover:text-blue-300 underline">area personale</a>.
+                  </p>
                 </div>
-              )}              {isBarber ? (
+              )}              {canMakeBookingsForOthers ? (
                 <p className="text-xs text-yellow-300 mt-2 bg-yellow-900/20 p-2 rounded border border-yellow-600/30">
-                  💼 <strong>Modalità Barbiere:</strong> Stai prenotando per un cliente. Solo il nome è obbligatorio, email e telefono sono opzionali.
+                  💼 <strong>{isBarber ? 'Modalità Barbiere' : 'Modalità Amministratore'}:</strong> Stai prenotando per un cliente. Solo il nome è obbligatorio, email e telefono sono opzionali.
                 </p>
               ) : (
                 <p className="text-xs text-blue-300 mt-2 bg-blue-900/20 p-2 rounded border border-blue-600/30">
