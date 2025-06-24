@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { 
   MapPinIcon, 
   ClockIcon, 
@@ -218,12 +219,19 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
               <p className="text-xl text-gray-600 mb-8">
                 Non è solo un lavoro, è una carriera in un ambiente che valorizza il talento, 
                 promuove la crescita e celebra l'eccellenza del barbering moderno.
-              </p>              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center">
-                <div className="text-white text-8xl">🪒</div>
-                <div className="absolute inset-0 bg-black/20 flex items-end p-6">
+              </p>              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
+                <Image
+                  src="/fotoPosterioreBarbieri.jpg"
+                  alt="Team Maskio Barber al lavoro"
+                  width={800}
+                  height={600}
+                  className="w-full h-full object-cover object-bottom"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end p-6">
                   <div className="text-white">
                     <h3 className="text-xl font-bold mb-1">Ambiente Professionale</h3>
-                    <p className="text-amber-100">Qui potrai aggiungere una foto del team al lavoro</p>
+                    <p className="text-amber-100">Il nostro team di esperti al lavoro</p>
                   </div>
                 </div>
               </div>

@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     // Converti il file in buffer per l'attachment
     const cvBuffer = Buffer.from(await cvFile.arrayBuffer());    // Prepara l'email per Maskio Barber
     const emailToMaskio = {
-      from: process.env.FROM_EMAIL || 'noreply@maskiobarberconcept.it',
+      from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
       to: 'fabio.cassano97@icloud.com', // Email dove riceverai i CV
       subject: `Nuova Candidatura: ${name}`,
       html: `
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       ],
     };    // Prepara email di conferma per il candidato
     const emailToCandidate = {
-      from: process.env.FROM_EMAIL || 'noreply@maskiobarberconcept.it',
+      from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
       to: email,
       subject: 'Candidatura Ricevuta - Maskio Barber',
       html: `

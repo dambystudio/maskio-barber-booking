@@ -87,7 +87,7 @@ Modifica il file `.env.local` con i dati ottenuti:
 
 ```bash
 # Google Places API Configuration
-GOOGLE_PLACES_API_KEY=AIza...la_chiave_api_completa
+GOOGLE_PLACES_API_KEY=your-google-places-api-key-here
 GOOGLE_PLACE_ID=ChIJ...il_place_id_completo
 ```
 

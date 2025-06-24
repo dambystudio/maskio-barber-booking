@@ -14,35 +14,117 @@ interface GoogleReview {
   relative_time_description: string;
 }
 
+interface ReviewsData {
+  reviews: GoogleReview[];
+  averageRating: number;
+  totalReviews?: number;
+  isDemo?: boolean;
+  isFallback?: boolean;
+  cached?: boolean;
+  cacheExpired?: boolean;
+  message?: string;
+  error?: string;
+  lastUpdated?: string;
+}
+
 const ReviewsSection = () => {
   const [reviews, setReviews] = useState<GoogleReview[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [reviewsData, setReviewsData] = useState<ReviewsData | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const loadReviews = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/google-reviews', {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data: ReviewsData = await response.json();
+      
+      if (data.reviews && data.reviews.length > 0) {
+        // Mostra solo le prime 3 recensioni sulla homepage
+        setReviews(data.reviews.slice(0, 3));
+        setAverageRating(data.averageRating || 0);
+        setReviewsData(data);
+      } else {
+        // Se non ci sono recensioni, prova un retry
+        if (retryCount < 2) {
+          console.log(`Retry ${retryCount + 1}/2 - Nessuna recensione ricevuta`);
+          setRetryCount(prev => prev + 1);
+          setTimeout(loadReviews, 2000); // Retry dopo 2 secondi
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+      
+      // Se fallisce, prova un retry
+      if (retryCount < 2) {
+        console.log(`Retry ${retryCount + 1}/2 dopo errore:`, error);
+        setRetryCount(prev => prev + 1);
+        setTimeout(loadReviews, 2000);
+        return;
+      }
+      
+      // Fallback locale dopo tutti i retry
+      const fallbackData: ReviewsData = {
+        reviews: [
+          {
+            id: 'local_fallback_1',
+            author_name: 'Cliente Verificato',
+            rating: 5,
+            text: 'Servizio eccellente! Taglio perfetto e ambiente molto professionale.',
+            relative_time_description: 'Recente'
+          },
+          {
+            id: 'local_fallback_2', 
+            author_name: 'Marco T.',
+            rating: 5,
+            text: 'Esperienza fantastica, consigliatissimo! Staff molto competente.',
+            relative_time_description: 'Recente'
+          },
+          {
+            id: 'local_fallback_3',
+            author_name: 'Andrea R.',
+            rating: 4,
+            text: 'Ottimo servizio e prezzi onesti. Ambiente moderno e accogliente.',
+            relative_time_description: 'Recente'
+          }
+        ],
+        averageRating: 4.8,
+        totalReviews: 25,
+        isDemo: true,
+        isFallback: true,
+        message: 'Recensioni temporaneamente non disponibili - Mostrando dati di esempio'
+      };
+      
+      setReviews(fallbackData.reviews);
+      setAverageRating(fallbackData.averageRating);
+      setReviewsData(fallbackData);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadReviews = async () => {
-      try {
-        const response = await fetch('/api/google-reviews');
-        const data = await response.json();
-        
-        if (data.reviews && data.reviews.length > 0) {
-          // Mostra solo le prime 3 recensioni sulla homepage
-          setReviews(data.reviews.slice(0, 3));
-          setAverageRating(data.averageRating || 0);
-          setIsDemo(data.isDemo || false);
-          setMessage(data.message || null);
-        }
-      } catch (error) {
-        console.error('Error loading reviews:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadReviews();
   }, []);
+
+  // Funzione per riprovare il caricamento
+  const handleRetry = () => {
+    setRetryCount(0);
+    loadReviews();
+  };
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 60 },
@@ -181,23 +263,36 @@ const ReviewsSection = () => {
                 {averageRating}/5
               </div>
               <div className="flex flex-col items-center">
-                <StarRating rating={Math.round(averageRating)} />
-                <span className="text-xs text-gray-400 mt-1">
-                  {isDemo ? 'Demo Reviews' : 'Google Reviews'}
+                <StarRating rating={Math.round(averageRating)} />                <span className="text-xs text-gray-400 mt-1">
+                  {reviewsData?.isDemo ? 'Demo Reviews' : 'Google Reviews'}
                 </span>
               </div>
             </motion.div>
-          )}
-
-          {/* Demo Warning */}
-          {isDemo && message && (
+          )}          {/* Demo/Error Messages */}
+          {reviewsData?.message && (reviewsData.isDemo || reviewsData.isFallback || reviewsData.cacheExpired) && (
             <motion.div 
-              className="bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 max-w-md mx-auto mt-4"
+              className={`border rounded-lg p-3 max-w-md mx-auto mt-4 ${
+                reviewsData.isFallback || reviewsData.error 
+                  ? 'bg-red-500/20 border-red-500/30' 
+                  : 'bg-amber-500/20 border-amber-500/30'
+              }`}
               variants={fadeInUp}
             >
-              <p className="text-amber-200 text-sm text-center">
-                {message}
+              <p className={`text-sm text-center ${
+                reviewsData.isFallback || reviewsData.error 
+                  ? 'text-red-200' 
+                  : 'text-amber-200'
+              }`}>
+                {reviewsData.message}
               </p>
+              {reviewsData.isFallback && (
+                <button
+                  onClick={handleRetry}
+                  className="mt-2 px-3 py-1 bg-amber-500 text-white text-xs rounded-md hover:bg-amber-600 transition-colors mx-auto block"
+                >
+                  Riprova
+                </button>
+              )}
             </motion.div>
           )}
         </motion.div>

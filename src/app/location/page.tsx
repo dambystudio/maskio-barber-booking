@@ -2,12 +2,24 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Page() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [mapError, setMapError] = useState(false);// Funzione per aprire la mappa nell'app predefinita del dispositivo
+  const [mapError, setMapError] = useState(false);
+
+  // Timeout per forzare il fallback se la mappa non si carica
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!mapLoaded) {
+        console.log('Timeout mappa - Attivo fallback');
+        setMapError(true);
+      }
+    }, 10000); // 10 secondi
+
+    return () => clearTimeout(timer);
+  }, [mapLoaded]);// Funzione per aprire la mappa nell'app predefinita del dispositivo
   const openMaps = () => {
     const address = "Via Sant'Agata 24, San Giovanni Rotondo, FG, Italy";
     const coordinates = "41.7060835,15.7188087";
@@ -848,8 +860,7 @@ export default function Page() {
                       </div>
                     </div>
                   )}
-                  
-                  {/* Error Fallback with Static Map */}
+                    {/* Error Fallback with Static Map */}
                   {mapError && (
                     <motion.div 
                       className="absolute inset-0 bg-gray-800 flex items-center justify-center cursor-pointer"
@@ -857,17 +868,31 @@ export default function Page() {
                       whileHover={{ scale: 1.02 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="text-center p-8">
-                        <div className="text-6xl mb-4">🗺️</div>
-                        <h3 className="text-white text-xl font-bold mb-2">Visualizza Mappa</h3>
-                        <p className="text-gray-300 mb-4">Clicca per aprire la mappa interattiva</p>
-                        <div className="bg-amber-500 text-white px-6 py-2 rounded-full font-medium">
-                          Apri Google Maps
+                      {/* Prova a mostrare un'immagine statica della mappa */}
+                      <div className="relative w-full h-full">
+                        <img
+                          src="https://maps.googleapis.com/maps/api/staticmap?center=41.7060835,15.7188087&zoom=16&size=600x400&markers=color:red%7C41.7060835,15.7188087&key=AIzaSyDummy"
+                          alt="Mappa statica - Maskio Barber"
+                          className="w-full h-full object-cover opacity-75"
+                          onError={(e) => {
+                            // Se anche l'immagine statica fallisce, mostra il placeholder
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <div className="text-center p-8">
+                            <div className="text-6xl mb-4">🗺️</div>
+                            <h3 className="text-white text-xl font-bold mb-2">Visualizza Mappa</h3>
+                            <p className="text-gray-300 mb-4">Clicca per aprire la mappa interattiva</p>
+                            <div className="bg-amber-500 text-white px-6 py-2 rounded-full font-medium">
+                              Apri Google Maps
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
-                  )}                  <iframe
-                    src="https://maps.google.com/maps?width=100%25&height=600&hl=it&q=Via%20Sant'Agata%2024,%20San%20Giovanni%20Rotondo,%20FG,%20Italy&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                  )}<iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3004.5!2d15.7188087!3d41.7060835!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDHCsDQyJzIyLjAiTiAxNcKwNDMnMDcuNyJF!5e0!3m2!1sit!2sit!4v1"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -876,8 +901,14 @@ export default function Page() {
                     referrerPolicy="no-referrer-when-downgrade"
                     title="Mappa Maskio Barber Concept - Via Sant'Agata 24, San Giovanni Rotondo"
                     className="filter hover:brightness-110 transition-all duration-300"
-                    onLoad={() => setMapLoaded(true)}
-                    onError={() => setMapError(true)}
+                    onLoad={() => {
+                      console.log('Mappa caricata con successo');
+                      setMapLoaded(true);
+                    }}
+                    onError={(e) => {
+                      console.error('Errore caricamento mappa:', e);
+                      setMapError(true);
+                    }}
                   />
                   
                   {/* Map Overlay for better interaction */}

@@ -40,7 +40,7 @@ RESEND_API_KEY=re_TUA_API_KEY_QUI
 FROM_EMAIL=noreply@maskiobarberconcept.it
 
 # Google Places (Reviews)
-GOOGLE_PLACES_API_KEY=AIzaSyAOOdE3XL7KAi63VnELGfTlj7cYU7ges_U
+GOOGLE_PLACES_API_KEY=your-google-places-api-key-here
 GOOGLE_PLACE_ID=ChIJJxigKx51NxMRN_cHtkuYN-M
 ```
 
