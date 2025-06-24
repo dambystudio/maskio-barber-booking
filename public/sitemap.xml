@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">  <url>
     <loc>https://maskiobarberconcept.it/</loc>
-    <lastmod>2025-06-05</lastmod>
+    <lastmod>2025-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>  <url>
     <loc>https://maskiobarberconcept.it/chi-siamo</loc>
-    <lastmod>2025-06-05</lastmod>
+    <lastmod>2025-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://maskiobarberconcept.it/servizi</loc>
-    <lastmod>2025-06-05</lastmod>
+    <lastmod>2025-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>  <url>
