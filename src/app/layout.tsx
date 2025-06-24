@@ -93,17 +93,16 @@ export default function RootLayout({
           <meta name="msapplication-TileColor" content="#000000" />
           <meta name="msapplication-tap-highlight" content="no" />
           <meta name="theme-color" content="#000000" />
-          
-          {/* Apple Touch Icons */}
-          <link rel="apple-touch-icon" href="/icone/nero/180x180.png" />
-          <link rel="apple-touch-icon" sizes="152x152" href="/icone/nero/180x180.png" />
-          <link rel="apple-touch-icon" sizes="180x180" href="/icone/nero/180x180.png" />
-          <link rel="apple-touch-icon" sizes="167x167" href="/icone/nero/180x180.png" />
+            {/* Apple Touch Icons */}
+          <link rel="apple-touch-icon" href="/icone/predefinita/180x180.png" />
+          <link rel="apple-touch-icon" sizes="152x152" href="/icone/predefinita/180x180.png" />
+          <link rel="apple-touch-icon" sizes="180x180" href="/icone/predefinita/180x180.png" />
+          <link rel="apple-touch-icon" sizes="167x167" href="/icone/predefinita/180x180.png" />
           
           {/* Favicon */}
-          <link rel="icon" type="image/png" sizes="32x32" href="/icone/nero/32x32.png" />
-          <link rel="icon" type="image/png" sizes="16x16" href="/icone/nero/16x16.png" />
-          <link rel="shortcut icon" href="/icone/nero/32x32.png" />
+          <link rel="icon" type="image/png" sizes="32x32" href="/icone/predefinita/32x32.png" />
+          <link rel="icon" type="image/png" sizes="16x16" href="/icone/predefinita/16x16.png" />
+          <link rel="shortcut icon" href="/icone/predefinita/32x32.png" />
         </head>
         <body className={inter.className}>
           <SessionProvider>

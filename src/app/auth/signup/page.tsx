@@ -98,13 +98,13 @@ export default function SignUp() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            password: formData.password,
-            phoneVerified: false, // Telefono inserito ma non verificato
-          }),
+        },        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          // NOTA: phoneVerified rimosso - telefono obbligatorio ma senza verifica SMS
+        }),
       });if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Errore durante la registrazione');

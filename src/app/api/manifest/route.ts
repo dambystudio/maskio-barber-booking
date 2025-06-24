@@ -6,8 +6,8 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const theme = url.searchParams.get('theme') || 'dark'; // default dark
   
-  // Scegli le icone in base al tema
-  const iconFolder = theme === 'light' ? 'nero' : 'bianco';
+  // Usa sempre le icone predefinite
+  const iconFolder = 'predefinita';
   
   const manifest = {
     "name": "Maskio Barber Concept",

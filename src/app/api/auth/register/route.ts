@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, password, phoneVerified } = await request.json();
+    const { name, email, phone, password } = await request.json();
 
     // Validation dei campi obbligatori
     if (!name || name.trim().length < 2) {
@@ -42,9 +42,7 @@ export async function POST(request: NextRequest) {
         { error: 'Formato email non valido' },
         { status: 400 }
       );
-    }
-
-    // Validation formato telefono - solo numeri italiani (+39)
+    }    // Validation formato telefono - solo numeri italiani (+39)
     const phoneRegex = /^(\+39|0039|39)?[\s]?3[0-9]{2}[\s]?[0-9]{3}[\s]?[0-9]{3,4}$/;
     if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
       return NextResponse.json(
@@ -53,13 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verifica che il telefono sia stato verificato (tranne per Google OAuth)
-    if (!phoneVerified) {
-      return NextResponse.json(
-        { error: 'Il numero di telefono deve essere verificato prima della registrazione' },
-        { status: 400 }
-      );
-    }    // Normalizza il numero di telefono per assicurarsi che abbia il prefisso +39
+    // NOTA: Verifica telefono rimossa - Il telefono è obbligatorio ma non serve verifica SMS// Normalizza il numero di telefono per assicurarsi che abbia il prefisso +39
     const normalizePhoneNumber = (phone: string) => {
       const cleaned = phone.replace(/\s/g, '');
       if (cleaned.startsWith('39') && !cleaned.startsWith('+39')) {

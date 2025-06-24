@@ -25,10 +25,9 @@ export default function DynamicManifest() {
       // Aggiorna anche le favicon dinamicamente
       updateFavicons(theme);
     };
-    
-    // Funzione per aggiornare le favicon
+      // Funzione per aggiornare le favicon
     const updateFavicons = (theme: string) => {
-      const iconFolder = theme === 'light' ? 'nero' : 'bianco';
+      const iconFolder = 'predefinita'; // Usa sempre le icone predefinite
       
       // Aggiorna favicon 16x16
       let favicon16 = document.querySelector('link[rel="icon"][sizes="16x16"]') as HTMLLinkElement;
@@ -48,7 +47,7 @@ export default function DynamicManifest() {
         appleTouchIcon.href = `/icone/${iconFolder}/180x180.png`;
       }
       
-      console.log(`🍎 Favicons updated for ${theme} theme (${iconFolder})`);
+      console.log(`🍎 Favicons updated to use predefinita folder`);
     };
     
     // Aggiorna immediatamente
