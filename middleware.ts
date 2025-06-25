@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Handle sitemap.xml specifically
+  const userAgent = request.headers.get('user-agent') || ''
+  
+  // Handle sitemap.xml specifically with bot-friendly response
   if (request.nextUrl.pathname === '/sitemap.xml') {
     const baseUrl = 'https://maskiobarberconcept.it';
     const currentDate = new Date().toISOString().split('T')[0];
@@ -101,16 +103,26 @@ export function middleware(request: NextRequest) {
   </url>
 </urlset>`;
 
-    return new NextResponse(sitemap, {
-      headers: {
-        'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-        'Access-Control-Allow-Headers': '*',
-        'X-Robots-Tag': 'noindex',
-      },
-    });
+    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|slurp|duckduckbot/i.test(userAgent)
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+    }
+    
+    // Per i bot, aggiungiamo headers extra permissivi e rimuoviamo restrizioni
+    if (isBot) {
+      headers['User-Agent'] = 'allowed'
+      headers['X-Bot-Access'] = 'allowed'
+      // Non aggiungiamo X-Robots-Tag per i bot
+    } else {
+      headers['X-Robots-Tag'] = 'noindex'
+    }
+
+    return new NextResponse(sitemap, { headers });
   }
 
   return NextResponse.next();
