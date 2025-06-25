@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Temporarily disabled middleware to allow Googlebot access to sitemap
-// export function middleware(request: NextRequest) {
-//   // Let API routes handle their own logic, no interference
-//   return NextResponse.next();
-// }
+export function middleware(request: NextRequest) {
+  // For API routes, let them handle their own logic completely
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+  
+  // For other routes, continue normally
+  return NextResponse.next();
+}
 
-// export const config = {
-//   matcher: [
-//     // Exclude API routes completely
-//     '/((?!api/|_next/static|_next/image|favicon.ico).*)',
-//   ],
-// };
+export const config = {
+  matcher: [
+    // Only run on specific paths, completely exclude API routes
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+  ],
+};

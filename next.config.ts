@@ -48,7 +48,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https:; media-src 'self' https:; object-src 'none'; base-uri 'self';"
           },
           {
             key: 'Referrer-Policy',
@@ -76,6 +76,28 @@ const nextConfig: NextConfig = {
           }
         ]
       },
+      // Headers specifici per API routes - permettiamo accesso completo ai bot
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, HEAD, OPTIONS, POST, PUT, DELETE'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization, User-Agent'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600'
+          }
+        ]
+      },
       // Headers specifici per sitemap XML - permettiamo accesso a Google
       {
         source: '/sitemap.xml',
@@ -95,15 +117,6 @@ const nextConfig: NextConfig = {
           {
             key: 'Access-Control-Allow-Methods',
             value: 'GET, HEAD, OPTIONS'
-          },
-          {
-            key: 'X-Robots-Tag',
-            value: 'noindex'
-          },
-          // Rimuoviamo CSP restrittivo per sitemap
-          {
-            key: 'Content-Security-Policy',
-            value: ''
           }
         ]
       },
