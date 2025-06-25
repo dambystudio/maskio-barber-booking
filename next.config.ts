@@ -99,6 +99,32 @@ const nextConfig: NextConfig = {
           {
             key: 'X-Robots-Tag',
             value: 'noindex'
+          },
+          // Rimuoviamo CSP restrittivo per sitemap
+          {
+            key: 'Content-Security-Policy',
+            value: ''
+          }
+        ]
+      },
+      // Headers permissivi per tutti i bot di ricerca
+      {
+        source: '/(.*)',
+        has: [
+          {
+            type: 'header',
+            key: 'user-agent',
+            value: '.*(bot|crawler|spider|crawling).*'
+          }
+        ],
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods', 
+            value: 'GET, HEAD, OPTIONS'
           }
         ]
       }
