@@ -75,6 +75,32 @@ const nextConfig: NextConfig = {
             value: '0'
           }
         ]
+      },
+      // Headers specifici per sitemap XML - permettiamo accesso a Google
+      {
+        source: '/sitemap.xml',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/xml; charset=utf-8'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=43200'
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, HEAD, OPTIONS'
+          },
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex'
+          }
+        ]
       }
     ];
   }

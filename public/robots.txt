@@ -4,5 +4,6 @@ Disallow: /pannello-prenotazioni/
 Disallow: /auth/
 Disallow: /api/
 
-# Sitemap
+# Sitemap (multiple formats for compatibility)
 Sitemap: https://maskiobarberconcept.it/sitemap.xml
+Sitemap: https://maskiobarberconcept.it/sitemap
