@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export async function GET() {
-  const baseUrl = 'https://maskiobarberconcept.it';
-  const currentDate = new Date().toISOString().split('T')[0];
-  
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+export function middleware(request: NextRequest) {
+  // Handle sitemap.xml specifically
+  if (request.nextUrl.pathname === '/sitemap.xml') {
+    const baseUrl = 'https://maskiobarberconcept.it';
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>${baseUrl}/</loc>
@@ -67,6 +70,18 @@ export async function GET() {
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>${baseUrl}/auth/signin</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/auth/signup</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>${baseUrl}/privacy-policy</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>yearly</changefreq>
@@ -86,14 +101,23 @@ export async function GET() {
   </url>
 </urlset>`;
 
-  return new NextResponse(sitemap, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=86400, stale-while-revalidate=43200',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+    return new NextResponse(sitemap, {
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+        'X-Robots-Tag': 'noindex',
+      },
+    });
+  }
+
+  return NextResponse.next();
 }
+
+export const config = {
+  matcher: [
+    '/sitemap.xml',
+  ],
+};
