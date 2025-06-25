@@ -1,17 +1,10 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  const userAgent = request.headers.get('user-agent') || ''
+export async function GET() {
+  const baseUrl = 'https://maskiobarberconcept.it';
+  const currentDate = new Date().toISOString().split('T')[0];
   
-  // Handle sitemap variations with bot-friendly response
-  if (request.nextUrl.pathname === '/sitemap.xml' || 
-      request.nextUrl.pathname === '/sitemaps.xml' ||
-      request.nextUrl.pathname === '/site-map.xml') {
-    const baseUrl = 'https://maskiobarberconcept.it';
-    const currentDate = new Date().toISOString().split('T')[0];
-    
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>${baseUrl}/</loc>
@@ -105,33 +98,13 @@ export function middleware(request: NextRequest) {
   </url>
 </urlset>`;
 
-    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|slurp|duckduckbot/i.test(userAgent)
-    
-    const headers: Record<string, string> = {
+  return new NextResponse(sitemap, {
+    headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600',
+      'Cache-Control': 'public, max-age=86400, stale-while-revalidate=43200',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-      'Access-Control-Allow-Headers': '*',
-    }
-    
-    // Per i bot, aggiungiamo headers extra permissivi e rimuoviamo restrizioni
-    if (isBot) {
-      headers['User-Agent'] = 'allowed'
-      headers['X-Bot-Access'] = 'allowed'
-      // Non aggiungiamo X-Robots-Tag per i bot
-    } else {
-      headers['X-Robots-Tag'] = 'noindex'
-    }
-
-    return new NextResponse(sitemap, { headers });
-  }
-
-  return NextResponse.next();
+      'X-Googlebot-Access': 'allowed',
+    },
+  });
 }
-
-export const config = {
-  matcher: [
-    '/sitemap.xml',
-  ],
-};
