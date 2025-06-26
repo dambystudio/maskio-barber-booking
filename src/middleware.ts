@@ -100,10 +100,34 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
 function detectSuspiciousActivity(request: NextRequest): boolean {
   // Temporarily disable aggressive bot detection for testing
   const userAgent = request.headers.get('user-agent') || '';
+  
+  // Allow legitimate search engines and crawlers
+  const allowedBots = [
+    /googlebot/i,
+    /bingbot/i,
+    /yandexbot/i,
+    /baiduspider/i,
+    /duckduckbot/i,
+    /yahoo.*slurp/i,
+    /facebookexternalhit/i,
+    /twitterbot/i,
+    /applebot/i,
+    /msnbot/i,
+    /slackbot/i,
+  ];
+  
+  // Check if it's an allowed bot
+  for (const botPattern of allowedBots) {
+    if (botPattern.test(userAgent)) {
+      return false; // Allow these known good bots
+    }
+  }
+  
   // Allow playwright test runs
   if (userAgent.includes('Playwright')) {
     return false;
   }
+  
   const suspiciousPatterns = [
     /bot/i,
     /crawler/i,
@@ -125,12 +149,15 @@ function detectSuspiciousActivity(request: NextRequest): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Skip middleware for static files and images
+  // Skip middleware for static files, images, and SEO-critical files
   if (
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon.ico') ||
     pathname.startsWith('/api/_next/') ||
-    pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|css|js|woff|woff2|ttf|eot)$/)
+    pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|css|js|woff|woff2|ttf|eot)$/) ||
+    pathname === '/sitemap.xml' ||
+    pathname === '/robots.txt' ||
+    pathname.startsWith('/sitemap')
   ) {
     return NextResponse.next();
   }
