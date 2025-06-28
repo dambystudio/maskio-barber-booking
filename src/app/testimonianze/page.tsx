@@ -105,12 +105,15 @@ export default function TestimonianzePage() {
       try {
         const response = await fetch('/api/google-reviews');
         const data = await response.json();
+        console.log('Dati recensioni ricevuti:', data);
           if (data.reviews && data.reviews.length > 0) {
+          console.log('Recensioni caricate:', data.reviews.length);
           setReviews(data.reviews);
           setAverageRating(data.averageRating || 0);
           setIsDemo(data.isDemo || false);
           setMessage(data.message || null);
         } else {
+          console.log('Nessuna recensione trovata, uso mock data');
           // Fallback ai dati mock se non ci sono recensioni
           setReviews(mockReviews);
           const avg = mockReviews.reduce((sum, review) => sum + review.rating, 0) / mockReviews.length;
@@ -279,6 +282,8 @@ export default function TestimonianzePage() {
       </motion.section>
 
       {/* Reviews Section */}
+      {/* Log dello stato delle recensioni */}
+      {(() => { console.log('Stato reviews durante render:', reviews); return null; })()}
       <motion.section 
         className="py-20 bg-gradient-to-br from-black to-gray-900"
         initial="hidden"
@@ -297,15 +302,25 @@ export default function TestimonianzePage() {
               <p className="mt-4 text-gray-300">Caricamento recensioni...</p>
             </div>          ) : (
             <div className="relative">
+              {/* Debug Banner */}
+              <div className="bg-amber-500 text-black p-2 mb-4 rounded text-center">
+                Recensioni caricate: {reviews.length} - {isDemo ? 'Demo' : 'Reali'}
+                {message && <div className="text-sm mt-1">{message}</div>}
+              </div>
               {/* Reviews Grid */}
+              {(() => { console.log('Rendering grid, reviews count:', reviews.length); return null; })()}
               <motion.div 
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative"
-                variants={staggerContainer}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               >
                 {reviews.map((review, index) => (
                   <motion.div
                     key={review.id}
-                    variants={cardVariant}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
                     className={`bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 hover:from-white/15 hover:to-white/10 transition-all duration-300 cursor-pointer ${
                       !showAllReviews && index >= 3 
                         ? 'filter blur-sm opacity-50 pointer-events-none' 
@@ -316,7 +331,6 @@ export default function TestimonianzePage() {
                       scale: 1.02,
                       boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)"
                     }}
-                    transition={{ duration: 0.3 }}
                   >
                     {/* ...existing code... */}
                     {/* Header with profile and rating */}
