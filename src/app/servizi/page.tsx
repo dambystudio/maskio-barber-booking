@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import BookingButton from '../../components/BookingButton';
-import { barbersFromData } from '../../data/booking'; // Import barbersFromData
+import { barbersFromData } from '../../data/booking';
 
 export default function Servizi() {
   // Animation variants
@@ -53,6 +53,7 @@ export default function Servizi() {
       transition: { duration: 0.6, ease: "easeOut" }
     }
   };
+
   return (
     <main className="relative min-h-screen pt-24 pb-16 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -72,14 +73,16 @@ export default function Servizi() {
 
         {/* Barbers Comparison */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-          {barbersFromData.map((barber, index) => ( // Use barbersFromData
+          {barbersFromData.map((barber, index) => (
             <motion.div
-              key={barber.id}              initial="hidden"
+              key={barber.id}
+              initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}
               variants={index === 0 ? fadeInLeft : fadeInRight}
               className="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden"
-            >              {/* Barber Header */}
+            >
+              {/* Barber Header */}
               <div className="relative h-64 bg-gradient-to-br from-black to-gray-900">
                 <Image
                   src={barber.image}
@@ -104,7 +107,8 @@ export default function Servizi() {
                   <motion.div 
                     className="flex flex-wrap gap-2 mt-3"
                     variants={staggerContainer}
-                  >                    {(typeof barber.specialties === 'string' 
+                  >
+                    {(typeof barber.specialties === 'string' 
                       ? JSON.parse(barber.specialties) 
                       : barber.specialties || []
                     ).map((specialty: string, idx: number) => (
@@ -121,7 +125,8 @@ export default function Servizi() {
               </div>
 
               {/* Services List */}
-              <div className="p-6">                <motion.h3 
+              <div className="p-6">
+                <motion.h3 
                   className="text-xl font-bold mb-4 text-white"
                   variants={fadeInUp}
                 >
@@ -131,12 +136,14 @@ export default function Servizi() {
                   className="space-y-4"
                   variants={staggerContainer}
                 >
-                  {(barber.availableServices || []).map((service) => ( // Add null check for availableServices
-                    <motion.div                      key={service.id}
+                  {(barber.availableServices || []).map((service) => (
+                    <motion.div
+                      key={service.id}
                       variants={scaleIn}
                       whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
                       className="border border-gray-700 bg-gray-800/50 rounded-lg p-4 hover:shadow-md hover:border-gray-600 transition-all"
-                    >                      <div className="flex justify-between items-start mb-2">
+                    >
+                      <div className="flex justify-between items-start mb-2">
                         <h4 className="font-semibold text-white">{service.name}</h4>
                         <span className="text-2xl font-bold text-yellow-400">
                           {service.price === 0 ? '-' : `€${service.price}`}
@@ -152,14 +159,17 @@ export default function Servizi() {
                     </motion.div>
                   ))}
                 </motion.div>
-              </div>              {/* CTA Button */}
+              </div>
+              
+              {/* CTA Button */}
               <div className="px-6 pb-6">
                 <motion.div
                   variants={scaleIn}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="relative z-10"
-                >                  <BookingButton 
+                >
+                  <BookingButton 
                     disableAnimation={true}
                     className="w-full bg-black hover:bg-gray-900 border border-yellow-400 text-yellow-400 hover:text-black hover:bg-yellow-400 font-semibold py-3 px-6 rounded-lg transition-colors relative z-10 opacity-100 visible">
                     Prenota con {barber.name}
@@ -174,7 +184,8 @@ export default function Servizi() {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}          variants={fadeInUp}
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeInUp}
           className="text-center bg-gray-900 border border-gray-800 rounded-2xl shadow-xl p-12"
         >
           <h2 className="text-3xl font-bold mb-4 text-white">

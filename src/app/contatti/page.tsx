@@ -37,12 +37,14 @@ export default function Page() {
           >
             Contattaci
           </motion.h1>
-            <motion.div 
+          
+          <motion.div 
             className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"
             variants={staggerContainer}
             initial="initial"
             animate="animate"
-          >            {/* Phone */}
+          >
+            {/* Phone */}
             <motion.a 
               href="tel:+393317100730"
               className="bg-gray-900 border border-gray-800 p-6 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors duration-200 block"
@@ -52,7 +54,9 @@ export default function Page() {
               <h3 className="text-lg font-semibold text-white mb-2">📞 Telefono</h3>
               <p className="text-gray-300">+39 331 710 0730</p>
               <p className="text-sm text-yellow-400 mt-2">Tocca per chiamare</p>
-            </motion.a>            {/* Email */}
+            </motion.a>
+            
+            {/* Email */}
             <motion.a 
               href="mailto:fabio.cassano97@icloud.com"
               className="bg-gray-900 border border-gray-800 p-6 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors duration-200 block"
@@ -64,7 +68,8 @@ export default function Page() {
               <p className="text-sm text-yellow-400 mt-2">Tocca per scrivere</p>
             </motion.a>
 
-            {/* Address */}            <motion.a 
+            {/* Address */}
+            <motion.a 
               href="https://maps.google.com/?q=Via+Sant'Agata+24+San+Giovanni+Rotondo+FG"
               target="_blank"
               rel="noopener noreferrer"
@@ -75,7 +80,8 @@ export default function Page() {
               <h3 className="text-lg font-semibold text-white mb-2">📍 Indirizzo</h3>
               <p className="text-gray-300">Via Sant'Agata, 24<br />San Giovanni Rotondo (FG) 71013</p>
               <p className="text-sm text-yellow-400 mt-2">Tocca per navigare</p>
-            </motion.a></motion.div>
+            </motion.a>
+          </motion.div>
 
           {/* Quick Actions */}
           <motion.div 
@@ -83,7 +89,8 @@ export default function Page() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-          >            <motion.a
+          >
+            <motion.a
               href="tel:+393317100730"
               className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
@@ -100,7 +107,8 @@ export default function Page() {
               whileTap={{ scale: 0.95 }}
             >
               💬 WhatsApp
-            </motion.a>            <motion.a
+            </motion.a>
+            <motion.a
               href="mailto:fabio.cassano97@icloud.com"
               className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
@@ -116,7 +124,8 @@ export default function Page() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          >            <motion.h2 
+          >
+            <motion.h2 
               className="text-2xl font-semibold text-white mb-6"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -134,7 +143,8 @@ export default function Page() {
                 boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
                 transition: { duration: 0.3 }
               }}
-            >              <div className="grid grid-cols-2 gap-4">
+            >
+              <div className="grid grid-cols-2 gap-4">
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -161,7 +171,8 @@ export default function Page() {
                   <h3 className="font-medium text-white">Domenica</h3>
                   <p className="text-red-400">Chiuso</p>
                 </motion.div>
-              </div></motion.div>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Call to Action */}

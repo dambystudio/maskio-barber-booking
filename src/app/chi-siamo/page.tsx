@@ -56,7 +56,8 @@ export default function ChiSiamo() {
           transition={{ duration: 1.5, delay: 0.5 }}
           className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-tr from-amber-500/5 to-amber-600/3 rounded-full blur-3xl"
         />
-        <motion.div          initial={{ opacity: 0 }}
+        <motion.div
+          initial={{ opacity: 0 }}
           animate={{ opacity: 0.15 }}
           transition={{ duration: 1.5, delay: 0.7 }}
           className="absolute bottom-1/3 left-1/5 w-80 h-80 bg-gradient-to-tl from-orange-400/5 to-amber-300/3 rounded-full blur-3xl"
@@ -70,7 +71,8 @@ export default function ChiSiamo() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-center mb-20"
-        >          <div className="relative inline-block mb-3">
+        >
+          <div className="relative inline-block mb-3">
             <motion.span
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
@@ -123,7 +125,9 @@ export default function ChiSiamo() {
           >
             <div className="h-1 w-24 bg-gradient-to-r from-amber-500/60 to-transparent rounded-full" />
           </motion.div>
-        </motion.div>        <div className="grid md:grid-cols-2 gap-16 items-center mb-28">
+        </motion.div>
+
+        <div className="grid md:grid-cols-2 gap-16 items-center mb-28">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -156,7 +160,8 @@ export default function ChiSiamo() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
                 className="absolute inset-0 h-full w-full"
-              >                <Image
+              >
+                <Image
                   src="/fotoBarbieri_dietro.jpg"
                   alt="Il nostro salone"
                   fill
@@ -164,8 +169,6 @@ export default function ChiSiamo() {
                   sizes="(max-width: 768px) 100vw, 50vw"
                   priority
                   quality={85}
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
                 />
               </motion.div>
               
@@ -248,7 +251,9 @@ export default function ChiSiamo() {
               className="h-[2px] bg-gradient-to-r from-amber-500/80 to-amber-500/0 ml-auto"
             />
           </motion.div>
-        </div>        <motion.h2 
+        </div>
+
+        <motion.h2 
           className="text-center text-3xl font-semibold text-white mb-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -412,7 +417,7 @@ export default function ChiSiamo() {
           <div className="inline-block">
             <div className="relative px-6 py-3 border border-amber-500/30 rounded-md overflow-hidden group cursor-pointer">
               <div className="absolute inset-0 w-0 bg-gradient-to-r from-amber-500/20 to-amber-500/10 transition-all duration-500 ease-out group-hover:w-full"></div>
-              <span className="relative text-amber-400 text-sm tracking-widest uppercase">Contattaci</span>
+              <a href="/contatti" className="relative text-amber-400 text-sm tracking-widest uppercase">Contattaci</a>
             </div>
           </div>
         </motion.div>

@@ -20,7 +20,7 @@ import JsonLdScript from '../components/JsonLdScript';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://maskiobarberconcept.it'),
+  metadataBase: new URL('https://www.maskiobarberconcept.it'),
   title: {
     default: 'Maskio Barber Concept | Barbiere a San Giovanni Rotondo',
     template: '%s | Maskio Barber Concept'
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'it_IT',
-    url: 'https://maskiobarberconcept.it',
+    url: 'https://www.maskiobarberconcept.it',
     siteName: 'Maskio Barber Concept',
     title: 'Maskio Barber Concept | Barbiere Professionale a San Giovanni Rotondo',
     description: 'Scopri una nuova concezione del barbiere: tagli moderni, trattamenti barba professionali, atmosfera accogliente. Prenota online il tuo appuntamento.',
@@ -96,20 +96,17 @@ export const metadata: Metadata = {
   
   // Canonical URL per prevenire contenuti duplicati
   alternates: {
-    canonical: 'https://maskiobarberconcept.it',
+    canonical: 'https://www.maskiobarberconcept.it',
   },
   
-  // Security and caching headers
+  // Security headers (rimossi i cache headers troppo restrittivi)
   other: {
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
     'X-XSS-Protection': '1; mode=block',
     'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
-    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()'
   },
 };
 

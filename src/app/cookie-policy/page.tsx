@@ -1,8 +1,19 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy | Maskio Barber',
-  description: 'Informativa sui cookie utilizzati dal sito Maskio Barber',
+  title: 'Cookie Policy',
+  description: 'Informativa sui cookie utilizzati dal sito Maskio Barber Concept. Scopri come utilizziamo i cookie per migliorare la tua esperienza.',
+  keywords: ['cookie policy', 'privacy', 'maskio barber', 'informativa cookie'],
+  openGraph: {
+    title: 'Cookie Policy | Maskio Barber Concept',
+    description: 'Informativa sui cookie utilizzati dal sito Maskio Barber Concept.',
+    type: 'website',
+    locale: 'it_IT',
+    url: 'https://www.maskiobarberconcept.it/cookie-policy',
+  },
+  alternates: {
+    canonical: 'https://www.maskiobarberconcept.it/cookie-policy',
+  }
 };
 
 export default function CookiePolicy() {

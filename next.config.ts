@@ -24,6 +24,23 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['framer-motion', 'next-auth'],
   },
   
+  // Redirect da non-www a www
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'maskiobarberconcept.it',
+          },
+        ],
+        destination: 'https://www.maskiobarberconcept.it/:path*',
+        permanent: true,
+      },
+    ];
+  },
+  
   // Header di sicurezza avanzati
   async headers() {
     return [
@@ -62,17 +79,16 @@ const nextConfig: NextConfig = {
             key: 'X-DNS-Prefetch-Control',
             value: 'off'
           },
+          // Rimuovo i cache headers troppo restrittivi per le pagine normali
+        ]
+      },
+      // Headers specifici per pagine statiche - permettiamo caching per SEO
+      {
+        source: '/:path((?!api|_next|pannello-prenotazioni|auth).*)',
+        headers: [
           {
             key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate, proxy-revalidate'
-          },
-          {
-            key: 'Pragma',
-            value: 'no-cache'
-          },
-          {
-            key: 'Expires',
-            value: '0'
+            value: 'public, max-age=3600, stale-while-revalidate=86400'
           }
         ]
       },

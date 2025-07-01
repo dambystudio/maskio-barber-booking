@@ -3,6 +3,7 @@ Allow: /
 Disallow: /pannello-prenotazioni/
 Disallow: /auth/
 Disallow: /api/
+Crawl-delay: 1
 
-# Sitemap principale
-Sitemap: https://maskiobarberconcept.it/sitemap.xml
+# Sitemap principale con www
+Sitemap: https://www.maskiobarberconcept.it/sitemap.xml
