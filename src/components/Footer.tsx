@@ -141,9 +141,22 @@ export default function Footer() {
         {/* Divider */}
         <div className="border-t border-gray-800 mt-8 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} Maskio Barber Concept. Tutti i diritti riservati.
-            </p>            <div className="flex space-x-6 text-sm">
+            <div className="flex flex-col items-center md:items-start space-y-2">
+              <p className="text-gray-400 text-sm">
+                &copy; {new Date().getFullYear()} Maskio Barber Concept. Tutti i diritti riservati.
+              </p>
+              <p className="text-gray-500 text-xs">
+                Sito realizzato da{' '}
+                <a 
+                  href="https://linktr.ee/dambystudio" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-amber-400 hover:text-amber-300 transition-colors font-medium"
+                >
+                  dambystudio
+                </a>
+              </p>
+            </div>            <div className="flex space-x-6 text-sm">
               <Link href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">
                 Privacy Policy
               </Link>

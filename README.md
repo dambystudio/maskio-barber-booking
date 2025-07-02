@@ -21,10 +21,11 @@
 
 ---
 
-## 👨‍💻 Autore
+## 👨‍💻 Sviluppatore
 
-**Davide D'Ambrosio** - Sviluppatore Full Stack  
-📧 Contatti: davide431@outlook.it
+**dambystudio** - Web Development Studio  
+🌐 Portfolio: [https://linktr.ee/dambystudio](https://linktr.ee/dambystudio)  
+📧 Contatti: dambystudio@gmail.com
 
 ---
 
@@ -33,7 +34,7 @@
 Questo progetto è rilasciato sotto licenza **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**.
 
 - **🚫 Non commerciale**: Non puoi utilizzare il codice per scopi commerciali senza permesso
-- **👤 Attribuzione**: Devi sempre citare l'autore (Davide D'Ambrosio)
+- **👤 Attribuzione**: Devi sempre citare l'autore (dambystudio)
 - **🔄 Stessa licenza**: Le modifiche devono mantenere la stessa licenza
 
 Per dettagli completi, vedi il file [LICENSE](LICENSE) e [COPYRIGHT.md](COPYRIGHT.md).

@@ -106,7 +106,8 @@ export const metadata: Metadata = {
     'X-XSS-Protection': '1; mode=block',
     'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()'
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+    'developer': 'dambystudio - https://linktr.ee/dambystudio'
   },
 };
 
@@ -131,7 +132,11 @@ export default function RootLayout({
           <meta name="msapplication-TileColor" content="#000000" />
           <meta name="msapplication-tap-highlight" content="no" />
           <meta name="theme-color" content="#000000" />
-            {/* Apple Touch Icons */}
+          
+          {/* Developer Attribution */}
+          <meta name="developer" content="dambystudio - https://linktr.ee/dambystudio" />
+          
+          {/* Apple Touch Icons */}
           <link rel="apple-touch-icon" href="/icone/predefinita/180x180.png" />
           <link rel="apple-touch-icon" sizes="152x152" href="/icone/predefinita/180x180.png" />
           <link rel="apple-touch-icon" sizes="180x180" href="/icone/predefinita/180x180.png" />
