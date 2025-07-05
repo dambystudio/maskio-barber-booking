@@ -461,11 +461,23 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
     
-    let lastMonth = today.getMonth();
+    // Determina la data di partenza
+    const currentYear = today.getFullYear();
+    const september1st = new Date(currentYear, 8, 1); // 8 = September (0-indexed)
+    september1st.setHours(0, 0, 0, 0);
+    
+    // Se siamo prima del 1 settembre, parti dal 1 settembre
+    // Altrimenti parti da oggi
+    const startDate = today < september1st ? september1st : today;
+    
+    let lastMonth = startDate.getMonth();
+    
+    // Calcola la differenza in giorni tra oggi e la data di partenza
+    const daysDifference = Math.floor((startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     for (let i = 0; i < 60; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
       
       // Check if we've moved to a new month and add a month separator
       if (date.getMonth() !== lastMonth && i > 0) {
@@ -480,11 +492,12 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         
       const dayNames = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
       const monthNames = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC'];
-      const isToday = i === 0;
+      // isToday è true solo se la data corrente è effettivamente oggi
+      const isToday = date.toDateString() === today.toDateString();
       
-      // Calculate proper week boundaries based on today's date
-      const todayDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      const daysUntilNextWeek = 7 - todayDayOfWeek; // Days until next Monday
+      // Calculate proper week boundaries based on start date
+      const startDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysUntilNextWeek = 7 - startDayOfWeek; // Days until next Monday
       const isNextWeek = i >= daysUntilNextWeek && i < (daysUntilNextWeek + 7);
       const isNextMonth = i >= 30;
       

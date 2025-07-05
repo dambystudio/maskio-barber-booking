@@ -816,10 +816,20 @@ Grazie! 😊`;
   const generateDates = () => {
     const dates = [];
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    // Aggiungi 30 giorni a partire da oggi
+    // Determina la data di partenza
+    const currentYear = today.getFullYear();
+    const september1st = new Date(currentYear, 8, 1); // 8 = September (0-indexed)
+    september1st.setHours(0, 0, 0, 0);
+    
+    // Se siamo prima del 1 settembre, parti dal 1 settembre
+    // Altrimenti parti da oggi
+    const startDate = today < september1st ? september1st : today;
+    
+    // Aggiungi 30 giorni a partire dalla data di partenza
     for (let i = 0; i < 30; i++) {
-      dates.push(addDays(today, i));
+      dates.push(addDays(startDate, i));
     }
     return dates;
   };

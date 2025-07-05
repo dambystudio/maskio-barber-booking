@@ -237,7 +237,7 @@ export default function PrivacyPolicy() {
                 </p>
                 <div className="space-y-2 text-amber-700">
                   <p><strong>Email:</strong> fabio.cassano97@icloud.com</p>
-                  <p><strong>Telefono:</strong> +39 XXX XXX XXXX</p>
+                  <p><strong>Telefono:</strong> +39 331 710 0730</p>
                   <p><strong>Indirizzo:</strong> Via Sant'Agata, 24 - 71013 San Giovanni Rotondo (FG)</p>
                 </div>
               </div>

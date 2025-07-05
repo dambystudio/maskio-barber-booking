@@ -2,13 +2,15 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import BookingForm from '../../components/BookingForm';
+import BookingNotificationModal from '../../components/BookingNotificationModal';
 import { motion } from 'framer-motion';
 
 export default function Page() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   useEffect(() => {
     if (status === 'loading') return; // Still loading
@@ -17,7 +19,15 @@ export default function Page() {
       router.push('/auth/signin?callbackUrl=' + encodeURIComponent('/prenota'));
       return;
     }
-  }, [session, status, router]);  // Show loading while checking auth
+
+    // Controlla se il modal è già stato mostrato
+    const hasSeenNotification = localStorage.getItem('maskio-booking-notification-dismissed');
+    if (!hasSeenNotification) {
+      setShowNotificationModal(true);
+    }
+  }, [session, status, router]);
+
+  // Show loading while checking auth
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -50,8 +60,14 @@ export default function Page() {
             Scegli il servizio perfetto per te e prenota con il nostro team di professionisti
           </p>
         </motion.div>
-          <BookingForm userSession={session} />
+        <BookingForm userSession={session} />
       </div>
+
+      {/* Modal di notifica */}
+      <BookingNotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+      />
     </div>
   );
 }
