@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService } from '@/lib/database';
-import { isDateClosed, getClosureSettings } from '../../closure-settings/route';
+import { isDateClosed, getClosureSettings } from '@/lib/closure-utils';
 import { isBarberClosed } from '@/lib/barber-closures';
 
 interface TimeSlot {

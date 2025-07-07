@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService } from '@/lib/database';
-import { isDateClosed } from '../../closure-settings/route';
+import { isDateClosed } from '@/lib/closure-utils';
 import { getBarberRecurringClosures, getBarberClosures } from '@/lib/barber-closures';
 
 interface BatchAvailabilityRequest {
@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
 
     // Carica le impostazioni di chiusura generale una sola volta
     console.log('🔄 Loading general closure settings...');
-    const { getClosureSettings } = await import('../../closure-settings/route');
-    requestCache.closureSettings = await getClosureSettings();
+          const { getClosureSettings } = await import('@/lib/closure-utils');
+      requestCache.closureSettings = await getClosureSettings();
     console.log('✅ Loaded general closure settings:', requestCache.closureSettings);
 
     // Carica le chiusure ricorrenti del barbiere una sola volta
