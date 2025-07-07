@@ -28,10 +28,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // Generate all possible time slots for the day
-    const allTimeSlots = await generateAllTimeSlots(date);
-    
-    // Get available slots from database
+    // Get available slots from database (ora include la logica di generazione automatica)
     const availableSlotTimes = await DatabaseService.getAvailableSlots(barberId, date);
     
     // Ottieni l'email del barbiere dal database
@@ -41,7 +38,10 @@ export async function GET(request: NextRequest) {
     // Create TimeSlot objects with availability status, considerando le chiusure specifiche del barbiere
     const timeSlots: TimeSlot[] = [];
     
-    for (const time of allTimeSlots) {
+    // Generate all possible time slots for comparison
+    const allPossibleSlots = generateAllTimeSlots(date);
+    
+    for (const time of allPossibleSlots) {
       let available = availableSlotTimes.includes(time);
       
       // Controlla se il barbiere è chiuso per questo orario specifico
@@ -69,15 +69,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function generateAllTimeSlots(dateString: string): Promise<string[]> {
+// Manteniamo questa funzione per generare tutti gli slot possibili per il confronto
+function generateAllTimeSlots(dateString: string): string[] {
   const slots: string[] = [];
   const date = new Date(dateString);
   const dayOfWeek = date.getDay();
   
-  // Verifica se il giorno è chiuso secondo le impostazioni di chiusura
-  const dateIsClosed = await isDateClosed(dateString);
-  if (dateIsClosed) {
-    return slots; // Ritorna array vuoto se il giorno è chiuso
+  // Skip domenica (0) - giorno di chiusura standard
+  if (dayOfWeek === 0) {
+    return slots;
   }
 
   // Saturday has same hours as weekdays (9:00-12:30, 15:00-17:30)

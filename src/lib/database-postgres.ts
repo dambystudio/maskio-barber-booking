@@ -215,28 +215,92 @@ export class DatabaseService {
 
   static async getAvailableSlots(barberId: string, date: string): Promise<string[]> {
     const schedule = await this.getBarberSchedule(barberId, date);
-    if (!schedule || schedule.dayOff) {
+    
+    let availableSlots: string[] = [];
+    
+    if (schedule && !schedule.dayOff) {
+      // Se esiste un record specifico per questa data, usalo
+      try {
+        availableSlots = schedule.availableSlots ? JSON.parse(schedule.availableSlots) : [];
+        const unavailableSlots = schedule.unavailableSlots ? JSON.parse(schedule.unavailableSlots) : [];
+        
+        // Rimuovi gli slot non disponibili
+        availableSlots = availableSlots.filter((slot: string) => !unavailableSlots.includes(slot));
+      } catch (error) {
+        console.error('Error parsing schedule slots:', error);
+        availableSlots = [];
+      }
+    } else if (!schedule || (schedule && !schedule.dayOff)) {
+      // Se non esiste un record specifico o il giorno non è marcato come libero,
+      // genera gli slot standard basandosi sugli orari di lavoro
+      availableSlots = this.generateStandardSlots(date);
+    } else {
+      // Il giorno è marcato come libero
       return [];
     }
 
-    try {
-      const availableSlots = schedule.availableSlots ? JSON.parse(schedule.availableSlots) : [];
-      const unavailableSlots = schedule.unavailableSlots ? JSON.parse(schedule.unavailableSlots) : [];
+    // Get booked slots for this date and barber
+    const bookings = await this.getBookingsByDate(date);
+    const bookedSlots = bookings
+      .filter(booking => booking.barberId === barberId && booking.status !== 'cancelled')
+      .map(booking => booking.time);
+
+    // Return available slots minus booked slots
+    return availableSlots.filter((slot: string) => !bookedSlots.includes(slot));
+  }
+
+  // Nuova funzione per generare gli slot standard
+  private static generateStandardSlots(dateString: string): string[] {
+    const slots: string[] = [];
+    const date = new Date(dateString);
+    const dayOfWeek = date.getDay();
+    
+    // Skip domenica (0) - giorno di chiusura standard
+    if (dayOfWeek === 0) {
+      return slots;
+    }
+
+    // Saturday has same hours as weekdays (9:00-12:30, 15:00-17:30)
+    if (dayOfWeek === 6) {
+      // Morning slots 9:00-12:30
+      for (let hour = 9; hour <= 12; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 12 && minute > 30) break;
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(timeString);
+        }
+      }
       
-      // Get booked slots for this date and barber
-      const bookings = await this.getBookingsByDate(date);
-      const bookedSlots = bookings
-        .filter(booking => booking.barberId === barberId && booking.status !== 'cancelled')
-        .map(booking => booking.time);
-
-      // Return available slots minus unavailable and booked slots
-      return availableSlots.filter((slot: string) => 
-        !unavailableSlots.includes(slot) && !bookedSlots.includes(slot)
-      );
-    } catch (error) {
-      console.error('Error parsing schedule slots:', error);
-      return [];
+      // Afternoon slots 15:00-17:30
+      for (let hour = 15; hour <= 17; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 17 && minute > 30) break;
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(timeString);
+        }
+      }
+      return slots;
     }
+
+    // Weekdays: Morning slots 9:00-12:30
+    for (let hour = 9; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 12 && minute > 30) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+    
+    // Weekdays: Afternoon slots 15:00-17:30
+    for (let hour = 15; hour <= 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 17 && minute > 30) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+    
+    return slots;
   }
 
   // === SERVICES MANAGEMENT ===
