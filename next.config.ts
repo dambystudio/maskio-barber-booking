@@ -8,9 +8,6 @@ const pwaConfig = {
   skipWaiting: true, // FORZA L'AGGIORNAMENTO IMMEDIATO
   disable: process.env.NODE_ENV === "development",
   reloadOnOnline: true, // Ricarica quando torna online
-  // Usa il service worker personalizzato
-  sw: '/sw.js',
-  swSrc: 'worker/index.ts',
   // Strategia di caching ottimizzata per aggiornamenti automatici
   runtimeCaching: [
     // Cache-First per risorse statiche (CSS, JS, immagini)
@@ -68,13 +65,6 @@ const pwaConfig = {
     },
   ],
   buildExcludes: [/middleware-manifest\.json$/],
-  // Forza il controllo degli aggiornamenti
-  clientsClaim: true,
-  // Precache delle risorse critiche
-  precacheAndRoute: [
-    { url: '/', revision: '1' },
-    { url: '/manifest.json', revision: '1' },
-  ],
 };
 
 const nextConfig: NextConfig = {
