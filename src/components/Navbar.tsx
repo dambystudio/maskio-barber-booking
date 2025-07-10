@@ -34,7 +34,7 @@ const navigation = [
 
 export default function Navbar() {
   const { data: session, status } = useSession();
-  const { isStandalone, isInstalled } = usePWA();
+  const { isStandalone } = usePWA();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');

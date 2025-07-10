@@ -5,8 +5,15 @@ import { useState, useEffect } from 'react';
 export const usePWA = () => {
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    // Controllo per la modalità standalone
+    if (typeof window !== 'undefined') {
+      const standalone = window.matchMedia('(display-mode: standalone)').matches;
+      setIsStandalone(standalone);
+    }
+
     // Assicurati che il codice venga eseguito solo nel browser
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
       return;
@@ -49,5 +56,5 @@ export const usePWA = () => {
     }
   };
 
-  return { isUpdateAvailable, handleUpdate };
+  return { isUpdateAvailable, handleUpdate, isStandalone };
 };
