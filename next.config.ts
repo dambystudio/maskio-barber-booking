@@ -1,4 +1,12 @@
 import type { NextConfig } from "next";
+import withPWA from "next-pwa";
+
+const pwaConfig = {
+  dest: "public",
+  register: true,
+  skipWaiting: false, // Fondamentale per la notifica di aggiornamento
+  disable: process.env.NODE_ENV === "development",
+};
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -161,4 +169,4 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default nextConfig;
+export default withPWA(pwaConfig)(nextConfig);
