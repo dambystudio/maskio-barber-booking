@@ -64,7 +64,7 @@ export default function Servizi() {
           variants={fadeInUp}
           className="text-center mb-16"
         >
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">I Nostri Serviz</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">I Nostri Servizi</h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Scopri i servizi personalizzati dei nostri esperti barbieri. Ogni professionista 
             ha le sue specialità per offrirti sempre il miglior risultato.
