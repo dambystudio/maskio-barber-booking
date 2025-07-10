@@ -4,12 +4,19 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, password } = await request.json();
+    const { firstName, lastName, email, phone, password } = await request.json();
 
     // Validation dei campi obbligatori
-    if (!name || name.trim().length < 2) {
+    if (!firstName || firstName.trim().length < 2) {
       return NextResponse.json(
         { error: 'Il nome deve essere di almeno 2 caratteri' },
+        { status: 400 }
+      );
+    }
+
+    if (!lastName || lastName.trim().length < 2) {
+      return NextResponse.json(
+        { error: 'Il cognome deve essere di almeno 2 caratteri' },
         { status: 400 }
       );
     }
@@ -87,7 +94,7 @@ export async function POST(request: NextRequest) {
     }// Hash password
     const hashedPassword = await bcrypt.hash(password, 12);    // Create user with normalized data
     const newUser = await DatabaseService.createUser({
-      name: name.trim(),
+      name: `${firstName.trim()} ${lastName.trim()}`,
       email: email.trim().toLowerCase(),
       phone: normalizedPhone,
       role: 'customer',

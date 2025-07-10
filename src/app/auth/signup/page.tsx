@@ -12,7 +12,8 @@ export default function SignUp() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     password: '',
@@ -44,8 +45,14 @@ export default function SignUp() {
     setError(null);
 
     // Client-side validation
-    if (!formData.name || formData.name.trim().length < 2) {
+    if (!formData.firstName || formData.firstName.trim().length < 2) {
       setError('Il nome deve essere di almeno 2 caratteri');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.lastName || formData.lastName.trim().length < 2) {
+      setError('Il cognome deve essere di almeno 2 caratteri');
       setLoading(false);
       return;
     }
@@ -99,7 +106,8 @@ export default function SignUp() {
         headers: {
           'Content-Type': 'application/json',
         },        body: JSON.stringify({
-          name: formData.name,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
@@ -223,18 +231,34 @@ export default function SignUp() {
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-              Nome completo <span className="text-red-400">*</span>
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
+              Nome <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
-              id="name"
+              id="firstName"
               required
               minLength={2}
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              value={formData.firstName}
+              onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
               className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder-gray-400"
-              placeholder="Mario Rossi"
+              placeholder="Mario"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
+              Cognome <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              required
+              minLength={2}
+              value={formData.lastName}
+              onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder-gray-400"
+              placeholder="Rossi"
             />
           </div>
 

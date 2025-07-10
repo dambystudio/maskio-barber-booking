@@ -115,7 +115,9 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {  return (      <html lang="it">
+}>) {  
+  return (      
+      <html lang="it">
         <head>
           <link rel="preload" as="video" href="/videoLoopCompresso.mp4" type="video/mp4" />
           <link rel="preload" as="image" href="/sediaOro.webp" />        
