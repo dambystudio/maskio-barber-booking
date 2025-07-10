@@ -21,6 +21,7 @@ interface UserBooking {
   created_at: string;
   notes?: string;
   service_price?: number;
+  customer_name?: string; // <-- CAMPO AGGIUNTO
 }
 
 type TabType = 'appointments' | 'profile' | 'account';
@@ -153,13 +154,41 @@ export default function AreaPersonale() {
   const { showPhoneModal, handlePhoneComplete, userEmail, userName } = usePhoneRequired();
 
   const fetchUserBookings = useCallback(async () => {
+    if (!session?.user?.id) return;
+
     try {
       setLoading(true);
-      const response = await fetch(`/api/bookings?userId=${session?.user?.id}`);
+
+      // --- LOGICA MODIFICATA ---
+      // Se l'utente è un barbiere, carica le prenotazioni in cui è il barbiere.
+      // Altrimenti, carica quelle in cui è il cliente.
+      const isBarberUser = session.user.role === 'barber';
+      const params = new URLSearchParams();
+
+      if (isBarberUser) {
+        // I barbieri vedono gli appuntamenti a loro assegnati
+        params.append('barberEmail', session.user.email);
+      } else {
+        // I clienti vedono gli appuntamenti prenotati da loro
+        params.append('userId', session.user.id);
+      }
+      
+      const response = await fetch(`/api/bookings?${params.toString()}`);
+      // --- FINE LOGICA MODIFICATA ---
+
       if (!response.ok) throw new Error('Errore nel caricamento delle prenotazioni');
       
       const data = await response.json();
-      setBookings(data.bookings || []);
+      
+      // La risposta dell'API include un campo customer_name, che usiamo per i barbieri
+      // e un campo barber_name, che usiamo per i clienti.
+      // L'interfaccia UserBooking può essere arricchita se necessario.
+      const bookingsData = data.bookings.map((b: UserBooking) => ({ // <-- TIPO AGGIUNTO
+        ...b,
+        customer_name: b.customer_name, // Assicuriamoci che il nome cliente sia presente
+      }));
+
+      setBookings(bookingsData || []);
     } catch (err) {
       setError('Impossibile caricare le prenotazioni');
       console.error('Error fetching bookings:', err);
@@ -277,15 +306,21 @@ export default function AreaPersonale() {
 
   if (!session) return null;
 
-  const upcomingBookings = bookings.filter(booking => 
+  // Ordina tutte le prenotazioni per data prima di filtrarle
+  const sortedBookings = [...bookings].sort((a, b) => 
+    new Date(`${a.booking_date}T${a.booking_time}`).getTime() - 
+    new Date(`${b.booking_date}T${b.booking_time}`).getTime()
+  );
+
+  const upcomingBookings = sortedBookings.filter(booking => 
     new Date(booking.booking_date + 'T' + booking.booking_time) > new Date() && 
     booking.status !== 'cancelled'
   );
   
-  const pastBookings = bookings.filter(booking => 
+  const pastBookings = sortedBookings.filter(booking => 
     new Date(booking.booking_date + 'T' + booking.booking_time) <= new Date() ||
     booking.status === 'cancelled'
-  );
+  ).reverse(); // .reverse() per avere il più recente in cima
 
   const tabVariants = {
     hidden: { opacity: 0, x: 20 },
@@ -402,72 +437,78 @@ export default function AreaPersonale() {
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {upcomingBookings.map((booking) => (
-                    <div key={booking.id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-                      <div className="flex flex-col space-y-3">
-                        <div className="flex justify-between items-start">
-                          <h3 className="text-lg font-bold text-white">{booking.service_name}</h3>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                            {getStatusText(booking.status)}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-300">
-                          <div className="flex items-center space-x-2">
-                            <span>👨‍💼</span>
-                            <span>{booking.barber_name}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span>🕐</span>
-                            <span>{booking.booking_time}</span>
-                          </div>
-                          <div className="flex items-center space-x-2 md:col-span-2">
-                            <span>📅</span>
-                            <span>{booking.booking_date ? format(parseISO(booking.booking_date), 'EEEE d MMMM yyyy', { locale: it }) : 'Data non disponibile'}</span>
-                          </div>
-                          {booking.notes && (
-                            <div className="flex items-center space-x-2 md:col-span-2">
-                              <span>📝</span>
-                              <span>{booking.notes}</span>
-                            </div>
-                          )}                        </div>
-                        {booking.status !== 'cancelled' && (
-                          <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                            {/* Pulsante WhatsApp */}
-                            {booking.barber_phone && (
-                              <a
-                                href={generateWhatsAppLink(
-                                  booking.barber_phone,
-                                  booking.barber_name,
-                                  booking.service_name,
-                                  booking.booking_date ? format(parseISO(booking.booking_date), 'dd/MM/yyyy', { locale: it }) : '',
-                                  booking.booking_time
-                                )}
-                                target="_blank"
-                                rel="noopener noreferrer"                                className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-4 py-2 rounded-lg transition duration-300 text-sm font-medium flex items-center justify-center space-x-2"
-                              >
-                                <span>�</span>
-                                <span>Contatta {booking.barber_name}</span>
-                              </a>
-                            )}
-                            
-                            {/* Pulsante Cancella */}
-                            {canCancelBooking(booking.booking_date, booking.booking_time) ? (
-                              <button
-                                onClick={() => handleCancelBooking(booking.id)}
-                                className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-4 py-2 rounded-lg transition duration-300 text-sm font-medium"
-                              >
-                                Cancella Prenotazione
-                              </button>
+                    <motion.div
+                      key={booking.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg overflow-hidden"
+                    >
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-xl font-bold text-white">{booking.service_name}</h3>
+                            {/* --- LOGICA DI VISUALIZZAZIONE MODIFICATA --- */}
+                            {isBarber ? (
+                              <p className="text-gray-300">Cliente: {booking.customer_name}</p>
                             ) : (
-                              <div className="text-xs text-gray-500 italic">
-                                ⚠️ Non è più possibile cancellare (meno di 48h dall'appuntamento)
-                              </div>
+                              <p className="text-gray-300">Barbiere: {booking.barber_name}</p>
                             )}
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(booking.status)}`}>
+                            {getStatusText(booking.status)}
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 text-gray-400">
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <span>{format(parseISO(booking.booking_date), 'EEEE d MMMM yyyy', { locale: it })}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span>Ore: {booking.booking_time}</span>
+                          </div>
+                          {booking.service_price && !isBarber && (
+                            <div className="flex items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                              <span>Prezzo: {booking.service_price.toFixed(2)} €</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {booking.status === 'confirmed' && !isBarber && (
+                          <div className="mt-6 pt-4 border-t border-gray-700 flex flex-col sm:flex-row gap-3">
+                              {canCancelBooking(booking.booking_date, booking.booking_time) ? (
+                                  <button
+                                      onClick={() => handleCancelBooking(booking.id)}
+                                      className="w-full bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                                  >
+                                      Cancella Prenotazione
+                                  </button>
+                              ) : (
+                                  <button
+                                      disabled
+                                      className="w-full bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed"
+                                      title="La cancellazione è disponibile fino a 48 ore prima dell'appuntamento."
+                                  >
+                                      Non cancellabile
+                                  </button>
+                              )}
+                            <a
+                              href={generateWhatsAppLink(booking.barber_phone || '', booking.barber_name, booking.service_name, booking.booking_date, booking.booking_time)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                            >
+                              Contatta su WhatsApp
+                            </a>
                           </div>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
