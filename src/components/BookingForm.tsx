@@ -36,9 +36,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
 
   const [formData, setFormData] = useState<BookingFormData>({
     selectedBarber: null,
-    selectedServices: [],
+    selectedService: null, // MODIFICATO: da selectedServices a selectedService (singolo)
     selectedDate: '',
-    selectedTime: '',    customerInfo: {
+    selectedTime: '',
+    customerInfo: {
       // If user can make bookings for others, start with empty fields for manual input
       name: canMakeBookingsForOthers ? '' : (userSession.user.name || ''),
       email: canMakeBookingsForOthers ? '' : (userSession.user.email || ''),
@@ -255,7 +256,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       setDisplayedServices(allServices);
     }
     // Reset selected services when barber changes or displayed services list changes
-    setFormData(prev => ({ ...prev, selectedServices: [] }));
+    setFormData(prev => ({ ...prev, selectedService: null }));
   }, [formData.selectedBarber, allServices]);
 
   // Load barber-specific recurring closures when barber changes
@@ -554,23 +555,11 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       selectedTime: '' // Reset time as well
     }));
   };
-  // Handle service selection (multiple services allowed)
-  const handleServiceToggle = (service: Service) => {
-    // Check if it's the special "altri-servizi" service
-    if (service.id === 'altri-servizi') {
-      // For "altri-servizi", show a message instead of allowing booking
-      alert('Per questo servizio contatta direttamente Maskio al numero: +39 331 710 0730');
-      return;
-    }
-    
-    setFormData(prev => {
-      const isSelected = prev.selectedServices.some(s => s.id === service.id);
-      const newServices = isSelected
-        ? prev.selectedServices.filter(s => s.id !== service.id)
-        : [...prev.selectedServices, service];
-      
-      return { ...prev, selectedServices: newServices };
-    });
+  const handleServiceChange = (service: Service) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedService: service, // Imposta direttamente il servizio selezionato
+    }));
   };
   // Handle date selection and generate time slots
   const handleDateChange = async (date: string) => {
@@ -595,8 +584,8 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   };
 
   // Calculate total duration and price
-  const totalDuration = formData.selectedServices.reduce((total, service) => total + service.duration, 0);
-  const totalPrice = formData.selectedServices.reduce((total, service) => total + service.price, 0);
+  const totalDuration = formData.selectedService?.duration || 0;
+  const totalPrice = formData.selectedService?.price || 0;
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -620,8 +609,8 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       }const bookingPayload = {
         userId: userId,
         barberId: formData.selectedBarber!.id,
-        serviceIds: formData.selectedServices.map(s => s.id), // Keep for API compatibility
-        services: formData.selectedServices, // Add for type compatibility
+        serviceIds: formData.selectedService?.id ? [formData.selectedService.id] : [], // Keep for API compatibility
+        services: formData.selectedService ? [formData.selectedService] : [], // Add for type compatibility
         duration: totalDuration, // Add for type compatibility
         customerInfo: formData.customerInfo,
         date: formData.selectedDate,
@@ -641,18 +630,18 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         currency: 'EUR',
         value: totalPrice,
         transaction_id: response?.id || 'unknown',
-        items: formData.selectedServices.map(service => ({
-          item_id: service.id,
-          item_name: service.name,
+        items: formData.selectedService ? [{
+          item_id: formData.selectedService.id,
+          item_name: formData.selectedService.name,
           category: 'barber_service',
           quantity: 1,
-          price: service.price
-        }))
+          price: formData.selectedService.price
+        }] : []
       });
       
       // Track individual events
       trackEvent('booking_submit', 'engagement', 'booking_form', totalPrice);
-      trackEvent('purchase', 'ecommerce', `${formData.selectedBarber?.name} - ${formData.selectedServices.map(s => s.name).join(', ')}`, totalPrice);
+      trackEvent('purchase', 'ecommerce', `${formData.selectedBarber?.name} - ${formData.selectedService?.name}`, totalPrice);
       
       setBookingResponse(response); // Store full response
       setCurrentStep(5); // Move to confirmation step
@@ -668,7 +657,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       case 1:
         return formData.selectedBarber !== null;
       case 2:
-        return formData.selectedServices.length > 0;
+        return formData.selectedService !== null;
       case 3:
         return formData.selectedDate && formData.selectedTime;      case 4:
         // For users who can make bookings for others: only name is required (email and phone are optional)
@@ -696,7 +685,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       if (nextStepNumber === 2) {
         trackEvent('barber_selected', 'engagement', formData.selectedBarber?.name || 'unknown');
       } else if (nextStepNumber === 3) {
-        trackEvent('services_selected', 'engagement', formData.selectedServices.map(s => s.name).join(', '));
+        trackEvent('services_selected', 'engagement', formData.selectedService?.name || 'unknown');
       } else if (nextStepNumber === 4) {
         trackEvent('datetime_selected', 'engagement', `${formData.selectedDate} ${formData.selectedTime}`);
       }
@@ -852,63 +841,47 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           className="space-y-6"
         >          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-white">
             Scegli i servizi di {formData.selectedBarber.name}
-          </motion.h2>                  <div className="grid md:grid-cols-2 gap-4">
-            {(formData.selectedBarber.availableServices || displayedServices).map((service: Service) => { // Use displayedServices as fallback, explicitly type service
-              const isSelected = formData.selectedServices.some(s => s.id === service.id);
-              const isSpecialService = service.id === 'altri-servizi';
-              
-              return (
-                <motion.div
-                  key={service.id}
-                  variants={fadeInUp}
-                  onClick={() => handleServiceToggle(service)}
-                  className={`p-4 rounded-lg border-2 transition-all duration-200 ${
-                    isSpecialService
-                    ? 'border-blue-400 bg-blue-400/10 cursor-pointer hover:bg-blue-400/20'
-                    : isSelected
-                    ? 'border-yellow-400 bg-yellow-400/10 cursor-pointer'
-                    : 'border-gray-700 hover:border-gray-600 bg-gray-900/50 cursor-pointer'
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">{service.name}</h3>
-                      <p className="text-gray-300 text-sm">{service.description}</p>
-                      {isSpecialService && (
-                        <p className="text-blue-400 text-sm font-medium mt-1">
-                          📞 Contattare Maskio
-                        </p>
-                      )}
-                      <p className="text-gray-400 text-sm mt-1">{service.duration} min</p>                    </div>
-                    <div className="text-right">
-                      <span className="text-xl font-bold text-white">
-                        {isSpecialService ? '-' : `€${service.price}`}
-                      </span>
+          </motion.h2>                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(formData.selectedBarber.availableServices || displayedServices).map((service: Service) => (
+              <label
+                key={service.id}
+                className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                  formData.selectedService?.id === service.id
+                    ? 'border-amber-500 bg-amber-900/30 shadow-lg'
+                    : 'border-gray-700 bg-gray-800/50 hover:border-amber-500/50'
+                }`}
+              >
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    name="service"
+                    checked={formData.selectedService?.id === service.id}
+                    onChange={() => handleServiceChange(service)}
+                    className="h-5 w-5 text-amber-600 bg-gray-700 border-gray-600 focus:ring-amber-500 mr-4"
+                  />
+                  <div className="flex-1">
+                    <h4 className="font-bold text-white">{service.name}</h4>
+                    <p className="text-sm text-gray-400">{service.description}</p>
+                    <div className="text-sm text-amber-400 mt-2 font-semibold">
+                      <span>{service.duration} min</span> - <span>€{service.price}</span>
                     </div>
                   </div>
-                  {isSelected && !isSpecialService && (
-                    <div className="mt-2 text-green-400 text-sm">✓ Selezionato</div>
-                  )}
-                </motion.div>
-              );
-            })}
+                </div>
+              </label>
+            ))}
           </div>
 
-          {formData.selectedServices.length > 0 && (
+          {formData.selectedService && (
             <motion.div
               variants={fadeInUp}
               className="bg-gray-900 p-4 rounded-lg border border-gray-700"
             >
               <h3 className="font-semibold mb-2 text-white">Riepilogo servizi selezionati:</h3>
               <div className="space-y-2">
-                {formData.selectedServices.map((service) => (
-                  <div key={service.id} className="flex justify-between text-sm text-gray-300">
-                    <span>{service.name}</span>
-                    <span>€{service.price} - {service.duration} min</span>
-                  </div>
-                ))}
+                <div key={formData.selectedService.id} className="flex justify-between text-sm text-gray-300">
+                  <span>{formData.selectedService.name}</span>
+                  <span>€{formData.selectedService.price} - {formData.selectedService.duration} min</span>
+                </div>
                 <div className="border-t border-gray-700 pt-2 font-semibold flex justify-between text-white">
                   <span>Totale: €{totalPrice} - {totalDuration} min</span>
                 </div>
@@ -1182,12 +1155,12 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 <div>
                   <h4 className="text-sm font-medium text-gray-300 mb-1">✂️ Servizi Selezionati</h4>
                   <div className="space-y-2">
-                    {formData.selectedServices.map((service, index) => (
-                      <div key={service.id} className="flex justify-between items-center bg-gray-800/50 p-2 rounded">
-                        <span className="text-white">{service.name}</span>
-                        <span className="text-yellow-400 font-semibold">€{service.price}</span>
+                    {formData.selectedService && (
+                      <div className="flex justify-between items-center bg-gray-800/50 p-2 rounded">
+                        <span className="text-white">{formData.selectedService.name}</span>
+                        <span className="text-yellow-400 font-semibold">€{formData.selectedService.price}</span>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -1359,7 +1332,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           <motion.div variants={fadeInUp} className="bg-gray-900 border-2 border-amber-500 p-6 rounded-lg shadow-lg text-left space-y-2">
             <p className="text-white"><strong className="text-amber-400">ID Prenotazione:</strong> {bookingResponse.id || bookingResponse.booking?.id}</p>
             <p className="text-white"><strong className="text-amber-400">Barbiere:</strong> {formData.selectedBarber?.name}</p>
-            <p className="text-white"><strong className="text-amber-400">Servizi:</strong> {formData.selectedServices.map(s => s.name).join(', ')}</p>
+            <p className="text-white"><strong className="text-amber-400">Servizi:</strong> {formData.selectedService?.name}</p>
             <p className="text-white"><strong className="text-amber-400">Data:</strong> {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
             <p className="text-white"><strong className="text-amber-400">Cliente:</strong> {formData.customerInfo.name}</p>
               
@@ -1424,7 +1397,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 setCurrentStep(1);
                 setFormData({
                   selectedBarber: null,
-                  selectedServices: [],
+                  selectedService: null,
                   selectedDate: '',
                   selectedTime: '',
                   customerInfo: { name: '', email: '', phone: '', notes: '' }

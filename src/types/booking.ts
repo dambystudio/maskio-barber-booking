@@ -33,7 +33,7 @@ export interface BookingData {
 
 export interface BookingFormData {
   selectedBarber: Barber | null;
-  selectedServices: Service[];
+  selectedService: Service | null; // MODIFICATO
   selectedDate: string;
   selectedTime: string;
   customerInfo: {
