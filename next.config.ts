@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
-import withPWA from "next-pwa";
+// Usiamo un fork di next-pwa per compatibilità con Next.js 15+
+import withPWA from "@ducanh2912/next-pwa";
 
 const pwaConfig = {
   dest: "public",

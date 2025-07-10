@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const phrases = [
   "✂️ Stile autentico",
-  "🔄 Test Aggiornamento PWA", 
+  "💫 Esperienza unica", 
   "🎯 Precisione assoluta",
   "⭐ Qualità superiore",
-  "🔥 Taglio perfetto"
+  "🚀 Aggiornamento PWA OK!"
 ];
 
 export default function RotatingPhrases() {
