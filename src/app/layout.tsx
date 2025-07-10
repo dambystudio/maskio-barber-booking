@@ -13,6 +13,7 @@ import MobileBottomNav from '../components/MobileBottomNav';
 import PWAFloatingMenu from '../components/PWAFloatingMenu';
 import AddToHomeBanner from '../components/AddToHomeBanner';
 import DynamicManifest from '../components/DynamicManifest';
+import PwaUpdateManager from '../components/PwaUpdateManager';
 // Importazione URL per metadataBase
 import { URL } from 'url';
 import JsonLdScript from '../components/JsonLdScript';
@@ -162,6 +163,7 @@ export default function RootLayout({
               <Footer />
               <MobileBottomNav />
               <PWAFloatingMenu />
+              <PwaUpdateManager />
             </SecurityProvider>
           </SessionProvider>
           <AddToHomeBanner />

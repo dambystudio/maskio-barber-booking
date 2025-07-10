@@ -1,81 +1,53 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 
-export interface PWAState {
-  isInstalled: boolean;
-  isStandalone: boolean;
-  canInstall: boolean;
-  installPrompt: any;
-}
-
-export const usePWA = (): PWAState => {
-  const [pwaState, setPwaState] = useState<PWAState>({
-    isInstalled: false,
-    isStandalone: false,
-    canInstall: false,
-    installPrompt: null,
-  });
+export const usePWA = () => {
+  const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
+  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
   useEffect(() => {
-    const checkPWAStatus = () => {
-      // Metodo 1: CSS display-mode
-      const isStandaloneCSS = window.matchMedia('(display-mode: standalone)').matches;
-      
-      // Metodo 2: Navigator standalone (iOS Safari)
-      const isStandaloneiOS = (window.navigator as any).standalone === true;
-      
-      // Metodo 3: URL parameter o localStorage
-      const isStandaloneParam = window.location.search.includes('standalone=true');
-      
-      // Metodo 4: Verifica altezza schermo (euristica)
-      const hasFullHeight = window.innerHeight === window.screen.height;
-      
-      const isStandalone = isStandaloneCSS || isStandaloneiOS || isStandaloneParam;
-      const isInstalled = isStandalone || hasFullHeight;
+    // Assicurati che il codice venga eseguito solo nel browser
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      return;
+    }
 
-      setPwaState(prev => ({
-        ...prev,
-        isStandalone,
-        isInstalled,
-      }));
+    const registerPWA = async () => {
+      // Usa workbox-window, che è lo standard per le PWA con Next.js
+      const { Workbox } = await import('workbox-window');
+
+      if (Workbox) {
+        const wb = new Workbox('/sw.js');
+
+        // Questo evento si attiva quando un nuovo Service Worker è stato installato
+        // ma è in attesa di attivazione. È il momento perfetto per notificare l'utente.
+        const onWaiting = (event: any) => {
+          setIsUpdateAvailable(true);
+          setWaitingWorker(event.sw);
+          console.log('✨ Una nuova versione è disponibile. In attesa di attivazione.');
+        };
+
+        // Aggiungi il listener
+        wb.addEventListener('waiting', onWaiting);
+
+        // Registra il service worker
+        wb.register();
+      }
     };
 
-    // Listener per installazione PWA
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setPwaState(prev => ({
-        ...prev,
-        canInstall: true,
-        installPrompt: e,
-      }));
-    };
-
-    // Listener per quando la PWA viene installata
-    const handleAppInstalled = () => {
-      setPwaState(prev => ({
-        ...prev,
-        isInstalled: true,
-        canInstall: false,
-        installPrompt: null,
-      }));
-    };
-
-    // Event listeners
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-    
-    // Controlla lo stato iniziale
-    checkPWAStatus();
-
-    // Controlla quando cambia la modalità display
-    const mediaQuery = window.matchMedia('(display-mode: standalone)');
-    mediaQuery.addEventListener('change', checkPWAStatus);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-      mediaQuery.removeEventListener('change', checkPWAStatus);
-    };
+    registerPWA();
   }, []);
 
-  return pwaState;
+  // Funzione che verrà chiamata dal pulsante "Aggiorna"
+  const handleUpdate = () => {
+    if (waitingWorker) {
+      // Invia un messaggio al service worker per attivare subito la nuova versione
+      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      
+      // Ricarica la pagina per applicare gli aggiornamenti
+      window.location.reload();
+    }
+  };
+
+  return { isUpdateAvailable, handleUpdate };
 };

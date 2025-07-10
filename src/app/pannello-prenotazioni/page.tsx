@@ -30,7 +30,15 @@ interface Stats {
 }
 
 // <-- NUOVO COMPONENTE PER LA TABELLA DI TUTTE LE PRENOTAZIONI -->
-const AllBookingsTable = ({ bookings }: { bookings: Booking[] }) => {
+const AllBookingsTable = ({ 
+  bookings,
+  onWhatsAppClick,
+  onPhoneClick 
+}: { 
+  bookings: Booking[],
+  onWhatsAppClick: (booking: Booking) => void,
+  onPhoneClick: (phone: string) => void,
+}) => {
   if (bookings.length === 0) {
     return (
       <div className="text-center py-8 bg-gray-800 rounded-lg mt-8">
@@ -59,6 +67,7 @@ const AllBookingsTable = ({ bookings }: { bookings: Booking[] }) => {
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Cliente</th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Servizio</th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Stato</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Contatti</th>
             </tr>
           </thead>
           <tbody className="bg-gray-800/50 divide-y divide-gray-700">
@@ -69,6 +78,26 @@ const AllBookingsTable = ({ bookings }: { bookings: Booking[] }) => {
                 <td className="px-6 py-4 whitespace-nowrap">{booking.customer_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{booking.service_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{booking.status}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onWhatsAppClick(booking)}
+                      className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50 text-xs flex items-center gap-1"
+                      title="Contatta cliente via WhatsApp"
+                    >
+                      <span role="img" aria-label="whatsapp">💬</span> WhatsApp
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onPhoneClick(booking.customer_phone)}
+                      className="text-blue-400 hover:text-blue-300 px-2 py-1 border border-blue-500 rounded hover:bg-blue-900/50 text-xs flex items-center gap-1"
+                      title="Chiama il cliente"
+                    >
+                      <span role="img" aria-label="phone">📞</span> Chiama
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -1421,7 +1450,7 @@ Grazie! 😊`;
                               booking.booking_time
                             )}                            className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"                            title="Contatta cliente via WhatsApp"
                           >
-                            <span>�</span> Contatta cliente su WhatsApp
+                            <span role="img" aria-label="whatsapp">💬</span> WhatsApp
                           </button>
                           <button
                             type="button"
@@ -1429,7 +1458,7 @@ Grazie! 😊`;
                             className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
                             title="Chiama il cliente"
                           >
-                            📞 Chiama
+                            <span role="img" aria-label="phone">📞</span> Chiama
                           </button>
                         </div>
                       </div>
@@ -1450,7 +1479,7 @@ Grazie! 😊`;
                                 booking.booking_time
                               )}                              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"                              title="Contatta barbiere via WhatsApp"
                             >
-                              <span>�</span> Contatta barbiere su WhatsApp
+                              <span role="img" aria-label="whatsapp">💬</span> WhatsApp
                             </button>
                             <button
                               type="button"
@@ -1458,7 +1487,7 @@ Grazie! 😊`;
                               className="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
                               title="Chiama il barbiere"
                             >
-                              📞 Chiama
+                              <span role="img" aria-label="phone">📞</span> Chiama
                             </button>
                           </div>
                         </div>
@@ -1599,7 +1628,7 @@ Grazie! 😊`;
                               booking.booking_time
                             )}                            className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50 text-xs"                            title="Contatta cliente via WhatsApp"
                           >
-                            <span>�</span> Cliente
+                            <span role="img" aria-label="whatsapp">💬</span> Cliente
                           </button>
                           <button
                             type="button"
@@ -1607,7 +1636,7 @@ Grazie! 😊`;
                             className="text-blue-400 hover:text-blue-300 px-2 py-1 border border-blue-500 rounded hover:bg-blue-900/50 text-xs"
                             title="Chiama il cliente"
                           >
-                            📞 Cliente
+                            <span role="img" aria-label="phone">📞</span> Cliente
                           </button>
                           
                           {/* Pulsanti per contattare il barbiere */}
@@ -1623,7 +1652,7 @@ Grazie! 😊`;
                                   booking.booking_date, 
                                   booking.booking_time
                                 )}                                className="text-orange-400 hover:text-orange-300 px-2 py-1 border border-orange-500 rounded hover:bg-orange-900/50 text-xs"                                title="Contatta barbiere via WhatsApp"                              >
-                                <span>�</span> Barbiere
+                                <span role="img" aria-label="whatsapp">💬</span> Barbiere
                               </button>
                               <button
                                 type="button"
@@ -1631,7 +1660,7 @@ Grazie! 😊`;
                                 className="text-purple-400 hover:text-purple-300 px-2 py-1 border border-purple-500 rounded hover:bg-purple-900/50 text-xs"
                                 title="Chiama il barbiere"
                               >
-                                📞 Barbiere
+                                <span role="img" aria-label="phone">📞</span> Barbiere
                               </button>
                             </>
                           )}
@@ -1695,7 +1724,17 @@ Grazie! 😊`;
       {/* SEZIONE STORICO PRENOTAZIONI */}
       {isAuthorized && (
         <div className="mt-8">
-          <AllBookingsTable bookings={allBookings} />
+          <AllBookingsTable 
+            bookings={allBookings} 
+            onWhatsAppClick={(booking) => openWhatsApp(
+              booking.customer_phone, 
+              booking.customer_name, 
+              booking.service_name, 
+              booking.booking_date, 
+              booking.booking_time
+            )}
+            onPhoneClick={makePhoneCall}
+          />
         </div>
       )}
     </div>

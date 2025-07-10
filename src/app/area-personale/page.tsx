@@ -22,6 +22,7 @@ interface UserBooking {
   notes?: string;
   service_price?: number;
   customer_name?: string; // <-- CAMPO AGGIUNTO
+  customer_phone?: string; // <-- CAMPO AGGIUNTO
 }
 
 type TabType = 'appointments' | 'profile' | 'account';
@@ -219,6 +220,19 @@ export default function AreaPersonale() {
     fetchUserBookings();
     fetchUserProfile();
   }, [session, status, router, fetchUserBookings, fetchUserProfile]);
+
+  const openWhatsAppCustomer = (phone: string, customerName: string | undefined) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    let whatsappPhone = cleanPhone.startsWith('39') ? cleanPhone : '39' + cleanPhone;
+    const message = `Ciao ${customerName || 'cliente'}, ti contatto da Maskio Barber per il tuo appuntamento.`;
+    const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const makePhoneCallCustomer = (phone: string) => {
+      window.open(`tel:${phone}`, '_self');
+  };
+
   const canCancelBooking = (bookingDate: string, bookingTime: string) => {
     try {
       const bookingDateTime = new Date(`${bookingDate}T${bookingTime}`);
