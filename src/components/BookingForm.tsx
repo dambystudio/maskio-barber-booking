@@ -19,6 +19,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   const [currentStep, setCurrentStep] = useState(1);  const [allServices, setAllServices] = useState<Service[]>([]); // All services from API
   const [displayedServices, setDisplayedServices] = useState<Service[]>([]); // Services to show based on barber
   const [barbers, setBarbers] = useState<Barber[]>([]);  
+  const [showContactMessage, setShowContactMessage] = useState(false);
   
   // Distinguish between actual barbers and those who can make bookings for others
   const isBarber = userSession?.user?.role === 'barber';
@@ -839,36 +840,73 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           initial="hidden"
           animate="visible"
           className="space-y-6"
-        >          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-white">
+        >
+          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-white">
             Scegli i servizi di {formData.selectedBarber.name}
-          </motion.h2>                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(formData.selectedBarber.availableServices || displayedServices).map((service: Service) => (
-              <label
-                key={service.id}
-                className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                  formData.selectedService?.id === service.id
-                    ? 'border-amber-500 bg-amber-900/30 shadow-lg'
-                    : 'border-gray-700 bg-gray-800/50 hover:border-amber-500/50'
-                }`}
-              >
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    name="service"
-                    checked={formData.selectedService?.id === service.id}
-                    onChange={() => handleServiceChange(service)}
-                    className="h-5 w-5 text-amber-600 bg-gray-700 border-gray-600 focus:ring-amber-500 mr-4"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-bold text-white">{service.name}</h4>
-                    <p className="text-sm text-gray-400">{service.description}</p>
-                    <div className="text-sm text-amber-400 mt-2 font-semibold">
-                      <span>{service.duration} min</span> - <span>€{service.price}</span>
+          </motion.h2>
+
+          {showContactMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded-md"
+              role="alert"
+            >
+              <p className="font-bold">Per altri servizi</p>
+              <p>Contattare Maskio Barber Concept al numero: +39 331 710 0730</p>
+            </motion.div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(formData.selectedBarber.availableServices || displayedServices).map((service: Service) => {
+              if (service.id === 'altri-servizi') {
+                return (
+                  <div
+                    key={service.id}
+                    onClick={() => setShowContactMessage(true)}
+                    className="p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 border-gray-700 bg-gray-800/50 hover:border-amber-500/50"
+                  >
+                    <div className="flex items-center">
+                      <div className="flex-1">
+                        <h4 className="font-bold text-white">{service.name}</h4>
+                        <p className="text-sm text-gray-400">{service.description}</p>
+                        <div className="text-sm text-amber-400 mt-2 font-semibold">
+                          <span>Contattaci</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </label>
-            ))}
+                );
+              }
+
+              return (
+                <label
+                  key={service.id}
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                    formData.selectedService?.id === service.id
+                      ? 'border-amber-500 bg-amber-900/30 shadow-lg'
+                      : 'border-gray-700 bg-gray-800/50 hover:border-amber-500/50'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      name="service"
+                      checked={formData.selectedService?.id === service.id}
+                      onChange={() => handleServiceChange(service)}
+                      className="h-5 w-5 text-amber-600 bg-gray-700 border-gray-600 focus:ring-amber-500 mr-4"
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-bold text-white">{service.name}</h4>
+                      <p className="text-sm text-gray-400">{service.description}</p>
+                      <div className="text-sm text-amber-400 mt-2 font-semibold">
+                        <span>{service.duration} min</span> - <span>€{service.price}</span>
+                      </div>
+                    </div>
+                  </div>
+                </label>
+              );
+            })}
           </div>
 
           {formData.selectedService && (
