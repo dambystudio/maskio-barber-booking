@@ -58,72 +58,97 @@ export async function GET(request: NextRequest) {  try {
     const barberEmail = url.searchParams.get('barberEmail');
     const status = url.searchParams.get('status');
     const userId = url.searchParams.get('userId');
+    const fetchAll = url.searchParams.get('fetchAll'); // <-- NUOVO
 
     let bookings: Booking[] = [];
 
-    // If user is a barber (not admin), they can only see their own bookings
-    if (userRole === 'barber') {
-      // Force filter by current barber's email
-      const allBarbers = await DatabaseService.getBarbers();
-      const currentBarber = allBarbers.find(b => b.email === userEmail);
-      
-      if (!currentBarber) {
-        return NextResponse.json(
-          { error: 'Barbiere non trovato' },
-          { status: 404 }
-        );
-      }
-
-      // Get bookings only for this barber
-      bookings = await DatabaseService.getBookingsByBarber(currentBarber.id);
-      
-      // Apply additional filters if specified
-      if (date) {
-        bookings = bookings.filter(booking => booking.date === date);
-      }
-      if (status && status !== 'all') {
-        bookings = bookings.filter(booking => booking.status === status);
-      }
-    } 
-    // If user is admin, allow filtering by parameters
-    else if (userRole === 'admin') {
-      if (userId) {
-        bookings = await DatabaseService.getBookingsByUser(userId);
-      } else if (date) {
-        bookings = await DatabaseService.getBookingsByDate(date);    
-      } else if (barberId) {
-        bookings = await DatabaseService.getBookingsByBarber(barberId);
-      } else {
-        // Get all bookings for admin panel
-        bookings = await DatabaseService.getAllBookings();
-      }
-
-      // Apply additional filters for admin
-      if (userId) {
-        bookings = bookings.filter(booking => booking.userId === userId);
-      }
-        // Filter by barber email if specified
-      if (barberEmail) {
-        // Get all barbers and find by email
-        const allBarbers = await DatabaseService.getBarbers();
-        const barber = allBarbers.find(b => b.email === barberEmail);
-        if (barber) {
-          bookings = bookings.filter(booking => booking.barberId === barber.id);
-        } else {
-          // If barber not found, return empty array
-          bookings = [];
+    // <-- NUOVA LOGICA per fetchAll -->
+    if (fetchAll === 'true') {
+        if (userRole === 'admin') {
+            bookings = await DatabaseService.getAllBookings();
+        } else if (userRole === 'barber') {
+            const allBarbers = await DatabaseService.getBarbers();
+            const currentBarber = allBarbers.find(b => b.email === userEmail);
+            if (!currentBarber) {
+                return NextResponse.json({ error: 'Barbiere non trovato' }, { status: 404 });
+            }
+            bookings = await DatabaseService.getBookingsByBarber(currentBarber.id);
+        } else { // Customer
+            bookings = await DatabaseService.getBookingsByUser(session.user.id);
         }
-      }
-      
-      // Filter by status if specified
-      if (status && status !== 'all') {
-        bookings = bookings.filter(booking => booking.status === status);
-      }
+        
+        // Applica filtro per status se presente, anche in modalità fetchAll
+        if (status && status !== 'all') {
+            bookings = bookings.filter(booking => booking.status === status);
+        }
+
+    } else { // <-- LOGICA ESISTENTE -->
+        // If user is a barber (not admin), they can only see their own bookings
+        if (userRole === 'barber') {
+          // Force filter by current barber's email
+          const allBarbers = await DatabaseService.getBarbers();
+          const currentBarber = allBarbers.find(b => b.email === userEmail);
+          
+          if (!currentBarber) {
+            return NextResponse.json(
+              { error: 'Barbiere non trovato' },
+              { status: 404 }
+            );
+          }
+
+          // Get bookings only for this barber
+          bookings = await DatabaseService.getBookingsByBarber(currentBarber.id);
+          
+          // Apply additional filters if specified
+          if (date) {
+            bookings = bookings.filter(booking => booking.date === date);
+          }
+          if (status && status !== 'all') {
+            bookings = bookings.filter(booking => booking.status === status);
+          }
+        } 
+        // If user is admin, allow filtering by parameters
+        else if (userRole === 'admin') {
+          if (userId) {
+            bookings = await DatabaseService.getBookingsByUser(userId);
+          } else if (date) {
+            bookings = await DatabaseService.getBookingsByDate(date);    
+          } else if (barberId) {
+            bookings = await DatabaseService.getBookingsByBarber(barberId);
+          } else {
+            // Get all bookings for admin panel
+            bookings = await DatabaseService.getAllBookings();
+          }
+
+          // Apply additional filters for admin
+          if (userId) {
+            bookings = bookings.filter(booking => booking.userId === userId);
+          }
+            // Filter by barber email if specified
+          if (barberEmail) {
+            // Get all barbers and find by email
+            const allBarbers = await DatabaseService.getBarbers();
+            const barber = allBarbers.find(b => b.email === barberEmail);
+            if (barber) {
+              bookings = bookings.filter(booking => booking.barberId === barber.id);
+            } else {
+              // If barber not found, return empty array
+              bookings = [];
+            }
+          }
+          
+          // Filter by status if specified
+          if (status && status !== 'all') {
+            bookings = bookings.filter(booking => booking.status === status);
+          }
+        }
+        // If user is customer, they can only see their own bookings
+        else {
+          bookings = await DatabaseService.getBookingsByUser(session.user.id);
+        }
     }
-    // If user is customer, they can only see their own bookings
-    else {
-      bookings = await DatabaseService.getBookingsByUser(session.user.id);
-    }    // Get all barbers to map phone numbers
+    
+    // Get all barbers to map phone numbers
     const allBarbers = await DatabaseService.getBarbers();
     const barberMap = new Map(allBarbers.map(b => [b.id, b]));
 

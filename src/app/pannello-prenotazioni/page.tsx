@@ -29,11 +29,61 @@ interface Stats {
   selectedDate: string;
 }
 
+// <-- NUOVO COMPONENTE PER LA TABELLA DI TUTTE LE PRENOTAZIONI -->
+const AllBookingsTable = ({ bookings }: { bookings: Booking[] }) => {
+  if (bookings.length === 0) {
+    return (
+      <div className="text-center py-8 bg-gray-800 rounded-lg mt-8">
+        <p className="text-gray-400">Nessuna prenotazione trovata nello storico.</p>
+      </div>
+    );
+  }
+
+  // Ordina le prenotazioni dalla più recente alla meno recente
+  const sortedBookings = [...bookings].sort((a, b) => 
+    new Date(`${b.booking_date}T${b.booking_time}`).getTime() - 
+    new Date(`${a.booking_date}T${a.booking_time}`).getTime()
+  );
+
+  return (
+    <div className="mt-12 bg-gray-900 shadow-lg rounded-lg p-6">
+      <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-4">
+        Storico Prenotazioni
+      </h2>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-white">
+          <thead className="bg-gray-800">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Data</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Ora</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Cliente</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Servizio</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Stato</th>
+            </tr>
+          </thead>
+          <tbody className="bg-gray-800/50 divide-y divide-gray-700">
+            {sortedBookings.map(booking => (
+              <tr key={booking.id}>
+                <td className="px-6 py-4 whitespace-nowrap">{format(parseISO(booking.booking_date), 'dd/MM/yyyy')}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{booking.booking_time}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{booking.customer_name}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{booking.service_name}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{booking.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 export default function PannelloPrenotazioni() {
   const { data: session, status } = useSession();
   
   // Tutti gli stati devono essere definiti all'inizio, prima di qualsiasi logica condizionale
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [allBookings, setAllBookings] = useState<Booking[]>([]); // <-- NUOVO STATO
   
   // Debug temporaneo
   console.log('🔍 Component render - bookings state:', { bookings, type: typeof bookings, isArray: Array.isArray(bookings), length: bookings?.length });
@@ -133,6 +183,33 @@ export default function PannelloPrenotazioni() {
     }
   };
 
+  // <-- NUOVA FUNZIONE FETCH ALL BOOKINGS -->
+  const fetchAllBarberBookings = async () => {
+    if (!session?.user?.email) return;
+
+    console.log(`📡 Inizio fetch di TUTTE le prenotazioni per ${session.user.email}`);
+    try {
+      const params = new URLSearchParams();
+      // Se non è admin, filtra per il suo ID. L'admin vede tutto.
+      if (!isAdmin) {
+        params.append('barberEmail', session.user.email);
+      }
+      // Aggiungiamo un parametro per segnalare che le vogliamo tutte
+      params.append('fetchAll', 'true');
+
+      const response = await fetch(`/api/bookings?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ TUTTE le prenotazioni ricevute:', data.bookings);
+        setAllBookings(data.bookings || []);
+      } else {
+        console.error('❌ Errore nel fetch di tutte le prenotazioni:', response.statusText);
+      }
+    } catch (error) {
+      console.error('❌ Errore critico nel fetch di tutte le prenotazioni:', error);
+    }
+  };
+
   useEffect(() => {
     if (status === 'loading') return;
     
@@ -141,6 +218,13 @@ export default function PannelloPrenotazioni() {
       return;
     }    checkPermissions();
   }, [session, status]);
+
+  // Esegui il fetch di tutte le prenotazioni una volta che i permessi sono stati verificati
+  useEffect(() => {
+    if (permissionsChecked && isAuthorized) {
+      fetchAllBarberBookings();
+    }
+  }, [permissionsChecked, isAuthorized]);
 
   // Carica i giorni di chiusura dal localStorage e sincronizza con il server
   useEffect(() => {
@@ -1607,6 +1691,13 @@ Grazie! 😊`;
           </>
         )}
       </div>
+
+      {/* SEZIONE STORICO PRENOTAZIONI */}
+      {isAuthorized && (
+        <div className="mt-8">
+          <AllBookingsTable bookings={allBookings} />
+        </div>
+      )}
     </div>
   );
 }
