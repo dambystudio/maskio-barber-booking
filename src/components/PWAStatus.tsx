@@ -1,30 +1,36 @@
 'use client';
 
 import { usePWA } from '@/hooks/usePWA';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function PWAStatus() {
-  const { isInstalled, isStandalone, canInstall, installPrompt } = usePWA();
+  const { isStandalone, canInstall, installPrompt } = usePWA();
   const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    // Mostra il banner solo se l'app può essere installata e non è già standalone
+    if (canInstall && !isStandalone) {
+      const timer = setTimeout(() => {
+        setShowInstallBanner(true);
+      }, 3000); // Mostra dopo 3 secondi per non essere troppo invasivo
+      
+      return () => clearTimeout(timer);
+    }
+  }, [canInstall, isStandalone]);
 
   const handleInstall = async () => {
     if (installPrompt) {
+      setShowInstallBanner(false); // Nascondi subito il banner
       installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
       console.log(`User response to install prompt: ${outcome}`);
-      setShowInstallBanner(false);
     }
   };
-
-  // Mostra banner di installazione solo se può essere installata
-  if (canInstall && !showInstallBanner) {
-    setTimeout(() => setShowInstallBanner(true), 2000); // Mostra dopo 2 secondi
-  }
 
   return (
     <>
       {/* Banner per installazione PWA */}
-      {canInstall && showInstallBanner && !isInstalled && (
+      {showInstallBanner && (
         <div className="fixed bottom-4 left-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg z-50 md:max-w-sm md:left-auto">
           <div className="flex items-center justify-between">
             <div>
@@ -53,7 +59,6 @@ export default function PWAStatus() {
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed top-16 left-4 bg-black/80 text-white text-xs p-2 rounded z-50">
           <div>Standalone: {isStandalone ? '✅' : '❌'}</div>
-          <div>Installed: {isInstalled ? '✅' : '❌'}</div>
           <div>Can Install: {canInstall ? '✅' : '❌'}</div>
         </div>
       )}
