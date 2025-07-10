@@ -8,6 +8,7 @@ import { BookingService, validateBookingData } from '../services/bookingService'
 import { fabioSpecificServices, micheleSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
 import { Session } from 'next-auth';
 import { trackEvent, trackConversion } from './GoogleAnalytics';
+import { FiClock, FiTag } from 'react-icons/fi'; // Import icons
 
 const steps = ['Barbiere', 'Servizi', 'Data e Ora', 'Dati Personali', 'Conferma'];
 
@@ -864,47 +865,38 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                   <div
                     key={service.id}
                     onClick={() => setShowContactMessage(true)}
-                    className="p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 border-gray-700 bg-gray-800/50 hover:border-amber-500/50"
+                    className="p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 border-gray-700 bg-gray-800/50 hover:border-amber-500/50 flex flex-col justify-center items-center text-center"
                   >
-                    <div className="flex items-center">
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white">{service.name}</h4>
-                        <p className="text-sm text-gray-400">{service.description}</p>
-                        <div className="text-sm text-amber-400 mt-2 font-semibold">
-                          <span>Contattaci</span>
-                        </div>
-                      </div>
-                    </div>
+                    <h4 className="font-bold text-white text-lg">{service.name}</h4>
+                    <p className="text-sm text-amber-400 mt-2 font-semibold">Contattaci</p>
                   </div>
                 );
               }
 
+              const isSelected = formData.selectedService?.id === service.id;
+
               return (
-                <label
+                <div
                   key={service.id}
-                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                    formData.selectedService?.id === service.id
-                      ? 'border-amber-500 bg-amber-900/30 shadow-lg'
-                      : 'border-gray-700 bg-gray-800/50 hover:border-amber-500/50'
-                  }`}
+                  onClick={() => handleServiceChange(service)}
+                  className={`p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between shadow-lg hover:shadow-amber-500/20
+                    ${isSelected ? 'bg-amber-500/10 border-amber-400' : 'bg-gray-800 border-gray-700 hover:border-gray-600'}
+                  `}
                 >
-                  <div className="flex items-center">
-                    <input
-                      type="radio"
-                      name="service"
-                      checked={formData.selectedService?.id === service.id}
-                      onChange={() => handleServiceChange(service)}
-                      className="h-5 w-5 text-amber-600 bg-gray-700 border-gray-600 focus:ring-amber-500 mr-4"
-                    />
-                    <div className="flex-1">
-                      <h4 className="font-bold text-white">{service.name}</h4>
-                      <p className="text-sm text-gray-400">{service.description}</p>
-                      <div className="text-sm text-amber-400 mt-2 font-semibold">
-                        <span>{service.duration} min</span> - <span>€{service.price}</span>
-                      </div>
-                    </div>
+                  <div className="flex-grow">
+                    <h4 className={`text-xl font-bold ${isSelected ? 'text-amber-400' : 'text-white'}`}>{service.name}</h4>
+                    <p className={`mt-2 text-sm ${isSelected ? 'text-gray-200' : 'text-gray-400'}`}>{service.description}</p>
                   </div>
-                </label>
+                  <div className="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center">
+                    <span className={`flex items-center text-sm ${isSelected ? 'text-gray-200' : 'text-gray-300'}`}>
+                      <FiClock className="mr-2 text-amber-400" />
+                      {service.duration} min
+                    </span>
+                    <span className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-amber-400'}`}>
+                      €{service.price}
+                    </span>
+                  </div>
+                </div>
               );
             })}
           </div>
