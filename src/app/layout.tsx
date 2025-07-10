@@ -13,7 +13,6 @@ import MobileBottomNav from '../components/MobileBottomNav';
 import PWAFloatingMenu from '../components/PWAFloatingMenu';
 import AddToHomeBanner from '../components/AddToHomeBanner';
 import DynamicManifest from '../components/DynamicManifest';
-import PwaUpdateManager from '../components/PwaUpdateManager';
 // Importazione URL per metadataBase
 import { URL } from 'url';
 import JsonLdScript from '../components/JsonLdScript';
@@ -163,14 +162,13 @@ export default function RootLayout({
               <Footer />
               <MobileBottomNav />
               <PWAFloatingMenu />
-              <PwaUpdateManager />
+              {/* Script per nascondere i blocchi di codice se non è attiva l'ispezione */}
+              <script src="/js/dev-tools-detector.js" defer></script>
+              {/* Schema.org JSON-LD script */}
+              <JsonLdScript />
             </SecurityProvider>
           </SessionProvider>
           <AddToHomeBanner />
-          {/* Script per nascondere i blocchi di codice se non è attiva l'ispezione */}
-          <script src="/js/dev-tools-detector.js" defer></script>
-          {/* Schema.org JSON-LD script */}
-          <JsonLdScript />
         </body>
       </html>
   );

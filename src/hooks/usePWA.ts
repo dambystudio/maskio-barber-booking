@@ -13,10 +13,6 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export const usePWA = () => {
-  // Stati per la notifica di aggiornamento
-  const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
-  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
-  
   // Stati per lo stato di installazione
   const [isStandalone, setIsStandalone] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
@@ -58,13 +54,15 @@ export const usePWA = () => {
       if (Workbox) {
         const wb = new Workbox('/sw.js');
 
-        const onWaiting = (event: any) => {
-          setIsUpdateAvailable(true);
-          setWaitingWorker(event.sw);
-          console.log('✨ Una nuova versione è disponibile. In attesa di attivazione.');
+        // Listener per quando il nuovo service worker prende il controllo
+        // Con skipWaiting: true, questo ricaricherà la pagina automaticamente
+        const onControlling = () => {
+          console.log('Service worker ha preso il controllo, ricarico la pagina.');
+          window.location.reload();
         };
 
-        wb.addEventListener('waiting', onWaiting);
+        wb.addEventListener('controlling', onControlling);
+        
         wb.register();
       }
     };
@@ -72,16 +70,7 @@ export const usePWA = () => {
     registerPWA();
   }, []);
 
-  const handleUpdate = () => {
-    if (waitingWorker) {
-      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-      window.location.reload();
-    }
-  };
-
   return { 
-    isUpdateAvailable, 
-    handleUpdate, 
     isStandalone,
     canInstall,
     installPrompt

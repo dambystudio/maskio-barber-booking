@@ -5,8 +5,23 @@ import withPWA from "@ducanh2912/next-pwa";
 const pwaConfig = {
   dest: "public",
   register: true,
-  skipWaiting: false, // Fondamentale per la notifica di aggiornamento
+  skipWaiting: true, // FORZA L'AGGIORNAMENTO IMMEDIATO
   disable: process.env.NODE_ENV === "development",
+  reloadOnOnline: true, // Ricarica quando torna online
+  runtimeCaching: [
+    {
+      urlPattern: /^https?.*/,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'offlineCache',
+        expiration: {
+          maxEntries: 200,
+          maxAgeSeconds: 60 * 60 * 24, // 24 ore invece di cache infinita
+        },
+      },
+    },
+  ],
+  buildExcludes: [/middleware-manifest\.json$/],
 };
 
 const nextConfig: NextConfig = {
