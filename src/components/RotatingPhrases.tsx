@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const phrases = [
   "✂️ Stile autentico",
-  "💫 Esperienza unica", 
+  "🔄 Test Aggiornamento PWA", 
   "🎯 Precisione assoluta",
   "⭐ Qualità superiore",
   "🔥 Taglio perfetto"
