@@ -28,7 +28,7 @@ export default function PannelloLayout({
                 </span>
               </div>
               <div className="flex gap-2 md:gap-3 ml-2">
-                {session?.user?.role === 'admin' && (
+                {(session?.user?.role === 'admin' || session?.user?.role === 'barber') && (
                   <button
                     onClick={() => router.push('/admin/users')}
                     className="px-3 py-2 md:px-4 md:py-2 text-xs md:text-sm text-gray-300 hover:text-white transition-colors border border-gray-600 rounded-lg hover:bg-gray-700 whitespace-nowrap"

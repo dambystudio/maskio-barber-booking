@@ -11,9 +11,11 @@ export async function GET() {
     
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
-    }    // Solo admin possono vedere la lista utenti
-    if (session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Solo gli admin possono accedere a questa funzione' }, { status: 403 });
+    }
+
+    // Admin e barbieri possono vedere la lista utenti
+    if (session.user.role !== 'admin' && session.user.role !== 'barber') {
+      return NextResponse.json({ error: 'Solo gli admin e barbieri possono accedere a questa funzione' }, { status: 403 });
     }
 
     // Recupera tutti gli utenti
@@ -51,9 +53,9 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
-    // Solo admin possono modificare i ruoli
-    if (session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Solo gli admin possono modificare i ruoli' }, { status: 403 });
+    // Admin e barbieri possono modificare i ruoli, con alcune limitazioni per i barbieri
+    if (session.user.role !== 'admin' && session.user.role !== 'barber') {
+      return NextResponse.json({ error: 'Solo gli admin e barbieri possono modificare i ruoli' }, { status: 403 });
     }
 
     const { userId, role } = await request.json();
@@ -64,6 +66,11 @@ export async function PATCH(request: NextRequest) {
 
     if (!['customer', 'barber', 'admin'].includes(role)) {
       return NextResponse.json({ error: 'Ruolo non valido' }, { status: 400 });
+    }
+
+    // I barbieri non possono creare nuovi admin (solo gli admin possono farlo)
+    if (session.user.role === 'barber' && role === 'admin') {
+      return NextResponse.json({ error: 'Solo gli admin possono promuovere utenti ad admin' }, { status: 403 });
     }
 
     // Aggiorna il ruolo dell'utente
@@ -101,9 +108,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
-    // Solo admin possono eliminare utenti
-    if (session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Solo gli admin possono eliminare utenti' }, { status: 403 });
+    // Admin e barbieri possono eliminare utenti, con alcune limitazioni per i barbieri
+    if (session.user.role !== 'admin' && session.user.role !== 'barber') {
+      return NextResponse.json({ error: 'Solo gli admin e barbieri possono eliminare utenti' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -134,7 +141,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 });
     }
 
-    const user = userToDelete[0];    // Elimina prima i record dipendenti per evitare errori di foreign key
+    const user = userToDelete[0];
+
+    // I barbieri non possono eliminare altri admin (solo gli admin possono farlo)
+    if (session.user.role === 'barber' && user.role === 'admin') {
+      return NextResponse.json({ error: 'Solo gli admin possono eliminare altri admin' }, { status: 403 });
+    }
+
+    // Elimina prima i record dipendenti per evitare errori di foreign key
     // 1. Elimina le prenotazioni dell'utente
     await db.delete(bookings).where(eq(bookings.userId, userId));
 

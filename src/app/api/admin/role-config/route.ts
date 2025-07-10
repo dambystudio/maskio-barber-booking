@@ -7,10 +7,9 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    // Solo admin possono vedere le configurazioni dei ruoli
-    if (!session?.user?.role || session.user.role !== 'admin') {
+    if (!session?.user?.role || (session.user.role !== 'admin' && session.user.role !== 'barber')) {
       return NextResponse.json(
-        { error: 'Accesso negato. Solo admin possono visualizzare le configurazioni.' },
+        { error: 'Accesso negato. Solo admin e barbieri possono accedere.' },
         { status: 403 }
       );
     }

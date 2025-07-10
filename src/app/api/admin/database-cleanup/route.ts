@@ -9,12 +9,8 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    // Solo admin possono pulire il database
-    if (!session?.user?.role || session.user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Accesso negato. Solo admin possono pulire il database.' },
-        { status: 403 }
-      );
+    if (!session?.user?.role || (session.user.role !== 'admin' && session.user.role !== 'barber')) {
+      return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
     const { action } = await request.json();

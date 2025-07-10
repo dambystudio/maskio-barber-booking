@@ -9,10 +9,9 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    // Solo admin possono promuovere utenti
-    if (!session?.user?.role || session.user.role !== 'admin') {
+    if (!session?.user?.role || (session.user.role !== 'admin' && session.user.role !== 'barber')) {
       return NextResponse.json(
-        { error: 'Accesso negato. Solo admin possono promuovere utenti.' },
+        { error: 'Accesso negato' },
         { status: 403 }
       );
     }
@@ -30,6 +29,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Ruolo non valido. Usare: admin, barber, o user' },
         { status: 400 }
+      );
+    }
+
+    // I barbieri non possono promuovere utenti ad admin (solo gli admin possono farlo)
+    if (session.user.role === 'barber' && role === 'admin') {
+      return NextResponse.json(
+        { error: 'Solo gli admin possono promuovere utenti ad admin' },
+        { status: 403 }
       );
     }
 

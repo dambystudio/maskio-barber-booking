@@ -179,7 +179,7 @@ export default function Navbar() {
                           onClick={() => setUserMenuOpen(false)}
                         >
                           👤 Profilo
-                        </Link>                        {isAdmin && (
+                        </Link>                        {(isAdmin || isBarber) && (
                           <Link
                             href="/admin/users"
                             className="block px-4 py-2 text-sm text-amber-400 hover:bg-gray-700 transition-colors font-medium"
@@ -317,7 +317,7 @@ export default function Navbar() {
                           >
                             <UserIcon className="h-5 w-5" />
                             Profilo
-                          </Link>                          {isAdmin && (
+                          </Link>                          {(isAdmin || isBarber) && (
                             <Link
                               href="/admin/users"
                               className="flex items-center gap-3 px-4 py-3 text-base font-medium text-amber-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"

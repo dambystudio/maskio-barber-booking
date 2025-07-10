@@ -21,7 +21,10 @@ export default function AdminUsersPage() {
   const [updateLoading, setUpdateLoading] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isBarber, setIsBarber] = useState(false);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const [permissionsChecked, setPermissionsChecked] = useState(false);
+
   // Verifica permessi tramite API invece che da sessione
   const checkAdminPermissions = async () => {
     try {
@@ -38,14 +41,23 @@ export default function AdminUsersPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Admin page permissions check:', data);
-        setIsAdmin(data.success && data.permissions.isAdmin || false);
+        const isAdminUser = data.success && data.permissions.isAdmin || false;
+        const isBarberUser = data.success && data.permissions.isBarber || false;
+        
+        setIsAdmin(isAdminUser);
+        setIsBarber(isBarberUser);
+        setHasAdminAccess(isAdminUser || isBarberUser); // Admin O Barbiere possono accedere
       } else {
         console.error('Failed to check permissions:', response.status);
         setIsAdmin(false);
+        setIsBarber(false);
+        setHasAdminAccess(false);
       }
     } catch (error) {
       console.error('Error checking permissions:', error);
       setIsAdmin(false);
+      setIsBarber(false);
+      setHasAdminAccess(false);
     } finally {
       setPermissionsChecked(true);
     }
@@ -65,13 +77,13 @@ export default function AdminUsersPage() {
   useEffect(() => {
     if (!permissionsChecked) return;
     
-    if (!isAdmin) {
+    if (!hasAdminAccess) {
       router.push('/');
       return;
     }
     
     fetchUsers();
-  }, [permissionsChecked, isAdmin, router]);
+  }, [permissionsChecked, hasAdminAccess, router]);
 
   const fetchUsers = async () => {
     try {
@@ -166,12 +178,12 @@ export default function AdminUsersPage() {
       </div>
     );
   }
-  if (!session || !isAdmin) {
+  if (!session || !hasAdminAccess) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Accesso Negato</h1>
-          <p className="text-gray-600">Solo gli amministratori possono accedere a questa pagina.</p>
+          <p className="text-gray-600">Solo gli amministratori o barbieri possono accedere a questa pagina.</p>
         </div>
       </div>
     );
@@ -180,13 +192,28 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Gestione Utenti (Admin)
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Gestisci i ruoli degli utenti del sistema ed elimina account se necessario
-          </p>
-          
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Gestione Utenti {isAdmin ? '(Admin)' : '(Barbiere)'}
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Gestisci i ruoli degli utenti del sistema ed elimina account se necessario
+              </p>
+            </div>
+            
+            {/* Indicatore ruolo */}
+            <div className="flex items-center space-x-2">
+              <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                isAdmin 
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-amber-100 text-amber-800'
+              }`}>
+                {isAdmin ? '👑 Admin' : '✂️ Barbiere'}
+              </span>
+            </div>
+          </div>
+
           {/* Avviso di sicurezza */}
           <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex">

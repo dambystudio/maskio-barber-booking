@@ -10,9 +10,9 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.role || session.user.role !== 'admin') {
+    if (!session?.user?.role || (session.user.role !== 'admin' && session.user.role !== 'barber')) {
       return NextResponse.json(
-        { error: 'Accesso negato. Solo admin possono gestire i ruoli.' },
+        { error: 'Accesso negato. Solo admin e barbieri possono visualizzare i ruoli.' },
         { status: 403 }
       );
     }

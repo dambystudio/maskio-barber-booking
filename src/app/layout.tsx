@@ -148,7 +148,8 @@ export default function RootLayout({
           <link rel="icon" type="image/png" sizes="32x32" href="/icone/predefinita/32x32.png" />
           <link rel="icon" type="image/png" sizes="16x16" href="/icone/predefinita/16x16.png" />
           <link rel="shortcut icon" href="/icone/predefinita/32x32.png" />
-        </head>        <body className={inter.className}>
+        </head>
+        <body className={inter.className}>
           <GoogleAnalytics />
           <SessionProvider>
             <SecurityProvider>

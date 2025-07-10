@@ -9,12 +9,8 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    // Solo admin possono vedere lo status del database
-    if (!session?.user?.role || session.user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Accesso negato. Solo admin possono visualizzare lo stato del database.' },
-        { status: 403 }
-      );
+    if (!session?.user?.role || (session.user.role !== 'admin' && session.user.role !== 'barber')) {
+      return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
     // Conta utenti per ruolo
