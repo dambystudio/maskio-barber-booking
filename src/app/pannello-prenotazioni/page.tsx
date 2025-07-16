@@ -279,6 +279,9 @@ export default function PannelloPrenotazioni() {
     }
       // Carica le impostazioni dal server (funzione definita più avanti)
     // loadClosureSettingsFromServer();
+    
+    // Carica le chiusure esistenti dei barbieri
+    loadBarberClosures();
   }, []);
 
   // Funzioni per il fetching dei dati (definite prima degli useEffect che le utilizzano)
@@ -678,6 +681,9 @@ export default function PannelloPrenotazioni() {
       setSelectedClosureBarber('all');
       setSelectedClosureType('full');
       
+      // Ricarica le chiusure per aggiornare la visualizzazione
+      await loadBarberClosures();
+      
       console.log(`✅ Barber closures added for ${barberEmail}: ${dates.length} dates`);
       alert(`Chiusura aggiunta per ${barberMapping[barberEmail as keyof typeof barberMapping]} - ${dates.length} giorni`);
       
@@ -784,6 +790,116 @@ export default function PannelloPrenotazioni() {
       alert('Errore di rete nel salvare la chiusura.');
     }
   };
+
+  // Funzione per rimuovere una chiusura di un barbiere
+  const removeBarberClosure = async (barberEmail: string, closureDate: string, closureType: 'full' | 'morning' | 'afternoon') => {
+    try {
+      const response = await fetch('/api/barber-closures', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          barberEmail,
+          closureDate,
+          closureType
+        })
+      });
+
+      if (response.ok) {
+        console.log(`✅ Barber closure removed for ${barberEmail} on ${closureDate} (${closureType})`);
+        
+        // Aggiorna lo stato locale rimuovendo la chiusura
+        setBarberClosures(prev => {
+          const newClosures = { ...prev };
+          if (newClosures[closureDate] && newClosures[closureDate][barberEmail]) {
+            if (closureType === 'full') {
+              // Rimuovi completamente la chiusura per quel barbiere in quella data
+              delete newClosures[closureDate][barberEmail];
+            } else if (closureType === 'morning') {
+              newClosures[closureDate][barberEmail].morning = false;
+            } else if (closureType === 'afternoon') {
+              newClosures[closureDate][barberEmail].afternoon = false;
+            }
+            
+            // Se non ci sono più chiusure per quella data, rimuovi l'intera data
+            if (Object.keys(newClosures[closureDate]).length === 0) {
+              delete newClosures[closureDate];
+            }
+          }
+          return newClosures;
+        });
+        
+        const barberName = barberMapping[barberEmail as keyof typeof barberMapping];
+        const closureTypeText = closureType === 'full' ? 'giornaliera' : 
+                               closureType === 'morning' ? 'mattutina' : 'pomeridiana';
+        alert(`Chiusura ${closureTypeText} rimossa per ${barberName} in data ${format(parseISO(closureDate + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}`);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to remove barber closure:', errorData);
+        
+        if (response.status === 404) {
+          alert('Chiusura non trovata.');
+        } else {
+          alert('Errore nel rimuovere la chiusura. Riprova.');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error removing barber closure:', error);
+      alert('Errore di rete nel rimuovere la chiusura.');
+    }
+  };
+
+  // Funzione per caricare le chiusure esistenti dei barbieri
+  const loadBarberClosures = async () => {
+    try {
+      const response = await fetch('/api/barber-closures');
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.closures) {
+          // Trasforma i dati dall'API nel formato dello stato
+          const closuresMap: {
+            [date: string]: {
+              [barberEmail: string]: {
+                morning: boolean;
+                afternoon: boolean;
+              }
+            }
+          } = {};
+          
+          data.closures.forEach((closure: any) => {
+            const { closureDate, barberEmail, closureType } = closure;
+            
+            if (!closuresMap[closureDate]) {
+              closuresMap[closureDate] = {};
+            }
+            
+            if (!closuresMap[closureDate][barberEmail]) {
+              closuresMap[closureDate][barberEmail] = { morning: false, afternoon: false };
+            }
+            
+            if (closureType === 'full') {
+              closuresMap[closureDate][barberEmail].morning = true;
+              closuresMap[closureDate][barberEmail].afternoon = true;
+            } else if (closureType === 'morning') {
+              closuresMap[closureDate][barberEmail].morning = true;
+            } else if (closureType === 'afternoon') {
+              closuresMap[closureDate][barberEmail].afternoon = true;
+            }
+          });
+          
+          setBarberClosures(closuresMap);
+          console.log('✅ Barber closures loaded:', closuresMap);
+        }
+      } else {
+        console.error('❌ Failed to load barber closures');
+      }
+    } catch (error) {
+      console.error('❌ Error loading barber closures:', error);
+    }
+  };
+
   const updateBookingStatus = async (bookingId: string, newStatus: 'confirmed' | 'cancelled') => {
     try {
       const response = await fetch('/api/bookings', {
@@ -1222,6 +1338,93 @@ Grazie! 😊`;
                 </div>
               )}
             </div>
+
+            {/* Chiusure Barbieri Esistenti - Nuova Sezione */}
+            {Object.keys(barberClosures).length > 0 && (
+              <div className="border-t border-gray-700 pt-4 md:pt-6">
+                <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4 flex items-center gap-2">
+                  🧔 Chiusure Barbieri Attive
+                </h3>
+                <div className="space-y-4">
+                  {Object.entries(barberClosures)
+                    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                    .map(([date, barbersClosures]) => (
+                      <div key={date} className="bg-orange-900/30 border border-orange-500 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="text-orange-400 text-lg">📅</div>
+                          <div>
+                            <div className="font-medium text-orange-300">
+                              {format(parseISO(date + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}
+                            </div>
+                            <div className="text-xs text-orange-400">
+                              {format(parseISO(date + 'T00:00:00'), 'EEEE', { locale: it })}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {Object.entries(barbersClosures).map(([barberEmail, closures]) => (
+                            <div key={barberEmail} className="bg-gray-800/50 rounded-lg p-3">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="flex items-center gap-3">
+                                  <div className="text-amber-400">🧔</div>
+                                  <div>
+                                    <div className="font-medium text-white text-sm">
+                                      {barberMapping[barberEmail as keyof typeof barberMapping] || barberEmail}
+                                    </div>
+                                    <div className="text-xs text-gray-400">
+                                      {closures.morning && closures.afternoon && 'Chiuso tutto il giorno'}
+                                      {closures.morning && !closures.afternoon && 'Chiuso la mattina (9:00-14:00)'}
+                                      {!closures.morning && closures.afternoon && 'Chiuso il pomeriggio (14:00-19:00)'}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex gap-1 flex-wrap">
+                                  {closures.morning && closures.afternoon ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => removeBarberClosure(barberEmail, date, 'full')}
+                                      className="text-red-400 hover:text-red-300 hover:bg-red-800 px-2 py-1 rounded text-xs border border-red-500 transition-colors touch-manipulation"
+                                      title="Rimuovi chiusura giornaliera"
+                                    >
+                                      ❌ Tutto
+                                    </button>
+                                  ) : (
+                                    <>
+                                      {closures.morning && (
+                                        <button
+                                          type="button"
+                                          onClick={() => removeBarberClosure(barberEmail, date, 'morning')}
+                                          className="text-red-400 hover:text-red-300 hover:bg-red-800 px-2 py-1 rounded text-xs border border-red-500 transition-colors touch-manipulation"
+                                          title="Rimuovi chiusura mattutina"
+                                        >
+                                          ❌ Mattina
+                                        </button>
+                                      )}
+                                      {closures.afternoon && (
+                                        <button
+                                          type="button"
+                                          onClick={() => removeBarberClosure(barberEmail, date, 'afternoon')}
+                                          className="text-red-400 hover:text-red-300 hover:bg-red-800 px-2 py-1 rounded text-xs border border-red-500 transition-colors touch-manipulation"
+                                          title="Rimuovi chiusura pomeridiana"
+                                        >
+                                          ❌ Pomeriggio
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
               <div className="bg-blue-900/50 border border-blue-500 rounded-lg p-4 mt-6">
               <div className="flex items-start gap-3">
                 <div className="text-blue-400 text-xl">💡</div>
