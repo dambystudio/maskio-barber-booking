@@ -203,7 +203,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
 
       
       {/* Why Choose Us */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 via-black to-gray-800">\
+      <section className="py-20 bg-gradient-to-br from-gray-900 via-black to-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div

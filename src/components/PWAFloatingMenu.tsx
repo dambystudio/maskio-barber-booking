@@ -166,7 +166,7 @@ export default function PWAFloatingMenu() {
           {/* Footer */}
           <div className="bg-gray-50 dark:bg-gray-800 p-3 text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Maskio Barber • PWA Mode
+              Maskio Barber Concept • PWA Mode
             </p>
           </div>
         </div>

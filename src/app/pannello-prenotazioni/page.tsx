@@ -252,6 +252,8 @@ export default function PannelloPrenotazioni() {
   useEffect(() => {
     if (permissionsChecked && isAuthorized) {
       fetchAllBarberBookings();
+      // Carica le chiusure esistenti dei barbieri
+      loadBarberClosures();
     }
   }, [permissionsChecked, isAuthorized]);
 
@@ -279,9 +281,6 @@ export default function PannelloPrenotazioni() {
     }
       // Carica le impostazioni dal server (funzione definita più avanti)
     // loadClosureSettingsFromServer();
-    
-    // Carica le chiusure esistenti dei barbieri
-    loadBarberClosures();
   }, []);
 
   // Funzioni per il fetching dei dati (definite prima degli useEffect che le utilizzano)
