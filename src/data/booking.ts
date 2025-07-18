@@ -21,7 +21,7 @@ export const barbersFromData: Barber[] = [
     name: 'Fabio',
     image: '/barbers/fabio.jpg',
     specialties: ['Tagli moderni', 'Tagli classici', 'Barba'],
-    experience: 'Proprietario',
+    experience: 'Titolare',
     availableServices: fabioSpecificServices // Assegnazione per la pagina /servizi
   },
   {
@@ -29,7 +29,7 @@ export const barbersFromData: Barber[] = [
     name: 'Michele',
     image: '/barbers/michele.jpg',
     specialties: ['Tagli moderni', 'Tagli classici', 'Barba'],
-    experience: 'Apprendista',
+    experience: 'Collaboratore',
     availableServices: micheleSpecificServices // Assegnazione per la pagina /servizi
   }
 ];
