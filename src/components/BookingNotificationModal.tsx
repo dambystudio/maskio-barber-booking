@@ -44,7 +44,7 @@ export default function BookingNotificationModal({ isOpen, onClose }: BookingNot
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-4 sm:p-6 text-center">
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-500 p-4 sm:p-6 text-center">
               <div className="text-3xl sm:text-4xl mb-2">📅</div>
               <h2 className="text-xl sm:text-2xl font-bold text-white">
                 Importante: Nuovo Sistema di Prenotazione
@@ -72,14 +72,14 @@ export default function BookingNotificationModal({ isOpen, onClose }: BookingNot
                 </div>
               </div>
 
-              <div className="bg-amber-900/30 border border-amber-500 rounded-lg p-3 sm:p-4">
+              <div className="bg-yellow-900/30 border border-yellow-500 rounded-lg p-3 sm:p-4">
                 <div className="flex items-start gap-3">
-                  <div className="text-amber-400 text-xl sm:text-2xl flex-shrink-0">🗓️</div>
+                  <div className="text-yellow-400 text-xl sm:text-2xl flex-shrink-0">🗓️</div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-amber-300 mb-2 text-sm sm:text-base">
+                    <h3 className="font-semibold text-yellow-300 mb-2 text-sm sm:text-base">
                       Date Disponibili
                     </h3>
-                    <p className="text-amber-200 text-xs sm:text-sm">
+                    <p className="text-yellow-200 text-xs sm:text-sm">
                       Le prenotazioni su questo sito partono dal <strong>1° settembre</strong> e sono già disponibili per i prossimi due mesi.
                     </p>
                   </div>
@@ -138,7 +138,7 @@ export default function BookingNotificationModal({ isOpen, onClose }: BookingNot
               <div className="flex flex-col gap-2">
                 <button
                   onClick={handleClose}
-                  className="w-full px-4 py-3 bg-amber-500 text-black rounded-lg hover:bg-amber-600 transition-colors font-medium text-sm sm:text-base"
+                  className="w-full px-4 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors font-medium text-sm sm:text-base"
                 >
                   Ho capito, continua
                 </button>

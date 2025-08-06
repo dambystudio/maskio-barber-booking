@@ -28,7 +28,7 @@ export default function BookingInfoBanner() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -100 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative bg-gradient-to-r from-amber-500 to-orange-500 text-white py-4 px-6 shadow-lg"
+          className="relative bg-gradient-to-r from-yellow-500 to-yellow-500 text-white py-4 px-6 shadow-lg"
         >
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -45,7 +45,7 @@ export default function BookingInfoBanner() {
             <div className="flex items-center gap-3">
               <Link
                 href="/prenota"
-                className="bg-white text-amber-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
+                className="bg-white text-yellow-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
               >
                 Prenota da Settembre
               </Link>

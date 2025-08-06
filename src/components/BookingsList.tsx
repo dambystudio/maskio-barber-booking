@@ -75,7 +75,7 @@ export default function BookingsList() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-12"
         >
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
           <p className="text-gray-400 text-lg">Verificando autorizzazioni...</p>
         </motion.div>
       ) : !session ? (
@@ -92,7 +92,7 @@ export default function BookingsList() {
             </p>
             <button
               onClick={() => window.location.href = '/auth/signin'}
-              className="bg-amber-500 hover:bg-amber-600 text-black px-6 py-3 rounded-lg font-semibold transition-colors"
+              className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               Effettua l'Accesso
             </button>

@@ -137,8 +137,8 @@ export default function Home() {
       {/* Enhanced Luxury Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         {/* Static background elements for better performance */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-amber-300/3 to-amber-600/2 rounded-full blur-3xl opacity-60" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-amber-400/2 to-orange-500/2 rounded-full blur-3xl opacity-40" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-yellow-300/3 to-yellow-600/2 rounded-full blur-3xl opacity-60" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-yellow-400/2 to-yellow-500/2 rounded-full blur-3xl opacity-40" />
         <div className="absolute top-1/2 left-1/4 w-60 h-60 bg-gradient-to-br from-gray-500/2 to-gray-700/2 rounded-full blur-3xl opacity-30" />
           {/* Soft vignette effect for depth */}
         <div className="absolute inset-0 bg-radial-gradient pointer-events-none opacity-40"          style={{
@@ -165,7 +165,7 @@ export default function Home() {
           />
           {/* Overlay con gradiente più sofisticato e lussuoso */}
           <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-black/70 via-gray-900/50 to-amber-950/20"
+            className="absolute inset-0 bg-gradient-to-br from-black/70 via-gray-900/50 to-yellow-950/20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 2.2, ease: "easeOut" }}
@@ -194,15 +194,15 @@ export default function Home() {
             />
             
             {/* Static decorative lines */}
-            <div className="absolute top-[10%] left-[5%] w-[2px] h-32 bg-gradient-to-b from-transparent via-amber-500/40 to-transparent opacity-50" />
-            <div className="absolute bottom-[15%] right-[8%] w-[2px] h-40 bg-gradient-to-b from-transparent via-amber-500/40 to-transparent opacity-50" />
+            <div className="absolute top-[10%] left-[5%] w-[2px] h-32 bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent opacity-50" />
+            <div className="absolute bottom-[15%] right-[8%] w-[2px] h-40 bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent opacity-50" />
             
             {/* Static decorative circles */}
-            <div className="absolute top-28 right-28 w-3 h-3 border-2 border-amber-400/40 rounded-full opacity-50" />
-            <div className="absolute bottom-36 left-24 w-2 h-2 border border-amber-300/50 rounded-full opacity-60" />
+            <div className="absolute top-28 right-28 w-3 h-3 border-2 border-yellow-400/40 rounded-full opacity-50" />
+            <div className="absolute bottom-36 left-24 w-2 h-2 border border-yellow-300/50 rounded-full opacity-60" />
               {/* SVG Decorative scissors icon */}
             <motion.div
-              className="absolute top-[30%] right-[15%] text-amber-500/30 w-12 h-12"
+              className="absolute top-[30%] right-[15%] text-yellow-500/30 w-12 h-12"
               animate={{
                 rotate: [0, 45, 0],
                 opacity: [0.3, 0.5, 0.3],
@@ -226,7 +226,7 @@ export default function Home() {
             
             {/* SVG Decorative straight razor icon */}
             <motion.div
-              className="absolute bottom-[25%] left-[12%] text-amber-500/30 w-10 h-10"
+              className="absolute bottom-[25%] left-[12%] text-yellow-500/30 w-10 h-10"
               animate={{
                 rotate: [0, -30, 0],
                 opacity: [0.3, 0.6, 0.3],
@@ -248,7 +248,7 @@ export default function Home() {
             
             {/* SVG Decorative comb icon */}
             <motion.div
-              className="absolute top-[60%] left-[20%] text-amber-500/20 w-8 h-8"
+              className="absolute top-[60%] left-[20%] text-yellow-500/20 w-8 h-8"
               animate={{
                 rotate: [0, 15, 0],
                 opacity: [0.2, 0.4, 0.2],
@@ -282,8 +282,8 @@ export default function Home() {
               className="flex flex-col items-center"
             >              <div className="relative">
                 {/* Static glow effect for better performance */}
-                <div className="absolute -inset-16 opacity-10 blur-[80px] bg-gradient-radial from-amber-400/20 via-amber-400/5 to-transparent" />
-                <div className="absolute -inset-12 opacity-15 blur-[60px] bg-gradient-radial from-amber-400/15 via-amber-400/3 to-transparent" />                {/* Logo */}
+                <div className="absolute -inset-16 opacity-10 blur-[80px] bg-gradient-radial from-yellow-400/20 via-yellow-400/5 to-transparent" />
+                <div className="absolute -inset-12 opacity-15 blur-[60px] bg-gradient-radial from-yellow-400/15 via-yellow-400/3 to-transparent" />                {/* Logo */}
                 <Image
                   src="/LogoSimboloNome_Bianco(1).png"
                   alt="Maskio Barber Concept"
@@ -308,7 +308,7 @@ export default function Home() {
                 </motion.div>
                 
                 <motion.div 
-                  className="h-[1px] w-48 bg-gradient-to-r from-transparent via-amber-400/80 to-transparent"
+                  className="h-[1px] w-48 bg-gradient-to-r from-transparent via-yellow-400/80 to-transparent"
                   variants={scaleIn}
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
@@ -317,7 +317,7 @@ export default function Home() {
                 
                 {/* Animated golden dot */}
                 <motion.div 
-                  className="absolute -top-[2px] left-1/2 transform -translate-x-1/2 h-[3px] w-3 rounded-full bg-amber-400"
+                  className="absolute -top-[2px] left-1/2 transform -translate-x-1/2 h-[3px] w-3 rounded-full bg-yellow-400"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: [0, 1, 0] }}
                   transition={{ delay: 1.7, duration: 2, repeat: Infinity, repeatDelay: 4 }}
@@ -325,21 +325,21 @@ export default function Home() {
                 
                 <div className="flex items-center justify-center space-x-2 mt-1">
                   <motion.div 
-                    className="h-[1px] w-8 bg-gradient-to-r from-transparent to-amber-400/50"
+                    className="h-[1px] w-8 bg-gradient-to-r from-transparent to-yellow-400/50"
                     initial={{ scaleX: 0, originX: 1 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 0.8, duration: 0.6 }}
                   />
                   
                   <motion.div
-                    className="h-1 w-1 rounded-full bg-amber-400/70"
+                    className="h-1 w-1 rounded-full bg-yellow-400/70"
                     initial={{ scale: 0 }}
                     animate={{ scale: [0, 1, 0.8, 1] }}
                     transition={{ delay: 1, duration: 0.8 }}
                   />
                   
                   <motion.div 
-                    className="h-[1px] w-8 bg-gradient-to-r from-amber-400/50 to-transparent"
+                    className="h-[1px] w-8 bg-gradient-to-r from-yellow-400/50 to-transparent"
                     initial={{ scaleX: 0, originX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 0.8, duration: 0.6 }}
@@ -352,7 +352,7 @@ export default function Home() {
             >
               <span className="relative inline-block">
                 <motion.span
-                  className="absolute -left-3 top-0 text-3xl text-amber-400/40 font-serif"
+                  className="absolute -left-3 top-0 text-3xl text-yellow-400/40 font-serif"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 1, delay: 1.5 }}
@@ -368,7 +368,7 @@ export default function Home() {
               >
                 tradizione
                 <motion.span
-                  className="absolute -bottom-1 left-0 h-[1px] w-full bg-amber-500/30"
+                  className="absolute -bottom-1 left-0 h-[1px] w-full bg-yellow-500/30"
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
                   transition={{ duration: 0.8, delay: 1.8 }}
@@ -382,7 +382,7 @@ export default function Home() {
               >
                 innovazione
                 <motion.span
-                  className="absolute -bottom-1 left-0 h-[1px] w-full bg-amber-500/30"
+                  className="absolute -bottom-1 left-0 h-[1px] w-full bg-yellow-500/30"
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
                   transition={{ duration: 0.8, delay: 2 }}
@@ -390,13 +390,13 @@ export default function Home() {
               </motion.span>{" "}
               si incontrano per creare il tuo{" "}
               <motion.span 
-                className="text-amber-200 font-normal italic relative"
+                className="text-yellow-200 font-normal italic relative"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
               >
                 stile perfetto
                 <motion.span 
-                  className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-amber-400/10 via-amber-400/70 to-amber-400/10"
+                  className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-yellow-400/10 via-yellow-400/70 to-yellow-400/10"
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
                   transition={{ duration: 1, delay: 1.2 }}
@@ -404,7 +404,7 @@ export default function Home() {
               </motion.span>
               <span className="relative inline-block">
                 <motion.span
-                  className="absolute -right-3 bottom-0 text-3xl text-amber-400/40 font-serif"
+                  className="absolute -right-3 bottom-0 text-3xl text-yellow-400/40 font-serif"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 1, delay: 1.8 }}
@@ -426,7 +426,7 @@ export default function Home() {
               >
                 {/* Glow effect behind primary button */}
                 <motion.div 
-                  className="absolute -inset-1 rounded-xl bg-amber-500/30 blur-md -z-10"
+                  className="absolute -inset-1 rounded-xl bg-yellow-500/30 blur-md -z-10"
                   animate={{
                     opacity: [0.3, 0.5, 0.3],
                     scale: [1, 1.05, 1]
@@ -436,7 +436,7 @@ export default function Home() {
                     ease: "easeInOut",
                     repeat: Infinity
                   }}
-                />                <BookingButton size="lg" className="text-base bg-gradient-to-br from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 border-0 shadow-xl px-10 py-5 uppercase tracking-wider font-medium">
+                />                <BookingButton size="lg" className="text-base bg-gradient-to-br from-yellow-500 to-yellow-700 hover:from-yellow-600 hover:to-yellow-800 border-0 shadow-xl px-10 py-5 uppercase tracking-wider font-medium">
                   <span className="relative flex items-center gap-2 z-10">
                     {/* Small decorative element before text */}
                     <motion.span
@@ -486,7 +486,7 @@ export default function Home() {
                 </BookingButton>
               </motion.div>
                 <Link href="/servizi">                <motion.button 
-                  className="relative border border-amber-400/30 text-white px-10 py-5 rounded-lg font-medium text-base transition-all duration-300 hover:border-amber-300/70 hover:text-amber-100 uppercase tracking-wider bg-black/50 backdrop-blur-sm overflow-hidden group"
+                  className="relative border border-yellow-400/30 text-white px-10 py-5 rounded-lg font-medium text-base transition-all duration-300 hover:border-yellow-300/70 hover:text-yellow-100 uppercase tracking-wider bg-black/50 backdrop-blur-sm overflow-hidden group"
                   whileHover={{
                     boxShadow: "0 10px 30px rgba(251, 191, 36, 0.15)",
                     borderColor: "rgba(251, 191, 36, 0.5)",
@@ -496,7 +496,7 @@ export default function Home() {
                 >
                   {/* Enhanced background shine effect */}
                   <motion.span 
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent -z-10" 
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-400/10 to-transparent -z-10" 
                     initial={{ x: '-100%', opacity: 0 }}
                     whileHover={{ x: '100%', opacity: 1 }}
                     transition={{ duration: 0.9, ease: "easeInOut" }}
@@ -504,12 +504,12 @@ export default function Home() {
                   
                   {/* Corner accent decorations */}
                   <motion.span 
-                    className="absolute top-[3px] left-[3px] w-3 h-3 border-l border-t border-amber-400/40"
+                    className="absolute top-[3px] left-[3px] w-3 h-3 border-l border-t border-yellow-400/40"
                     initial={{ opacity: 0.4 }}
                     whileHover={{ opacity: 0.8 }}
                   />
                   <motion.span 
-                    className="absolute bottom-[3px] right-[3px] w-3 h-3 border-r border-b border-amber-400/40"
+                    className="absolute bottom-[3px] right-[3px] w-3 h-3 border-r border-b border-yellow-400/40"
                     initial={{ opacity: 0.4 }}
                     whileHover={{ opacity: 0.8 }}
                   />
@@ -517,7 +517,7 @@ export default function Home() {
                   <span className="relative flex items-center gap-2">
                     {/* Small decorative dot before text */}
                     <motion.span 
-                      className="w-[3px] h-[3px] rounded-full bg-amber-400/70 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      className="w-[3px] h-[3px] rounded-full bg-yellow-400/70 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     />
                     
                     <span>Scopri i Servizi</span>
@@ -544,12 +544,12 @@ export default function Home() {
                     
                     {/* Small decorative dot after text */}
                     <motion.span 
-                      className="w-[3px] h-[3px] rounded-full bg-amber-400/70 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      className="w-[3px] h-[3px] rounded-full bg-yellow-400/70 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     />
                     
                     {/* Enhanced underline effect */}
                     <motion.span
-                      className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-400/70 to-transparent"
+                      className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-yellow-400/70 to-transparent"
                       initial={{ scaleX: 0 }}
                       whileHover={{ scaleX: 1 }}
                       transition={{ duration: 0.4 }}
@@ -591,7 +591,7 @@ export default function Home() {
             variants={staggerContainer}
           >
             <motion.div variants={fadeInLeft} className="space-y-8">
-              <motion.div className="space-y-6">                <motion.h2 
+              <motion.div className="space-y-6">                <motion.h1 
                   variants={fadeInUp}
                   className="text-4xl md:text-5xl font-bold text-white"
                   whileHover={{ scale: 1.02 }}
@@ -599,12 +599,12 @@ export default function Home() {
                 >
                   L'Arte del{" "}
                   <motion.span 
-                    className="text-amber-600 inline-block"
+                    className="text-yellow-600 inline-block"
                     animate={{ 
                       textShadow: [
-                        "0 0 0px rgba(245, 158, 11, 0)",
-                        "0 0 20px rgba(245, 158, 11, 0.4)",
-                        "0 0 0px rgba(245, 158, 11, 0)"
+                        "0 0 0px rgba(234, 179, 8, 0)",
+                        "0 0 20px rgba(234, 179, 8, 0.4)",
+                        "0 0 0px rgba(234, 179, 8, 0)"
                       ]
                     }}
                     transition={{
@@ -616,7 +616,7 @@ export default function Home() {
                   >
                     Barbiere Moderno
                   </motion.span>
-                </motion.h2>
+                </motion.h1>
                   <motion.p 
                   variants={fadeInUp}
                   className="text-lg text-gray-300 leading-relaxed"
@@ -680,7 +680,7 @@ export default function Home() {
                 
                 {/* Overlay with gradient */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-amber-500/20"
+                  className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-yellow-500/20"
                   animate={hoveredCard === 'about-image' ? {
                     background: [
                       "linear-gradient(45deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(245,158,11,0.2) 100%)",
@@ -693,7 +693,7 @@ export default function Home() {
 
                 {/* Floating decorative elements */}
                 <motion.div
-                  className="absolute top-4 right-4 w-3 h-3 bg-amber-400 rounded-full"
+                  className="absolute top-4 right-4 w-3 h-3 bg-yellow-400 rounded-full"
                   animate={{
                     scale: [1, 1.5, 1],
                     opacity: [0.7, 1, 0.7]
@@ -706,7 +706,7 @@ export default function Home() {
                   }}
                 />
                 <motion.div
-                  className="absolute bottom-6 left-6 w-2 h-2 bg-amber-300 rounded-full"
+                  className="absolute bottom-6 left-6 w-2 h-2 bg-yellow-300 rounded-full"
                   animate={{
                     scale: [1.2, 1, 1.2],
                     opacity: [1, 0.5, 1]
@@ -740,7 +740,7 @@ export default function Home() {
         </div>
       </motion.section>      {/* Services Preview with Advanced Animations */}
       <motion.section 
-        className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-amber-900/20 relative overflow-hidden"
+        className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-yellow-900/20 relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
@@ -749,7 +749,7 @@ export default function Home() {
         {/* Animated Background Particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-20 left-10 w-2 h-2 bg-amber-400/30 rounded-full"
+            className="absolute top-20 left-10 w-2 h-2 bg-yellow-400/30 rounded-full"
             animate={{
               y: [-20, 20, -20],
               x: [-10, 10, -10],
@@ -764,7 +764,7 @@ export default function Home() {
             }}
           />
           <motion.div
-            className="absolute bottom-32 right-16 w-3 h-3 bg-amber-300/20 rounded-full"
+            className="absolute bottom-32 right-16 w-3 h-3 bg-yellow-300/20 rounded-full"
             animate={{
               y: [15, -15, 15],
               x: [8, -8, 8],
@@ -780,7 +780,7 @@ export default function Home() {
             }}
           />
           <motion.div
-            className="absolute top-1/2 right-1/4 w-1 h-1 bg-amber-500/40 rounded-full"
+            className="absolute top-1/2 right-1/4 w-1 h-1 bg-yellow-500/40 rounded-full"
             animate={{
               scale: [1, 3, 1],
               opacity: [0.4, 1, 0.4],
@@ -807,12 +807,12 @@ export default function Home() {
             >
               I Nostri{" "}
               <motion.span 
-                className="text-amber-600 inline-block"
+                className="text-yellow-600 inline-block"
                 animate={{ 
                   textShadow: [
-                    "0 0 0px rgba(245, 158, 11, 0)",
-                    "0 0 25px rgba(245, 158, 11, 0.6)",
-                    "0 0 0px rgba(245, 158, 11, 0)"
+                    "0 0 0px rgba(234, 179, 8, 0)",
+                    "0 0 25px rgba(234, 179, 8, 0.6)",
+                    "0 0 0px rgba(234, 179, 8, 0)"
                   ]
                 }}
                 transition={{
@@ -850,7 +850,7 @@ export default function Home() {
                 icon: '🪒',
                 image: '/servizi-barba.jpg', // Immagine per taglio barba
                 price: 'da 10€',
-                gradient: 'from-amber-100/20 to-gray-100/25'
+                gradient: 'from-yellow-100/20 to-gray-100/25'
               },
               {
                 title: 'Altri Servizi',
@@ -885,12 +885,12 @@ export default function Home() {
                 }}
               >
                 {/* Gradient Background Effect */}                <motion.div
-                  className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/30 to-amber-100/30 rounded-2xl"
+                  className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/30 to-yellow-100/30 rounded-2xl"
                   animate={hoveredCard === `service-${index}` ? {
                     background: [
-                      "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(245,158,11,0.3) 100%)",
-                      "linear-gradient(225deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 50%, rgba(245,158,11,0.5) 100%)",
-                      "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(245,158,11,0.3) 100%)"
+                      "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(234,179,8,0.3) 100%)",
+                      "linear-gradient(225deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 50%, rgba(234,179,8,0.5) 100%)",
+                      "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(234,179,8,0.3) 100%)"
                     ]
                   } : {}}
                   transition={{ duration: 2, ease: "easeInOut" }}
@@ -924,10 +924,10 @@ export default function Home() {
                 <p className="text-gray-900 mb-5 relative z-10 font-medium drop-shadow-sm">{service.description}</p>
                 
                 <motion.div 
-                  className="text-lg font-semibold text-amber-900 mb-4 relative z-10"
+                  className="text-lg font-semibold text-yellow-900 mb-4 relative z-10"
                   animate={hoveredCard === `service-${index}` ? {
                     scale: [1, 1.05, 1],
-                    color: ["#78350f", "#92400e", "#78350f"]
+                    color: ["#713f12", "#854d0e", "#713f12"]
                   } : {}}
                   transition={{ duration: 1.5, ease: "easeInOut" }}
                 >
@@ -965,14 +965,14 @@ export default function Home() {
             variants={fadeInUp}
           >
             <Link href="/servizi">              <motion.button 
-                className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 relative overflow-hidden group"
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 relative overflow-hidden group"
                 variants={magneticHover}
                 initial="rest"
                 whileTap="tap"
                 whileHover={{
-                  boxShadow: "0 20px 40px rgba(245, 158, 11, 0.3)",
+                  boxShadow: "0 20px 40px rgba(234, 179, 8, 0.3)",
                   y: -3,
-                  background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                  background: "linear-gradient(135deg, #eab308 0%, #ca8a04 100%)"
                 }}
               >
                 <motion.span
@@ -998,7 +998,7 @@ export default function Home() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Floating Particles */}
           <motion.div
-            className="absolute top-16 left-16 w-2 h-2 bg-amber-400/40 rounded-full"
+            className="absolute top-16 left-16 w-2 h-2 bg-yellow-400/40 rounded-full"
             animate={{
               y: [-30, 30, -30],
               x: [-15, 15, -15],
@@ -1013,7 +1013,7 @@ export default function Home() {
             }}
           />
           <motion.div
-            className="absolute bottom-24 right-20 w-3 h-3 bg-amber-300/30 rounded-full"
+            className="absolute bottom-24 right-20 w-3 h-3 bg-yellow-300/30 rounded-full"
             animate={{
               y: [20, -20, 20],
               x: [10, -10, 10],
@@ -1029,7 +1029,7 @@ export default function Home() {
             }}
           />
           <motion.div
-            className="absolute top-1/3 right-1/3 w-1 h-1 bg-amber-500/50 rounded-full"
+            className="absolute top-1/3 right-1/3 w-1 h-1 bg-yellow-500/50 rounded-full"
             animate={{
               scale: [1, 4, 1],
               opacity: [0.5, 1, 0.5],
@@ -1057,12 +1057,12 @@ export default function Home() {
             >
               Perché Scegliere{" "}
               <motion.span 
-                className="text-amber-400 inline-block"
+                className="text-yellow-400 inline-block"
                 animate={{ 
                   textShadow: [
-                    "0 0 0px rgba(245, 158, 11, 0)",
-                    "0 0 30px rgba(245, 158, 11, 0.8)",
-                    "0 0 0px rgba(245, 158, 11, 0)"
+                    "0 0 0px rgba(234, 179, 8, 0)",
+                    "0 0 30px rgba(234, 179, 8, 0.8)",
+                    "0 0 0px rgba(234, 179, 8, 0)"
                   ]
                 }}
                 transition={{
@@ -1098,8 +1098,8 @@ export default function Home() {
                 icon: '🏆',
                 title: 'Qualità Premium',
                 description: 'Utilizziamo solo prodotti professionali di alta qualità',
-                color: 'from-amber-500/20 to-yellow-500/20',
-                accent: 'amber'
+                color: 'from-yellow-500/20 to-yellow-500/20',
+                accent: 'yellow'
               },
               {
                 icon: '🎯',
@@ -1141,12 +1141,12 @@ export default function Home() {
               >
                 {/* Glowing Background Effect */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-amber-400/10 rounded-2xl"
+                  className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-yellow-400/10 rounded-2xl"
                   animate={hoveredFeature === `feature-${index}` ? {
                     background: [
-                      "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(245,158,11,0.1) 100%)",
-                      "linear-gradient(225deg, rgba(255,255,255,0.05) 0%, transparent 50%, rgba(245,158,11,0.2) 100%)",
-                      "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(245,158,11,0.1) 100%)"
+                      "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(234,179,8,0.1) 100%)",
+                      "linear-gradient(225deg, rgba(255,255,255,0.05) 0%, transparent 50%, rgba(234,179,8,0.2) 100%)",
+                      "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(234,179,8,0.1) 100%)"
                     ]
                   } : {}}
                   transition={{ duration: 2, ease: "easeInOut" }}
@@ -1155,7 +1155,7 @@ export default function Home() {
                 {/* Animated Icon with Pulsing Circle */}
                 <motion.div className="relative mb-6 flex justify-center">
                   <motion.div
-                    className="absolute inset-0 w-16 h-16 mx-auto bg-gradient-to-br from-amber-400/20 to-amber-600/20 rounded-full"
+                    className="absolute inset-0 w-16 h-16 mx-auto bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-full"
                     animate={hoveredFeature === `feature-${index}` ? {
                       scale: [1, 1.3, 1],
                       opacity: [0.2, 0.4, 0.2]
@@ -1226,7 +1226,7 @@ export default function Home() {
         </div>
       </motion.section>      {/* Gallery Preview with Advanced 3D Effects */}
       <motion.section 
-        className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-amber-900/20 relative overflow-hidden"
+        className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-yellow-900/20 relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
@@ -1235,7 +1235,7 @@ export default function Home() {
         {/* Floating Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-32 right-24 w-2 h-2 bg-amber-400/20 rounded-full"
+            className="absolute top-32 right-24 w-2 h-2 bg-yellow-400/20 rounded-full"
             animate={{
               y: [-25, 25, -25],
               x: [-12, 12, -12],
@@ -1250,7 +1250,7 @@ export default function Home() {
             }}
           />
           <motion.div
-            className="absolute bottom-40 left-20 w-3 h-3 bg-amber-300/15 rounded-full"
+            className="absolute bottom-40 left-20 w-3 h-3 bg-yellow-300/15 rounded-full"
             animate={{
               y: [18, -18, 18],
               x: [9, -9, 9],
@@ -1278,12 +1278,12 @@ export default function Home() {
             >
               I Nostri{" "}
               <motion.span 
-                className="text-amber-600 inline-block"
+                className="text-yellow-600 inline-block"
                 animate={{ 
                   textShadow: [
-                    "0 0 0px rgba(245, 158, 11, 0)",
-                    "0 0 25px rgba(245, 158, 11, 0.6)",
-                    "0 0 0px rgba(245, 158, 11, 0)"
+                    "0 0 0px rgba(234, 179, 8, 0)",
+                    "0 0 25px rgba(234, 179, 8, 0.6)",
+                    "0 0 0px rgba(234, 179, 8, 0)"
                   ]
                 }}
                 transition={{
@@ -1351,12 +1351,12 @@ export default function Home() {
                   
                   {/* Overlay with Gradient Animation */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-amber-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-yellow-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     animate={hoveredCard === `gallery-${index}` ? {
                       background: [
-                        "linear-gradient(45deg, rgba(0,0,0,0.4) 0%, transparent 50%, rgba(245,158,11,0.3) 100%)",
-                        "linear-gradient(90deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(245,158,11,0.5) 100%)",
-                        "linear-gradient(45deg, rgba(0,0,0,0.4) 0%, transparent 50%, rgba(245,158,11,0.3) 100%)"
+                        "linear-gradient(45deg, rgba(0,0,0,0.4) 0%, transparent 50%, rgba(234,179,8,0.3) 100%)",
+                        "linear-gradient(90deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(234,179,8,0.5) 100%)",
+                        "linear-gradient(45deg, rgba(0,0,0,0.4) 0%, transparent 50%, rgba(234,179,8,0.3) 100%)"
                       ]
                     } : {}}
                     transition={{ duration: 2, ease: "easeInOut" }}
@@ -1387,7 +1387,7 @@ export default function Home() {
 
                   {/* Floating Decorative Elements */}
                   <motion.div
-                    className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full opacity-0 group-hover:opacity-70"
+                    className="absolute top-3 right-3 w-2 h-2 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-70"
                     animate={hoveredCard === `gallery-${index}` ? {
                       scale: [1, 1.8, 1],
                       opacity: [0.7, 1, 0.7]
@@ -1466,7 +1466,7 @@ export default function Home() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Floating Particles */}
           <motion.div
-            className="absolute top-20 left-20 w-3 h-3 bg-amber-400/30 rounded-full"
+            className="absolute top-20 left-20 w-3 h-3 bg-yellow-400/30 rounded-full"
             animate={{
               y: [-40, 40, -40],
               x: [-20, 20, -20],
@@ -1481,7 +1481,7 @@ export default function Home() {
             }}
           />
           <motion.div
-            className="absolute bottom-24 right-32 w-2 h-2 bg-amber-300/25 rounded-full"
+            className="absolute bottom-24 right-32 w-2 h-2 bg-yellow-300/25 rounded-full"
             animate={{
               y: [25, -25, 25],
               x: [15, -15, 15],
@@ -1497,7 +1497,7 @@ export default function Home() {
             }}
           />
           <motion.div
-            className="absolute top-1/2 right-1/4 w-1 h-1 bg-amber-500/40 rounded-full"
+            className="absolute top-1/2 right-1/4 w-1 h-1 bg-yellow-500/40 rounded-full"
             animate={{
               scale: [1, 5, 1],
               opacity: [0.4, 1, 0.4],
@@ -1544,12 +1544,12 @@ export default function Home() {
             >
               Pronto per il Tuo{" "}
               <motion.span 
-                className="text-amber-400 inline-block"
+                className="text-yellow-400 inline-block"
                 animate={{ 
                   textShadow: [
-                    "0 0 0px rgba(245, 158, 11, 0)",
-                    "0 0 30px rgba(245, 158, 11, 0.8)",
-                    "0 0 0px rgba(245, 158, 11, 0)"
+                    "0 0 0px rgba(234, 179, 8, 0)",
+                    "0 0 30px rgba(234, 179, 8, 0.8)",
+                    "0 0 0px rgba(234, 179, 8, 0)"
                   ]
                 }}
                 transition={{
@@ -1581,7 +1581,7 @@ export default function Home() {
                 whileTap="tap"
                 className="relative"
               >
-                <BookingButton size="lg" className="text-lg px-10 py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg transition-all duration-300">
+                <BookingButton size="lg" className="text-lg px-10 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg transition-all duration-300">
                   Prenota il Tuo Appuntamento
                 </BookingButton>
               </motion.div>

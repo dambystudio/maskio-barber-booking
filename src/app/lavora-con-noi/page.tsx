@@ -164,15 +164,15 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
           >
             <motion.div
               variants={scaleIn}
-              className="inline-flex items-center justify-center w-20 h-20 bg-amber-500/20 rounded-full mb-8"
+              className="inline-flex items-center justify-center w-20 h-20 bg-yellow-500/20 rounded-full mb-8"
             >
-              <ScissorsIcon className="h-10 w-10 text-amber-400" />
+              <ScissorsIcon className="h-10 w-10 text-yellow-400" />
             </motion.div>
             <motion.h1 
               variants={fadeInUp}
               className="text-5xl md:text-7xl font-bold text-white mb-6"
             >
-              Lavora con <span className="text-amber-400">Noi</span>
+              Lavora con <span className="text-yellow-400">Noi</span>
             </motion.h1>
             <motion.p 
               variants={fadeInUp}
@@ -186,15 +186,15 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
               className="flex flex-wrap justify-center gap-8 text-gray-300"
             >
               <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
-                <MapPinIcon className="h-5 w-5 text-amber-400" />
+                <MapPinIcon className="h-5 w-5 text-yellow-400" />
                 <span className="font-medium">San Giovanni Rotondo (FG)</span>
               </div>
               <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
-                <UserGroupIcon className="h-5 w-5 text-amber-400" />
+                <UserGroupIcon className="h-5 w-5 text-yellow-400" />
                 <span className="font-medium">Team di Eccellenza</span>
               </div>
               <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
-                <TrophyIcon className="h-5 w-5 text-amber-400" />
+                <TrophyIcon className="h-5 w-5 text-yellow-400" />
                 <span className="font-medium">Crescita Garantita</span>
               </div>
             </motion.div>
@@ -214,7 +214,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
             >
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Perché Scegliere 
-                <span className="text-amber-500"> Maskio</span>
+                <span className="text-yellow-500"> Maskio</span>
               </h2>
               <p className="text-xl text-gray-600 mb-8">
                 Non è solo un lavoro, è una carriera in un ambiente che valorizza il talento, 
@@ -231,7 +231,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end p-6">
                   <div className="text-white">
                     <h3 className="text-xl font-bold mb-1">Ambiente Professionale</h3>
-                    <p className="text-amber-100">Il nostro team di esperti al lavoro</p>
+                    <p className="text-yellow-100">Il nostro team di esperti al lavoro</p>
                   </div>
                 </div>
               </div>
@@ -253,8 +253,8 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                     transition={{ delay: index * 0.1 }}
                     className="flex items-start gap-4 p-6 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 transition-all duration-300 group"
                   >
-                    <div className="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
-                      <Icon className="h-6 w-6 text-amber-600" />
+                    <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
+                      <Icon className="h-6 w-6 text-yellow-600" />
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-2">
@@ -306,7 +306,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-4 border border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 bg-gray-700 shadow-sm text-white placeholder-gray-400"
+                    className="w-full px-4 py-4 border border-gray-600 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 bg-gray-700 shadow-sm text-white placeholder-gray-400"
                     placeholder="Mario Rossi"
                   />
                 </div>
@@ -395,7 +395,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                 className={`w-full font-bold py-5 px-8 rounded-xl transition-all duration-300 text-lg shadow-xl hover:shadow-2xl ${
                   isSubmitting 
                     ? 'bg-gray-600 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white'
+                    : 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white'
                 }`}
               >
                 {isSubmitting ? '🔄 Invio in corso...' : '🚀 Invia la Tua Candidatura'}
@@ -404,7 +404,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
           </motion.div>
         </div>
       </section>      {/* Contact & CTA */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-amber-900 text-white relative overflow-hidden">
+      <section className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-yellow-900 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-black/40"></div>
         {/* Qui potrai aggiungere la tua immagine di sfondo personalizzata */}
         
@@ -427,7 +427,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
               className="grid md:grid-cols-3 gap-8 mb-12"
             >
               <div className="flex flex-col items-center gap-3 p-6 bg-white/10 rounded-xl backdrop-blur-sm">
-                <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center">
                   <MapPinIcon className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -437,7 +437,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
               </div>
               
               <div className="flex flex-col items-center gap-3 p-6 bg-white/10 rounded-xl backdrop-blur-sm">
-                <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center">
                   <EnvelopeIcon className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -447,7 +447,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
               </div>
               
               <div className="flex flex-col items-center gap-3 p-6 bg-white/10 rounded-xl backdrop-blur-sm">
-                <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center">
                   <PhoneIcon className="h-6 w-6 text-white" />
                 </div>
                 <div>

@@ -41,17 +41,17 @@ export default function Footer() {
           
           {/* Contatti - Area Sinistra (Centrata) */}
           <div className="flex flex-col items-center text-center">
-            <h3 className="font-semibold text-xl mb-6 text-amber-400">Contatti</h3>
+            <h3 className="font-semibold text-xl mb-6 text-yellow-400">Contatti</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-center space-x-3">
-                <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>                <a href="tel:+393317100730" className="text-gray-300 hover:text-white transition-colors">
                   +39 331 710 0730
                 </a>
               </div>
               <div className="flex items-center justify-center space-x-3">
-                <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>                <a href="mailto:fabio.cassano97@icloud.com" className="text-gray-300 hover:text-white transition-colors">
                   fabio.cassano97@icloud.com
@@ -59,7 +59,7 @@ export default function Footer() {
               </div>
               <div className="flex flex-col items-center space-y-2 mt-6">
                 <div className="flex items-center space-x-2 mb-2">
-                  <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="text-gray-300 text-sm font-medium">Orari</span>
@@ -88,7 +88,7 @@ export default function Footer() {
               Il tuo barbiere di fiducia per un look sempre perfetto. Tradizione, stile e innovazione in un unico posto.
             </p>
               {/* Social Media */}
-            <h3 className="font-semibold text-xl mb-4 text-amber-400">Seguici</h3>
+            <h3 className="font-semibold text-xl mb-4 text-yellow-400">Seguici</h3>
             <div className="flex justify-center space-x-6">
               {socialLinks.map((item) => (
                 <motion.a
@@ -96,7 +96,7 @@ export default function Footer() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-amber-400 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-800/50"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-800/50"
                   whileHover={{ scale: 1.1, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   title={item.name}
@@ -127,7 +127,7 @@ export default function Footer() {
                 href="https://www.google.com/maps/search/?api=1&query=Via+Sant'Agata+24,+San+Giovanni+Rotondo,+FG,+Italy"
                 target="_blank"
                 rel="noopener noreferrer" 
-                className="inline-flex items-center space-x-2 text-amber-400 hover:text-amber-300 transition-colors text-sm mt-4 px-3 py-2 rounded-lg hover:bg-gray-800/50"
+                className="inline-flex items-center space-x-2 text-yellow-400 hover:text-yellow-300 transition-colors text-sm mt-4 px-3 py-2 rounded-lg hover:bg-gray-800/50"
               >
                 <span>Visualizza sulla mappa</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,12 +146,15 @@ export default function Footer() {
                 &copy; {new Date().getFullYear()} Maskio Barber Concept. Tutti i diritti riservati.
               </p>
               <p className="text-gray-500 text-xs">
+                P.IVA: 04123456789 • San Giovanni Rotondo (FG)
+              </p>
+              <p className="text-gray-500 text-xs">
                 Sito realizzato da{' '}
                 <a 
                   href="https://linktr.ee/dambystudio" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-amber-400 hover:text-amber-300 transition-colors font-medium"
+                  className="text-yellow-400 hover:text-yellow-300 transition-colors font-medium"
                 >
                   dambystudio
                 </a>

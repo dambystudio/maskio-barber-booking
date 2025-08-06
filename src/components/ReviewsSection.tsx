@@ -167,7 +167,7 @@ const ReviewsSection = () => {
       <motion.section className="py-20 bg-gradient-to-br from-black via-gray-900 to-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
-            className="inline-block w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full"
+            className="inline-block w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full"
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />

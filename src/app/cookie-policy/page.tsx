@@ -40,7 +40,7 @@ export default function CookiePolicy() {
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Cookie utilizzati da Maskio Barber</h2>
               
               <div className="space-y-6">
-                <div className="border-l-4 border-amber-500 pl-4">
+                <div className="border-l-4 border-yellow-500 pl-4">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Cookie Necessari</h3>
                   <p className="text-gray-700 mb-2">
                     Questi cookie sono essenziali per il funzionamento del sito web e non possono essere disabilitati.
@@ -81,9 +81,9 @@ export default function CookiePolicy() {
                 disabilitare alcuni cookie potrebbe influire sulla funzionalità del sito.
               </p>
               
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-amber-800 mb-2">Come disabilitare i cookie</h3>
-                <ul className="list-disc list-inside text-amber-700 space-y-1">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-yellow-800 mb-2">Come disabilitare i cookie</h3>
+                <ul className="list-disc list-inside text-yellow-700 space-y-1">
                   <li><strong>Chrome:</strong> Impostazioni → Privacy e sicurezza → Cookie</li>
                   <li><strong>Firefox:</strong> Opzioni → Privacy e sicurezza → Cookie</li>
                   <li><strong>Safari:</strong> Preferenze → Privacy → Cookie</li>
@@ -122,7 +122,7 @@ export default function CookiePolicy() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Contatti</h2>
               <p className="text-gray-700">
-                Per domande su questa Cookie Policy, contattaci all'indirizzo:{' '}                <a href="mailto:fabio.cassano97@icloud.com" className="text-amber-600 hover:text-amber-700">
+                Per domande su questa Cookie Policy, contattaci all'indirizzo:{' '}                <a href="mailto:fabio.cassano97@icloud.com" className="text-yellow-600 hover:text-yellow-700">
                   fabio.cassano97@icloud.com
                 </a>
               </p>

@@ -26,7 +26,7 @@ export default function AddToHomeBanner() {
   };
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 w-[95vw] max-w-md bg-amber-900 text-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 animate-fade-in">
+    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 w-[95vw] max-w-md bg-yellow-900 text-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 animate-fade-in">
       <svg width="32" height="32" fill="none" viewBox="0 0 24 24" className="flex-shrink-0"><path fill="#fff" d="M12 2a1 1 0 0 1 1 1v12.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V3a1 1 0 0 1 1-1Z"/></svg>
       <div className="flex-1 text-sm">
         <b>Consiglio:</b> Per un'esperienza migliore, aggiungi Maskio Barber alla schermata Home.<br/>
