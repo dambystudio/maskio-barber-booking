@@ -15,6 +15,13 @@ export const micheleSpecificServices: Service[] = [
   { id: 'altri-servizi', name: 'Altri servizi', description: 'colore o altri servizi', duration: 30, price: 0 }
 ];
 
+export const marcoSpecificServices: Service[] = [
+  { id: 'taglio', name: 'Taglio', description: 'Taglio di capelli personalizzato', duration: 30, price: 12 },
+  { id: 'barba', name: 'Barba', description: 'Modellatura e contorno barba', duration: 15, price: 5 },
+  { id: 'taglio-e-barba', name: 'Taglio e Barba', description: 'Taglio capelli e sistemazione barba', duration: 40, price: 15 },
+  { id: 'altri-servizi', name: 'Altri servizi', description: 'colore o altri servizi', duration: 30, price: 0 }
+];
+
 export const barbersFromData: Barber[] = [
   {
     id: 'fabio', // Questo ID deve corrispondere a quello nel database se si fa matching
@@ -31,6 +38,14 @@ export const barbersFromData: Barber[] = [
     specialties: ['Tagli moderni', 'Tagli classici', 'Barba'],
     experience: 'Collaboratore',
     availableServices: micheleSpecificServices // Assegnazione per la pagina /servizi
+  },
+  {
+    id: 'marco', // Nuovo barbiere
+    name: 'Marco',
+    image: '/barbers/marco.jpg',
+    specialties: ['Taglio', 'Barba', 'Taglio e Barba'],
+    experience: 'Collaboratore',
+    availableServices: marcoSpecificServices // Assegnazione per la pagina /servizi
   }
 ];
 

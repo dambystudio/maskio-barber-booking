@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Service, Barber, BookingFormData } from '../types/booking';
 import { BookingService, validateBookingData } from '../services/bookingService';
-import { fabioSpecificServices, micheleSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
+import { fabioSpecificServices, micheleSpecificServices, marcoSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
 import { Session } from 'next-auth';
 import { trackEvent, trackConversion } from './GoogleAnalytics';
 import { FiClock, FiTag } from 'react-icons/fi'; // Import icons
@@ -220,7 +220,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         if (!barbersResponse.ok) throw new Error('Failed to fetch barbers');
         const barbersData = await barbersResponse.json();
           const updatedBarbers = barbersData.map((barber: any) => {
-          // Find matching local barber data to get experience field
+          // Find matching local barber data for services assignment
           const localBarberData = barbersFromData.find(local => local.id === barber.id || local.name === barber.name);
           
           return {
@@ -229,12 +229,18 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               ? JSON.parse(barber.specialties) 
               : barber.specialties || [],
             image: barber.image || '/placeholder-barber.jpg',
-            // Add experience from local data
-            experience: localBarberData?.experience,
+            // Use experience from database API instead of local data
+            experience: barber.experience || 'Barbiere',
             // Assign the hardcoded specific services for now, until API provides this
             // IMPORTANT: This uses barber.name for matching, ensure names are consistent.
             // Ideally, match by barber.id if the IDs from API match those in booking.ts
-            availableServices: barber.name === 'Fabio' ? fabioSpecificServices : barber.name === 'Michele' ? micheleSpecificServices : servicesData
+            availableServices: barber.name === 'Fabio' 
+              ? fabioSpecificServices 
+              : barber.name === 'Michele' 
+                ? micheleSpecificServices 
+                : barber.name === 'Marco'
+                  ? marcoSpecificServices 
+                  : servicesData
           };
         });
         setBarbers(updatedBarbers);
@@ -850,7 +856,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded-md"
+              className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-md"
               role="alert"
             >
               <p className="font-bold">Per altri servizi</p>
@@ -865,10 +871,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                   <div
                     key={service.id}
                     onClick={() => setShowContactMessage(true)}
-                    className="p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 border-gray-700 bg-gray-800/50 hover:border-amber-500/50 flex flex-col justify-center items-center text-center"
+                    className="p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 border-gray-700 bg-gray-800/50 hover:border-yellow-500/50 flex flex-col justify-center items-center text-center"
                   >
                     <h4 className="font-bold text-white text-lg">{service.name}</h4>
-                    <p className="text-sm text-amber-400 mt-2 font-semibold">Contattaci</p>
+                    <p className="text-sm text-yellow-400 mt-2 font-semibold">Contattaci</p>
                   </div>
                 );
               }
@@ -879,20 +885,20 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 <div
                   key={service.id}
                   onClick={() => handleServiceChange(service)}
-                  className={`p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between shadow-lg hover:shadow-amber-500/20
-                    ${isSelected ? 'bg-amber-500/10 border-amber-400' : 'bg-gray-800 border-gray-700 hover:border-gray-600'}
+                  className={`p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between shadow-lg hover:shadow-yellow-500/20
+                    ${isSelected ? 'bg-yellow-500/10 border-yellow-400' : 'bg-gray-800 border-gray-700 hover:border-gray-600'}
                   `}
                 >
                   <div className="flex-grow">
-                    <h4 className={`text-xl font-bold ${isSelected ? 'text-amber-400' : 'text-white'}`}>{service.name}</h4>
+                    <h4 className={`text-xl font-bold ${isSelected ? 'text-yellow-400' : 'text-white'}`}>{service.name}</h4>
                     <p className={`mt-2 text-sm ${isSelected ? 'text-gray-200' : 'text-gray-400'}`}>{service.description}</p>
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center">
                     <span className={`flex items-center text-sm ${isSelected ? 'text-gray-200' : 'text-gray-300'}`}>
-                      <FiClock className="mr-2 text-amber-400" />
+                      <FiClock className="mr-2 text-yellow-400" />
                       {service.duration} min
                     </span>
-                    <span className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-amber-400'}`}>
+                    <span className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-yellow-400'}`}>
                       €{service.price}
                     </span>
                   </div>
@@ -944,7 +950,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                         <div className="flex items-center">
                           <div className="flex-grow border-t border-gray-600"></div>
                           <div className="px-4 py-2 bg-gray-700 rounded-full">
-                            <span className="text-amber-400 font-bold text-sm">
+                            <span className="text-yellow-400 font-bold text-sm">
                               {item.monthName} {item.year}
                             </span>
                           </div>
@@ -983,13 +989,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                             : dateButton.hasNoAvailableSlots
                             ? 'border-orange-600 bg-orange-900/30 text-orange-400 cursor-not-allowed'
                             : 'border-gray-700 bg-gray-800 text-gray-500 cursor-not-allowed'
-                          : dateButton.isToday
-                          ? 'border-blue-400 bg-blue-900/30 hover:border-blue-500 hover:shadow-md text-blue-300'
-                          : dateButton.isNextWeek
-                          ? 'border-green-400 bg-green-900/30 hover:border-green-400 hover:shadow-md text-green-300'
-                          : dateButton.isNextMonth
-                          ? 'border-purple-400 bg-purple-900/30 hover:border-purple-400 hover:shadow-md text-purple-300'
-                          : 'border-gray-600 hover:border-yellow-400 bg-gray-900/50 hover:shadow-md text-gray-300'
+                          : 'border-green-400 bg-green-900/30 hover:border-green-500 hover:shadow-md text-green-300'
                       }`}
                       whileHover={!dateButton.disabled ? { scale: 1.05 } : {}}
                       whileTap={!dateButton.disabled ? { scale: 0.95 } : {}}
@@ -1003,30 +1003,21 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                       <div className={`text-xs font-medium ${
                         formData.selectedDate === dateButton.date ? 'text-black' : 
                         dateButton.disabled ? 'text-gray-500' : 
-                        dateButton.isToday ? 'text-blue-300' :
-                        dateButton.isNextWeek ? 'text-green-300' :
-                        dateButton.isNextMonth ? 'text-purple-300' :
-                        'text-gray-300'
+                        'text-green-300'
                       }`}>
                         {dateButton.dayName}
                       </div>
                       <div className={`text-lg font-bold ${
                         formData.selectedDate === dateButton.date ? 'text-black' : 
                         dateButton.disabled ? 'text-gray-500' : 
-                        dateButton.isToday ? 'text-blue-300' :
-                        dateButton.isNextWeek ? 'text-green-300' :
-                        dateButton.isNextMonth ? 'text-purple-300' :
-                        'text-gray-300'
+                        'text-green-300'
                       }`}>
                         {dateButton.dayNumber}
                       </div>
                       <div className={`text-xs ${
                         formData.selectedDate === dateButton.date ? 'text-black' : 
                         dateButton.disabled ? 'text-gray-500' : 
-                        dateButton.isToday ? 'text-blue-300' :
-                        dateButton.isNextWeek ? 'text-green-300' :
-                        dateButton.isNextMonth ? 'text-purple-300' :
-                        'text-gray-300'
+                        'text-green-300'
                       }`}>
                         {dateButton.monthName}
                       </div>
@@ -1050,32 +1041,17 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               </div>{/* Legend for date colors */}
               <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-300">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-900/30 border border-blue-400 rounded mr-2"></div>
-                  <span>Oggi</span>
-                </div>
-                <div className="flex items-center">
                   <div className="w-3 h-3 bg-green-900/30 border border-green-400 rounded mr-2"></div>
-                  <span>Prossima settimana</span>
+                  <span>Giorni disponibili</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-purple-900/30 border border-purple-400 rounded mr-2"></div>
-                  <span>Prossimo mese</span>
-                </div>                <div className="flex items-center">
                   <div className="w-3 h-3 bg-red-900/30 border border-red-600 rounded mr-2"></div>
                   <span>Giorni di chiusura</span>
                 </div>
-                {formData.selectedBarber && (
-                  <>
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-red-900/30 border border-red-600 rounded mr-2"></div>
-                      <span>Chiuso</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-orange-900/30 border border-orange-600 rounded mr-2"></div>
-                      <span>Tutto occupato</span>
-                    </div>
-                  </>
-                )}
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-orange-900/30 border border-orange-600 rounded mr-2"></div>
+                  <span>Tutto occupato</span>
+                </div>
               </div>
               
               {formData.selectedDate && (
@@ -1296,7 +1272,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           </motion.div>
 
           {/* Benefits of your booking */}
-          <motion.div variants={fadeInUp} className="bg-gradient-to-r from-yellow-900/20 to-amber-900/20 p-4 rounded-lg border border-yellow-600/30">
+          <motion.div variants={fadeInUp} className="bg-gradient-to-r from-yellow-900/20 to-yellow-900/20 p-4 rounded-lg border border-yellow-600/30">
             <h4 className="text-yellow-300 font-semibold mb-3 flex items-center">
               ✨ Con la tua prenotazione riceverai:
             </h4>
@@ -1354,21 +1330,21 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           animate="visible"
           className="text-center space-y-6"
         >          <motion.div variants={fadeInUp}>
-            <svg className="w-16 h-16 mx-auto text-amber-500" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          </motion.div>          <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-amber-400">
+            <svg className="w-16 h-16 mx-auto text-yellow-500" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </motion.div>          <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-yellow-400">
             Prenotazione Confermata!
           </motion.h2>
 
-          <motion.div variants={fadeInUp} className="bg-gray-900 border-2 border-amber-500 p-6 rounded-lg shadow-lg text-left space-y-2">
-            <p className="text-white"><strong className="text-amber-400">ID Prenotazione:</strong> {bookingResponse.id || bookingResponse.booking?.id}</p>
-            <p className="text-white"><strong className="text-amber-400">Barbiere:</strong> {formData.selectedBarber?.name}</p>
-            <p className="text-white"><strong className="text-amber-400">Servizi:</strong> {formData.selectedService?.name}</p>
-            <p className="text-white"><strong className="text-amber-400">Data:</strong> {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
-            <p className="text-white"><strong className="text-amber-400">Cliente:</strong> {formData.customerInfo.name}</p>
+          <motion.div variants={fadeInUp} className="bg-gray-900 border-2 border-yellow-500 p-6 rounded-lg shadow-lg text-left space-y-2">
+            <p className="text-white"><strong className="text-yellow-400">ID Prenotazione:</strong> {bookingResponse.id || bookingResponse.booking?.id}</p>
+            <p className="text-white"><strong className="text-yellow-400">Barbiere:</strong> {formData.selectedBarber?.name}</p>
+            <p className="text-white"><strong className="text-yellow-400">Servizi:</strong> {formData.selectedService?.name}</p>
+            <p className="text-white"><strong className="text-yellow-400">Data:</strong> {formatSelectedDate(formData.selectedDate)} alle {formData.selectedTime}</p>
+            <p className="text-white"><strong className="text-yellow-400">Cliente:</strong> {formData.customerInfo.name}</p>
               
             {/* Resoconto finale */}
-            <div className="mt-4 p-4 bg-gray-800 border border-amber-400 rounded-lg">
-              <h4 className="font-semibold text-amber-300 mb-3 flex items-center gap-2">
+            <div className="mt-4 p-4 bg-gray-800 border border-yellow-400 rounded-lg">
+              <h4 className="font-semibold text-yellow-300 mb-3 flex items-center gap-2">
                 🎉 Resoconto della prenotazione
               </h4>
               <div className="text-sm text-gray-300 space-y-2">
@@ -1381,7 +1357,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                   <span><strong className="text-white">Promemoria</strong> prima dell'appuntamento</span>
                 </p>
                 <p className="flex items-start gap-2">
-                  <span className="text-amber-400">🏪</span>
+                  <span className="text-yellow-400">🏪</span>
                   <span><strong className="text-white">Ti aspettiamo</strong> presso Maskio Barber Concept</span>
                 </p>
                 {formData.customerInfo.notes && (
@@ -1391,7 +1367,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                   </p>
                 )}
                 <div className="mt-3 pt-3 border-t border-gray-600">
-                  <p className="flex items-start gap-2 font-medium text-amber-300">
+                  <p className="flex items-start gap-2 font-medium text-yellow-300">
                     <span className="text-yellow-400">💡</span>
                     <em>In caso di imprevisti, contattaci almeno 48 ore prima dell'appuntamento</em>
                   </p>
@@ -1399,7 +1375,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               </div>
             </div>
             
-            <p className="mt-4 font-medium text-amber-300 text-center">
+            <p className="mt-4 font-medium text-yellow-300 text-center">
               Grazie per aver scelto Maskio Barber Concept! 🙏
             </p>
           </motion.div>          <motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
@@ -1408,7 +1384,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 // Redirect alla home page
                 window.location.href = '/';
               }}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
             >
               🏠 Torna alla Home
             </button>
@@ -1478,7 +1454,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           disabled={!isStepValid(currentStep) || loading}          className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
             !isStepValid(currentStep) || loading
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-amber-500 text-white hover:bg-amber-600'
+              : 'bg-yellow-500 text-white hover:bg-yellow-600'
           }`}
           whileHover={{ scale: isStepValid(currentStep) && !loading ? 1.05 : 1 }}          whileTap={{ scale: isStepValid(currentStep) && !loading ? 0.95 : 1 }}        >          {loading ? 'Caricamento...' : currentStep === 4 ? 'Conferma Prenotazione' : 'Continua'}
         </motion.button>        </div>
