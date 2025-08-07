@@ -131,9 +131,9 @@ export default function RootLayout({
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
           <meta name="msapplication-config" content="/browserconfig.xml" />
-          <meta name="msapplication-TileColor" content="#000000" />
+          <meta name="msapplication-TileColor" content="#eab308" />
           <meta name="msapplication-tap-highlight" content="no" />
-          <meta name="theme-color" content="#000000" />
+          <meta name="theme-color" content="#eab308" />
           
           {/* Developer Attribution */}
           <meta name="developer" content="dambystudio - https://linktr.ee/dambystudio" />
