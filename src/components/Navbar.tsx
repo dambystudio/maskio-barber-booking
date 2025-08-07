@@ -126,7 +126,7 @@ export default function Navbar() {
                 {isBarber ? (
                   <Link
                     href="/pannello-prenotazioni"
-                    className="bg-amber-500 hover:bg-amber-600 text-black px-4 py-2 text-sm rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+                    className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 text-sm rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z" />
@@ -144,7 +144,7 @@ export default function Navbar() {
                 <div className="hidden lg:block relative" ref={userMenuRef}>                  <button
                     ref={userButtonRef}
                     onClick={handleUserMenuToggle}
-                    className="flex items-center space-x-2 text-white hover:text-amber-400 transition-colors"
+                    className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors"
                   >
                     <UserIcon className="h-6 w-6" />
                     <span className="text-sm font-medium">{session.user.name}</span>
@@ -182,7 +182,7 @@ export default function Navbar() {
                         </Link>                        {(isAdmin || isBarber) && (
                           <Link
                             href="/admin/users"
-                            className="block px-4 py-2 text-sm text-amber-400 hover:bg-gray-700 transition-colors font-medium"
+                            className="block px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700 transition-colors font-medium"
                             onClick={() => setUserMenuOpen(false)}
                           >
                             🛠️ Pannello Admin
@@ -208,7 +208,7 @@ export default function Navbar() {
                 <div className="hidden lg:block">
                   <Link
                     href="/auth/signin"
-                    className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-white hover:text-amber-400 transition-colors"
+                    className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-white hover:text-yellow-400 transition-colors"
                   >
                     <UserIcon className="h-5 w-5" />
                     <span>Accedi</span>
@@ -287,7 +287,7 @@ export default function Navbar() {
                     <div>
                       <Link
                         href="/lavora-con-noi"
-                        className="flex items-center gap-3 px-4 py-3 text-base font-medium text-amber-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                        className="flex items-center gap-3 px-4 py-3 text-base font-medium text-yellow-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,7 +320,7 @@ export default function Navbar() {
                           </Link>                          {(isAdmin || isBarber) && (
                             <Link
                               href="/admin/users"
-                              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-amber-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-yellow-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
                               onClick={() => setMobileMenuOpen(false)}
                             >
                               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -348,7 +348,7 @@ export default function Navbar() {
                       <div className="border-t border-gray-700 pt-4 mt-4">
                         <Link
                           href="/auth/signin"
-                          className="flex items-center gap-3 px-4 py-3 text-base font-medium text-amber-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                          className="flex items-center gap-3 px-4 py-3 text-base font-medium text-yellow-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           <UserIcon className="h-5 w-5" />
@@ -363,7 +363,7 @@ export default function Navbar() {
                     {isBarber ? (
                       <Link
                         href="/pannello-prenotazioni"
-                        className="w-full block text-base font-semibold bg-amber-500 hover:bg-amber-600 text-black px-6 py-3 rounded-lg transition-all duration-300 text-center"
+                        className="w-full block text-base font-semibold bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-3 rounded-lg transition-all duration-300 text-center"
                       >
                         <div className="flex items-center justify-center gap-2">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
