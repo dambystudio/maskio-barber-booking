@@ -59,6 +59,15 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   const [closedDays, setClosedDays] = useState<Set<number>>(new Set([0])); // Sunday closed by default
   const [closedDates, setClosedDates] = useState<Set<string>>(new Set()); // Specific closed dates
   const [barberClosedDays, setBarberClosedDays] = useState<Set<number>>(new Set()); // Barber-specific recurring closures
+  const [barberSpecificClosures, setBarberSpecificClosures] = useState<{
+    fullDayClosures: Set<string>;
+    morningClosures: Set<string>;
+    afternoonClosures: Set<string>;
+  }>({
+    fullDayClosures: new Set(),
+    morningClosures: new Set(),
+    afternoonClosures: new Set()
+  }); // Barber-specific date closures
   // Add state for tracking days with no available slots
   const [unavailableDates, setUnavailableDates] = useState<Set<string>>(new Set());
   // Load closure settings from localStorage and server
@@ -313,6 +322,55 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     };
 
     loadBarberClosures();
+  }, [formData.selectedBarber]);
+
+  // Load barber-specific date closures when barber changes
+  useEffect(() => {
+    const loadBarberSpecificClosures = async () => {
+      if (!formData.selectedBarber) {
+        setBarberSpecificClosures({
+          fullDayClosures: new Set(),
+          morningClosures: new Set(),
+          afternoonClosures: new Set()
+        });
+        console.log('🔄 No barber selected, clearing barber specific closures');
+        return;
+      }
+
+      try {
+        console.log(`🔄 Loading specific closures for barber: ${formData.selectedBarber.name} (ID: ${formData.selectedBarber.id})`);
+        const response = await fetch(`/api/barber-closures/public?barberId=${formData.selectedBarber.id}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('📄 Raw response from barber-closures API:', data);
+        
+        setBarberSpecificClosures({
+          fullDayClosures: new Set(data.fullDayClosures || []),
+          morningClosures: new Set(data.morningClosures || []),
+          afternoonClosures: new Set(data.afternoonClosures || [])
+        });
+        
+        console.log(`✅ Loaded barber specific closures for ${formData.selectedBarber.name}:`, {
+          fullDays: data.fullDayClosures?.length || 0,
+          mornings: data.morningClosures?.length || 0,
+          afternoons: data.afternoonClosures?.length || 0
+        });
+        
+      } catch (error) {
+        console.error('❌ Error loading barber specific closures:', error);
+        setBarberSpecificClosures({
+          fullDayClosures: new Set(),
+          morningClosures: new Set(),
+          afternoonClosures: new Set()
+        });
+      }
+    };
+
+    loadBarberSpecificClosures();
   }, [formData.selectedBarber]);// Update available slots when date or barber changes with debouncing
   useEffect(() => {
     const fetchSlots = async () => {
@@ -403,7 +461,21 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       return barberClosedDays.has(dayOfWeek);
     } catch (error) {
       console.error('Error checking if barber is closed:', error);
-      return false;    }
+      return false;
+    }
+  };
+
+  // Check if the selected barber is closed on a specific date (recurring + specific closures)
+  const isBarberClosed = (dateString: string) => {
+    if (!formData.selectedBarber) return false;
+    
+    // Check recurring closures (e.g., every Sunday)
+    const isRecurringClosed = isBarberClosedRecurring(dateString);
+    
+    // Check specific date closures (full day closures)
+    const isSpecificallyClosed = barberSpecificClosures.fullDayClosures.has(dateString);
+    
+    return isRecurringClosed || isSpecificallyClosed;
   };
 
   // [DEPRECATED] Old function kept for compatibility - will be removed in next version
@@ -517,8 +589,8 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       
       // Check different types of closures
       const isGenerallyClosed = isDateClosed(dateString);
-      const isBarberClosed = isBarberClosedRecurring(dateString);
-      const hasNoAvailableSlots = formData.selectedBarber && unavailableDates.has(dateString) && !isGenerallyClosed && !isBarberClosed;
+      const isBarberClosedForDate = isBarberClosed(dateString);
+      const hasNoAvailableSlots = formData.selectedBarber && unavailableDates.has(dateString) && !isGenerallyClosed && !isBarberClosedForDate;
       
       dates.push({
         type: 'dateButton',
@@ -526,12 +598,12 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         dayName: dayNames[date.getDay()],
         dayNumber: date.getDate(),
         monthName: monthNames[date.getMonth()],
-        disabled: isGenerallyClosed || isBarberClosed || !!hasNoAvailableSlots,
+        disabled: isGenerallyClosed || isBarberClosedForDate || !!hasNoAvailableSlots,
         isToday,
         isNextWeek,
         isNextMonth,
         isClosed: isGenerallyClosed,
-        isBarberClosed,
+        isBarberClosed: isBarberClosedForDate,
         hasNoAvailableSlots
       });}
     
