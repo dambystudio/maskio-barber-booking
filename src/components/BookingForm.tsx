@@ -1478,7 +1478,13 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                   selectedService: null,
                   selectedDate: '',
                   selectedTime: '',
-                  customerInfo: { name: '', email: '', phone: '', notes: '' }
+                  customerInfo: {
+                    // Mantieni i dati dell'utente loggato come all'inizializzazione
+                    name: canMakeBookingsForOthers ? '' : (userSession.user.name || ''),
+                    email: canMakeBookingsForOthers ? '' : (userSession.user.email || ''),
+                    phone: '', // Will be loaded from profile or left empty for manual input
+                    notes: ''
+                  }
                 });
                 setBookingResponse(null);
                 setAvailableSlots([]);
