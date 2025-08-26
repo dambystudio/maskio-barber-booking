@@ -318,14 +318,19 @@ export default function PannelloPrenotazioni() {
         // Estrai l'array bookings dalla response
         const bookingsArray = data.bookings || [];
         
+        // Ordina le prenotazioni per ora (crescente)
+        const sortedBookingsArray = [...bookingsArray].sort((a, b) => {
+          return a.booking_time.localeCompare(b.booking_time);
+        });
+        
         // Aggiorna cache
         const cacheKey = `${selectedDate}-${filterStatus}`;
         setBookingsCache(prev => ({
           ...prev,
-          [cacheKey]: bookingsArray
+          [cacheKey]: sortedBookingsArray
         }));
         
-        setBookings(bookingsArray);
+        setBookings(sortedBookingsArray);
       } else {
         if (response.status === 429 && retryCount < 3) {
           console.warn(`⚠️ Rate limited, retrying in ${(retryCount + 1) * 1000}ms...`);
@@ -428,7 +433,11 @@ export default function PannelloPrenotazioni() {
     
     if (hasBookingsCache && hasStatsCache) {
       console.log('💾 Using cached data for:', bookingsCacheKey, statsCacheKey);
-      setBookings(hasBookingsCache);
+      // Ordina le prenotazioni anche dalla cache per ora (crescente)
+      const sortedCachedBookings = [...hasBookingsCache].sort((a, b) => {
+        return a.booking_time.localeCompare(b.booking_time);
+      });
+      setBookings(sortedCachedBookings);
       setStats(hasStatsCache);
       setLoading(false);
       return;

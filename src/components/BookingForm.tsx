@@ -1163,7 +1163,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                   ))}
                 </div>                <div className="mt-2 text-sm text-gray-300">
                   <p className="font-semibold text-blue-400">🗓️ Esteso! Ora puoi prenotare fino a 2 mesi in anticipo</p>
-                  <p>📅 Orari: 9:00-12:30 e 15:00-17:30 (Domenica chiuso)</p>                  <div className="flex flex-wrap gap-4 text-xs mt-2">
+                  <p>📅 Orari: Lun-Ven 9:00-12:30, 15:00-17:30 | Sab 9:00-12:30, 14:30-17:00 (Domenica chiuso)</p>                  <div className="flex flex-wrap gap-4 text-xs mt-2">
                     <div className="flex items-center">
                       <div className="w-4 h-4 bg-yellow-400 border border-yellow-500 rounded mr-2"></div>
                       <span>Selezionato</span>
@@ -1469,6 +1469,13 @@ export default function BookingForm({ userSession }: BookingFormProps) {
             >
               📅 Visualizza i tuoi appuntamenti
             </button>
+            <a
+              href={`/api/booking/calendar/${bookingResponse.id || bookingResponse.booking?.id}`}
+              download
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300 flex items-center justify-center gap-2 text-center"
+            >
+              📱 Aggiungi al Calendario
+            </a>
             <button
               onClick={() => {
                 // Reset completo del form per una nuova prenotazione
@@ -1494,7 +1501,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 // Scroll to top per una migliore UX
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
+              className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300"
             >
               ➕ Effettua Nuova Prenotazione
             </button>
