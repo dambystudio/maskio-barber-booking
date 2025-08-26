@@ -6,10 +6,10 @@ import { generateICSFile } from '@/lib/calendar-utils';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { bookingId: string } }
+  context: { params: Promise<{ bookingId: string }> }
 ) {
   try {
-    const { bookingId } = params;
+    const { bookingId } = await context.params;
 
     if (!bookingId) {
       return new NextResponse('ID prenotazione mancante', { status: 400 });
