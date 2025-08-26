@@ -283,23 +283,37 @@ export async function POST(request: NextRequest) {  try {    // Check authentica
         { status: 409 }
       );
     }    // Verifica che l'utente non abbia già una prenotazione nello stesso giorno
-    const userBookingsToday = await DatabaseService.getBookingsByUser(session.user.id);
-    const userBookingsOnDate = userBookingsToday.filter(
-      booking => booking.date === bookingData.date && 
-                booking.status !== 'cancelled'
-    );
-
-    if (userBookingsOnDate.length > 0) {
-      return NextResponse.json(
-        { error: 'Hai già una prenotazione per questo giorno' },
-        { status: 409 }
+    // ECCEZIONE: I barbieri possono fare prenotazioni per clienti diversi lo stesso giorno
+    if (session.user.role !== 'barber' && session.user.role !== 'admin') {
+      const userBookingsToday = await DatabaseService.getBookingsByUser(session.user.id);
+      const userBookingsOnDate = userBookingsToday.filter(
+        booking => booking.date === bookingData.date && 
+                  booking.status !== 'cancelled'
       );
+
+      if (userBookingsOnDate.length > 0) {
+        return NextResponse.json(
+          { error: 'Hai già una prenotazione per questo giorno' },
+          { status: 409 }
+        );
+      }
     }// Crea la prenotazione usando il servizio PostgreSQL
-    const bookingDataWithUser = {
-      ...bookingData,
-      userId: session.user.id // Associa la prenotazione all'utente loggato
-    };
-    const newBooking = await DatabaseService.createBooking(bookingDataWithUser);// Invia email di conferma al cliente (async, non blocca la risposta)
+    // Per i barbieri: modifica la logica dell'associazione userId
+    let finalBookingData;
+    if (session.user.role === 'barber' || session.user.role === 'admin') {
+      // I barbieri fanno prenotazioni per i clienti, non per se stessi
+      finalBookingData = {
+        ...bookingData,
+        userId: null // Non associare al barbiere, ma al cliente (se esiste)
+      };
+    } else {
+      // Cliente normale: associa la prenotazione al suo account
+      finalBookingData = {
+        ...bookingData,
+        userId: session.user.id
+      };
+    }
+    const newBooking = await DatabaseService.createBooking(finalBookingData);// Invia email di conferma al cliente (async, non blocca la risposta)
     EmailService.sendBookingConfirmation({
       customerName: newBooking.customerName,
       customerEmail: newBooking.customerEmail,
