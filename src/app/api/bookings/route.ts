@@ -126,12 +126,20 @@ export async function GET(request: NextRequest) {  try {
           }
             // Filter by barber email if specified
           if (barberEmail) {
+            console.log('🔍 API: Filtering by barberEmail:', barberEmail);
             // Get all barbers and find by email
             const allBarbers = await DatabaseService.getBarbers();
+            console.log('🔍 API: All barbers:', allBarbers.map(b => ({ id: b.id, email: b.email, name: b.name })));
             const barber = allBarbers.find(b => b.email === barberEmail);
+            console.log('🔍 API: Found barber:', barber);
+            
             if (barber) {
+              console.log('🔍 API: Before filtering - bookings count:', bookings.length);
+              console.log('🔍 API: Sample booking barberId:', bookings[0]?.barberId);
               bookings = bookings.filter(booking => booking.barberId === barber.id);
+              console.log('🔍 API: After filtering - bookings count:', bookings.length);
             } else {
+              console.log('❌ API: Barber not found, returning empty array');
               // If barber not found, return empty array
               bookings = [];
             }
