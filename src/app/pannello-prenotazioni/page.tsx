@@ -195,31 +195,7 @@ export default function PannelloPrenotazioni() {
   const getOtherBarbers = (currentEmail: string) => {
     const emails = Object.keys(barberMapping);
     const others = emails.filter(email => email !== currentEmail);
-    console.log('🔧 getOtherBarbers:', { currentEmail, emails, others });
     return others;
-  };
-
-  const getNextBarberToView = (currentEmail: string, currentlyViewing: string) => {
-    const otherBarbers = getOtherBarbers(currentEmail);
-    if (otherBarbers.length === 0) {
-      console.log('🔧 getNextBarberToView: No other barbers available');
-      return '';
-    }
-    
-    const currentIndex = otherBarbers.indexOf(currentlyViewing);
-    const nextBarber = currentIndex === -1 
-      ? otherBarbers[0] 
-      : otherBarbers[(currentIndex + 1) % otherBarbers.length];
-    
-    console.log('🔧 getNextBarberToView:', {
-      currentEmail,
-      currentlyViewing,
-      otherBarbers,
-      currentIndex,
-      nextBarber
-    });
-    
-    return nextBarber;
   };  // Verifica permessi tramite API invece che da sessione
   const checkPermissions = async () => {
     try {
@@ -345,13 +321,27 @@ export default function PannelloPrenotazioni() {
       // Filtro barbiere: solo se non sei admin e stai guardando le tue prenotazioni o quelle dell'altro
       if (!isAdmin && currentBarber) {
         if (viewMode === 'own') {
+          console.log('🔍 Adding barberEmail for own bookings:', currentBarber);
           params.append('barberEmail', currentBarber);
         } else if (viewMode === 'other' && viewingBarber) {
+          console.log('🔍 Adding barberEmail for other bookings:', viewingBarber);
           params.append('barberEmail', viewingBarber);
         }
       }
       
-      const response = await fetch(`/api/bookings?${params.toString()}`);
+      const apiUrl = `/api/bookings?${params.toString()}`;
+      console.log('🌐 API URL being called:', apiUrl);
+      console.log('🔍 URL params:', {
+        date: params.get('date'),
+        status: params.get('status'),
+        barberEmail: params.get('barberEmail'),
+        isAdmin,
+        currentBarber,
+        viewMode,
+        viewingBarber
+      });
+      
+      const response = await fetch(apiUrl);
         if (response.ok) {
         const data = await response.json();
         console.log('✅ Bookings fetched successfully:', data);
@@ -1524,55 +1514,36 @@ Grazie! 😊`;
             {/* Controlli Barbieri - Solo per barbieri */}
             {!isAdmin && currentBarber && (
               <div className="flex flex-col sm:flex-row gap-2">
-                <div className="text-sm text-gray-300">
+                <div className="text-sm text-gray-300 flex items-center">
                   👤 {barberMapping[currentBarber as keyof typeof barberMapping] || 'Barbiere'}
                 </div>
+                
+                {/* Pulsante per le proprie prenotazioni */}
                 <button
-                  onClick={() => {
-                    console.log('🔵 Button clicked - Current state:', {
-                      viewMode,
-                      viewingBarber,
-                      currentBarber
-                    });
-                    
-                    if (viewMode === 'own') {
-                      // Passa alla modalità other e inizia con il primo altro barbiere
-                      const otherBarbers = getOtherBarbers(currentBarber);
-                      console.log('🔵 Other barbers available:', otherBarbers);
-                      if (otherBarbers.length > 0) {
-                        console.log('🔵 Switching to other mode, viewing:', otherBarbers[0]);
-                        switchToBarber(otherBarbers[0]);
-                      }
-                    } else {
-                      // Cicla al prossimo barbiere o torna alle proprie
-                      const nextBarber = getNextBarberToView(currentBarber, viewingBarber);
-                      const otherBarbers = getOtherBarbers(currentBarber);
-                      
-                      console.log('🔵 Next barber to view:', nextBarber);
-                      console.log('🔵 Available others:', otherBarbers);
-                      
-                      if (nextBarber && otherBarbers.includes(nextBarber)) {
-                        console.log('🔵 Switching to next barber:', nextBarber);
-                        switchToBarber(nextBarber);
-                      } else {
-                        console.log('🔵 Returning to own bookings');
-                        switchToOwnBookings();
-                      }
-                    }
-                  }}
+                  onClick={() => switchToOwnBookings()}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    viewMode === 'other' 
-                      ? 'bg-blue-600 text-white' 
+                    viewMode === 'own' 
+                      ? 'bg-amber-600 text-white' 
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
-                  {viewMode === 'own' 
-                    ? `👁️ Vedi altri barbieri`
-                    : viewingBarber && barberMapping[viewingBarber as keyof typeof barberMapping]
-                      ? `👁️ Vedi ${barberMapping[viewingBarber as keyof typeof barberMapping]}`
-                      : '👤 Torna alle tue'
-                  }
+                  👤 Le tue prenotazioni
                 </button>
+                
+                {/* Pulsanti per gli altri barbieri */}
+                {getOtherBarbers(currentBarber).map((otherBarberEmail) => (
+                  <button
+                    key={otherBarberEmail}
+                    onClick={() => switchToBarber(otherBarberEmail)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      viewMode === 'other' && viewingBarber === otherBarberEmail
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    👁️ Vedi {barberMapping[otherBarberEmail as keyof typeof barberMapping] || 'Barbiere'}
+                  </button>
+                ))}
               </div>
             )}            
             {/* Controlli Admin - Rimosso pulsante obsoleto */}
