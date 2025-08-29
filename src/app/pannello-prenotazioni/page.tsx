@@ -1642,9 +1642,9 @@ Grazie! 😊`;
         </div>
       </div>      {/* Lista prenotazioni - Modalità Griglia o Tabella */}
       {displayMode === 'grid' ? (
-        /* Modalità Calendario a Griglia */
+        /* Modalità Calendario a Griglia - Mostra TUTTI i barbieri */
         <CalendarGrid
-          bookings={bookings}
+          bookings={allBookings.filter(booking => booking.booking_date === selectedDate)}
           selectedDate={selectedDate}
           onWhatsAppClick={(booking) => openWhatsApp(
             booking.customer_phone, 
@@ -1654,6 +1654,8 @@ Grazie! 😊`;
             booking.booking_time
           )}
           onPhoneClick={makePhoneCall}
+          onCancelBooking={updateBookingStatus ? (id) => updateBookingStatus(id, 'cancelled') : undefined}
+          onConfirmBooking={updateBookingStatus ? (id) => updateBookingStatus(id, 'confirmed') : undefined}
         />
       ) : (
         /* Modalità Tabella Tradizionale */

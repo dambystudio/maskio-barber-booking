@@ -25,14 +25,22 @@ interface CalendarGridProps {
   selectedDate: string;
   onWhatsAppClick: (booking: Booking) => void;
   onPhoneClick: (phone: string) => void;
+  onCancelBooking?: (bookingId: string) => void;
+  onConfirmBooking?: (bookingId: string) => void;
 }
 
 const CalendarGrid = ({ 
   bookings, 
   selectedDate, 
   onWhatsAppClick, 
-  onPhoneClick 
+  onPhoneClick,
+  onCancelBooking,
+  onConfirmBooking
 }: CalendarGridProps) => {
+  // State per il modal
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Definisco i barbieri fissi
   const BARBERS = [
     { name: 'Fabio', email: 'fabio.cassano97@icloud.com' },
@@ -141,6 +149,45 @@ const CalendarGrid = ({
     }
   };
 
+  // Funzioni per gestire il modal
+  const openBookingModal = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
+
+  const closeBookingModal = () => {
+    setSelectedBooking(null);
+    setIsModalOpen(false);
+  };
+
+  const handleWhatsAppClick = () => {
+    if (selectedBooking) {
+      onWhatsAppClick(selectedBooking);
+      closeBookingModal();
+    }
+  };
+
+  const handlePhoneClick = () => {
+    if (selectedBooking) {
+      onPhoneClick(selectedBooking.customer_phone);
+      closeBookingModal();
+    }
+  };
+
+  const handleCancelBooking = () => {
+    if (selectedBooking && onCancelBooking) {
+      onCancelBooking(selectedBooking.id);
+      closeBookingModal();
+    }
+  };
+
+  const handleConfirmBooking = () => {
+    if (selectedBooking && onConfirmBooking) {
+      onConfirmBooking(selectedBooking.id);
+      closeBookingModal();
+    }
+  };
+
   if (dayBookings.length === 0) {
     return (
       <div className="mt-8 bg-gray-800 rounded-lg p-8 text-center">
@@ -224,7 +271,7 @@ const CalendarGrid = ({
                         className={`absolute inset-0 p-2 rounded-lg border-2 cursor-pointer hover:shadow-lg transition-all duration-200 ${getBookingStyles(booking.status)}`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => onWhatsAppClick(booking)}
+                        onClick={() => openBookingModal(booking)}
                       >
                         <div className="h-full flex flex-col justify-between text-xs">
                           <div className="flex items-center justify-between">
@@ -240,30 +287,6 @@ const CalendarGrid = ({
                             <div className="truncate font-medium">
                               {booking.service_name}
                             </div>
-                          </div>
-                          
-                          {/* Azioni rapide */}
-                          <div className="flex gap-1 mt-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onWhatsAppClick(booking);
-                              }}
-                              className="flex-1 bg-green-700 hover:bg-green-600 text-white text-xs py-1 rounded transition-colors"
-                              title="WhatsApp"
-                            >
-                              💬
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onPhoneClick(booking.customer_phone);
-                              }}
-                              className="flex-1 bg-blue-700 hover:bg-blue-600 text-white text-xs py-1 rounded transition-colors"
-                              title="Chiama"
-                            >
-                              📞
-                            </button>
                           </div>
                         </div>
                       </motion.div>
@@ -299,6 +322,154 @@ const CalendarGrid = ({
           <div className="text-sm text-gray-300">In Attesa</div>
         </div>
       </div>
+
+      {/* Modal per dettagli prenotazione */}
+      {isModalOpen && selectedBooking && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={closeBookingModal}
+        >
+          <motion.div
+            className="bg-gray-800 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del modal */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">
+                📅 Dettagli Prenotazione
+              </h3>
+              <button
+                onClick={closeBookingModal}
+                className="text-gray-400 hover:text-white text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Informazioni cliente */}
+            <div className="space-y-4">
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <h4 className="font-semibold text-white mb-2 flex items-center">
+                  👤 Cliente
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <p className="text-gray-300">
+                    <strong>Nome:</strong> <span className="text-white">{selectedBooking.customer_name}</span>
+                  </p>
+                  <p className="text-gray-300">
+                    <strong>Telefono:</strong> <span className="text-white">{selectedBooking.customer_phone}</span>
+                  </p>
+                  {selectedBooking.customer_email && (
+                    <p className="text-gray-300">
+                      <strong>Email:</strong> <span className="text-white">{selectedBooking.customer_email}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Informazioni appuntamento */}
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <h4 className="font-semibold text-white mb-2 flex items-center">
+                  ✂️ Appuntamento
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <p className="text-gray-300">
+                    <strong>Barbiere:</strong> <span className="text-white">{selectedBooking.barber_name}</span>
+                  </p>
+                  <p className="text-gray-300">
+                    <strong>Servizio:</strong> <span className="text-white">{selectedBooking.service_name}</span>
+                  </p>
+                  <p className="text-gray-300">
+                    <strong>Data:</strong> <span className="text-white">
+                      {format(parseISO(selectedBooking.booking_date + 'T00:00:00'), 'dd MMMM yyyy', { locale: it })}
+                    </span>
+                  </p>
+                  <p className="text-gray-300">
+                    <strong>Ora:</strong> <span className="text-white">{selectedBooking.booking_time}</span>
+                  </p>
+                  <p className="text-gray-300">
+                    <strong>Stato:</strong> 
+                    <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
+                      selectedBooking.status === 'confirmed' ? 'bg-green-600 text-white' :
+                      selectedBooking.status === 'pending' ? 'bg-yellow-600 text-white' :
+                      'bg-red-600 text-white'
+                    }`}>
+                      {getStatusIcon(selectedBooking.status)} {
+                        selectedBooking.status === 'confirmed' ? 'Confermato' :
+                        selectedBooking.status === 'pending' ? 'In Attesa' :
+                        'Annullato'
+                      }
+                    </span>
+                  </p>
+                  {selectedBooking.notes && (
+                    <p className="text-gray-300">
+                      <strong>Note:</strong> <span className="text-white">{selectedBooking.notes}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Pulsanti azioni */}
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleWhatsAppClick}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    💬 WhatsApp
+                  </button>
+                  <button
+                    onClick={handlePhoneClick}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    📞 Chiama
+                  </button>
+                </div>
+
+                {/* Pulsanti gestione prenotazione */}
+                {selectedBooking.status === 'pending' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={handleConfirmBooking}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      ✅ Conferma
+                    </button>
+                    <button
+                      onClick={handleCancelBooking}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      ❌ Annulla
+                    </button>
+                  </div>
+                )}
+
+                {selectedBooking.status === 'confirmed' && (
+                  <button
+                    onClick={handleCancelBooking}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    ❌ Annulla Prenotazione
+                  </button>
+                )}
+
+                <button
+                  onClick={closeBookingModal}
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  Chiudi
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 };
