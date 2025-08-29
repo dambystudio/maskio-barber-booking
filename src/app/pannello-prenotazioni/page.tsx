@@ -125,6 +125,7 @@ export default function PannelloPrenotazioni() {
   const [currentBarber, setCurrentBarber] = useState<string>('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [viewMode, setViewMode] = useState<'own' | 'other'>('own'); // 'own' = proprie prenotazioni, 'other' = dell'altro barbiere
+  const [viewingBarber, setViewingBarber] = useState<string>(''); // quale barbiere sta visualizzando quando è in modalità 'other'
   
   // Cache per prenotazioni e statistiche separate
   const [bookingsCache, setBookingsCache] = useState<{[key: string]: Booking[]}>({});
@@ -159,13 +160,14 @@ export default function PannelloPrenotazioni() {
   const [showClosureSettings, setShowClosureSettings] = useState(false);
   const [newClosureDate, setNewClosureDate] = useState('');
   const [newClosureEndDate, setNewClosureEndDate] = useState('');
-  const [newClosureReason, setNewClosureReason] = useState('');  const [selectedClosureBarber, setSelectedClosureBarber] = useState('all'); // 'all', 'fabio.cassano97@icloud.com', 'michelebiancofiore0230@gmail.com'
+  const [newClosureReason, setNewClosureReason] = useState('');  const [selectedClosureBarber, setSelectedClosureBarber] = useState('all'); // 'all', 'fabio.cassano97@icloud.com', 'michelebiancofiore0230@gmail.com', 'marcocis2006@gmail.com'
   const [selectedClosureType, setSelectedClosureType] = useState('full'); // 'full', 'morning', 'afternoon'
 
   // Mapping barbieri
   const barberMapping = {
     'fabio.cassano97@icloud.com': 'Fabio Cassano',
-    'michelebiancofiore0230@gmail.com': 'Michele Biancofiore'
+    'michelebiancofiore0230@gmail.com': 'Michele Biancofiore',
+    'marcocis2006@gmail.com': 'Marco'
   };
 
   // Nomi dei giorni della settimana
@@ -174,6 +176,22 @@ export default function PannelloPrenotazioni() {
   const getOtherBarber = (currentEmail: string) => {
     const emails = Object.keys(barberMapping);
     return emails.find(email => email !== currentEmail) || '';
+  };
+
+  // Funzioni helper per gestire più barbieri
+  const getOtherBarbers = (currentEmail: string) => {
+    const emails = Object.keys(barberMapping);
+    return emails.filter(email => email !== currentEmail);
+  };
+
+  const getNextBarberToView = (currentEmail: string, currentlyViewing: string) => {
+    const otherBarbers = getOtherBarbers(currentEmail);
+    if (otherBarbers.length === 0) return '';
+    
+    const currentIndex = otherBarbers.indexOf(currentlyViewing);
+    if (currentIndex === -1) return otherBarbers[0];
+    
+    return otherBarbers[(currentIndex + 1) % otherBarbers.length];
   };  // Verifica permessi tramite API invece che da sessione
   const checkPermissions = async () => {
     try {
@@ -300,13 +318,8 @@ export default function PannelloPrenotazioni() {
       if (!isAdmin && currentBarber) {
         if (viewMode === 'own') {
           params.append('barberEmail', currentBarber);
-        } else if (viewMode === 'other') {
-          // Trova l'altro barbiere
-          const allBarbers = Object.keys(barberMapping);
-          const otherBarber = allBarbers.find(email => email !== currentBarber);
-          if (otherBarber) {
-            params.append('barberEmail', otherBarber);
-          }
+        } else if (viewMode === 'other' && viewingBarber) {
+          params.append('barberEmail', viewingBarber);
         }
       }
       
@@ -1206,6 +1219,7 @@ Grazie! 😊`;
                         <option value="all">Tutti i barbieri</option>
                         <option value="fabio.cassano97@icloud.com">Fabio Cassano</option>
                         <option value="michelebiancofiore0230@gmail.com">Michele Biancofiore</option>
+                        <option value="marcocis2006@gmail.com">Marco</option>
                       </select>
                     </div>
                   )}
@@ -1464,7 +1478,28 @@ Grazie! 😊`;
                   👤 {barberMapping[currentBarber as keyof typeof barberMapping] || 'Barbiere'}
                 </div>
                 <button
-                  onClick={() => setViewMode(viewMode === 'own' ? 'other' : 'own')}
+                  onClick={() => {
+                    if (viewMode === 'own') {
+                      // Passa alla modalità other e inizia con il primo altro barbiere
+                      const otherBarbers = getOtherBarbers(currentBarber);
+                      if (otherBarbers.length > 0) {
+                        setViewMode('other');
+                        setViewingBarber(otherBarbers[0]);
+                      }
+                    } else {
+                      // Cicla al prossimo barbiere o torna alle proprie
+                      const nextBarber = getNextBarberToView(currentBarber, viewingBarber);
+                      const otherBarbers = getOtherBarbers(currentBarber);
+                      
+                      if (nextBarber && otherBarbers.includes(nextBarber)) {
+                        setViewingBarber(nextBarber);
+                      } else {
+                        // Torna alle proprie prenotazioni
+                        setViewMode('own');
+                        setViewingBarber('');
+                      }
+                    }
+                  }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     viewMode === 'other' 
                       ? 'bg-blue-600 text-white' 
@@ -1472,8 +1507,10 @@ Grazie! 😊`;
                   }`}
                 >
                   {viewMode === 'own' 
-                    ? `👁️ Vedi ${barberMapping[getOtherBarber(currentBarber) as keyof typeof barberMapping] || 'Altro'}` 
-                    : '👤 Torna alle tue'
+                    ? `👁️ Vedi altri barbieri`
+                    : viewingBarber && barberMapping[viewingBarber as keyof typeof barberMapping]
+                      ? `👁️ Vedi ${barberMapping[viewingBarber as keyof typeof barberMapping]}`
+                      : '👤 Torna alle tue'
                   }
                 </button>
               </div>
@@ -1746,9 +1783,9 @@ Grazie! 😊`;
                       )}
                       
                       {/* Indicatore modalità solo visualizzazione */}
-                      {!isAdmin && viewMode === 'other' && (
+                      {!isAdmin && viewMode === 'other' && viewingBarber && (
                         <div className="w-full bg-blue-900/20 border border-blue-500/30 text-blue-300 px-4 py-3 rounded-lg text-center text-sm">
-                          👁️ Solo visualizzazione - Prenotazioni di {barberMapping[getOtherBarber(currentBarber) as keyof typeof barberMapping]}
+                          👁️ Solo visualizzazione - Prenotazioni di {barberMapping[viewingBarber as keyof typeof barberMapping]}
                         </div>
                       )}
                     </div>
