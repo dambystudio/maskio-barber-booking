@@ -59,16 +59,21 @@ export async function GET(request: NextRequest) {  try {
     const status = url.searchParams.get('status');
     const userId = url.searchParams.get('userId');
     const fetchAll = url.searchParams.get('fetchAll'); // <-- NUOVO
+    const showAllBarbers = url.searchParams.get('allBarbers'); // <-- NUOVO parametro per calendario
 
     let bookings: Booking[] = [];
 
     // <-- NUOVA LOGICA per fetchAll -->
     if (fetchAll === 'true') {
-        if (userRole === 'admin') {
+        // Se richiede allBarbers, restituisce tutte le prenotazioni di tutti i barbieri
+        if (showAllBarbers === 'true') {
+            console.log('🔍 API: Richiesta tutte le prenotazioni di tutti i barbieri per calendario');
+            bookings = await DatabaseService.getAllBookings();
+        } else if (userRole === 'admin') {
             bookings = await DatabaseService.getAllBookings();
         } else if (userRole === 'barber') {
-            const allBarbers = await DatabaseService.getBarbers();
-            const currentBarber = allBarbers.find(b => b.email === userEmail);
+            const allBarbersData = await DatabaseService.getBarbers();
+            const currentBarber = allBarbersData.find(b => b.email === userEmail);
             if (!currentBarber) {
                 return NextResponse.json({ error: 'Barbiere non trovato' }, { status: 404 });
             }

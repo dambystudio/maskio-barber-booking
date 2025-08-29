@@ -254,20 +254,18 @@ export default function PannelloPrenotazioni() {
   const fetchAllBarberBookings = async () => {
     if (!session?.user?.email) return;
 
-    console.log(`📡 Inizio fetch di TUTTE le prenotazioni per ${session.user.email}`);
+    console.log(`📡 Inizio fetch di TUTTE le prenotazioni per la modalità calendario`);
     try {
       const params = new URLSearchParams();
-      // Se non è admin, filtra per il suo ID. L'admin vede tutto.
-      if (!isAdmin) {
-        params.append('barberEmail', session.user.email);
-      }
-      // Aggiungiamo un parametro per segnalare che le vogliamo tutte
+      // Per la modalità calendario, vogliamo sempre TUTTE le prenotazioni di TUTTI i barbieri
+      // Non filtrare per barbiere specifico
       params.append('fetchAll', 'true');
+      params.append('allBarbers', 'true'); // Nuovo parametro per indicare che vogliamo tutti i barbieri
 
       const response = await fetch(`/api/bookings?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ TUTTE le prenotazioni ricevute:', data.bookings);
+        console.log('✅ TUTTE le prenotazioni di tutti i barbieri ricevute:', data.bookings);
         setAllBookings(data.bookings || []);
       } else {
         console.error('❌ Errore nel fetch di tutte le prenotazioni:', response.statusText);
@@ -1642,9 +1640,9 @@ Grazie! 😊`;
         </div>
       </div>      {/* Lista prenotazioni - Modalità Griglia o Tabella */}
       {displayMode === 'grid' ? (
-        /* Modalità Calendario a Griglia */
+        /* Modalità Calendario a Griglia - Mostra TUTTI i barbieri */
         <CalendarGrid
-          bookings={bookings}
+          bookings={allBookings.filter(booking => booking.booking_date === selectedDate)}
           selectedDate={selectedDate}
           onWhatsAppClick={(booking) => openWhatsApp(
             booking.customer_phone, 

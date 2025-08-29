@@ -37,22 +37,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === 'phone' && phone) {
-      const success = await VerificationService.sendSMSVerification(
-        session.user.id,
-        phone
+      // SMS verification not supported
+      return NextResponse.json(
+        { error: 'Verifica SMS non supportata' },
+        { status: 400 }
       );
-      
-      if (success) {
-        return NextResponse.json({
-          message: 'Codice di verifica inviato via SMS',
-          success: true
-        });
-      } else {
-        return NextResponse.json(
-          { error: 'Errore nell\'invio dell\'SMS' },
-          { status: 500 }
-        );
-      }
     }
 
     return NextResponse.json(
@@ -91,10 +80,8 @@ export async function PUT(request: NextRequest) {
         code
       );
     } else if (type === 'phone') {
-      success = await VerificationService.verifyPhoneCode(
-        session.user.id,
-        code
-      );
+      // Phone verification not supported
+      success = false;
     }
 
     if (success) {
