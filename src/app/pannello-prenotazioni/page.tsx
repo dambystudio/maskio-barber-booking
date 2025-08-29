@@ -336,8 +336,11 @@ export default function PannelloPrenotazioni() {
           return a.booking_time.localeCompare(b.booking_time);
         });
         
-        // Aggiorna cache
-        const cacheKey = `${selectedDate}-${filterStatus}`;
+        // Aggiorna cache con chiave che include il barbiere
+        const targetBarber = (!isAdmin && currentBarber) 
+          ? (viewMode === 'own' ? currentBarber : viewingBarber)
+          : 'all';
+        const cacheKey = `${selectedDate}-${filterStatus}-${targetBarber}`;
         setBookingsCache(prev => ({
           ...prev,
           [cacheKey]: sortedBookingsArray
@@ -438,7 +441,10 @@ export default function PannelloPrenotazioni() {
     console.log('🔄 Effect triggered - selectedDate:', selectedDate, 'filterStatus:', filterStatus);
     
     // Controlla se abbiamo già le prenotazioni in cache
-    const bookingsCacheKey = `${selectedDate}-${filterStatus}`;
+    const targetBarber = (!isAdmin && currentBarber) 
+      ? (viewMode === 'own' ? currentBarber : viewingBarber)
+      : 'all';
+    const bookingsCacheKey = `${selectedDate}-${filterStatus}-${targetBarber}`;
     const statsCacheKey = selectedDate; // Le stats dipendono solo dalla data
     
     const hasBookingsCache = bookingsCache[bookingsCacheKey];
@@ -476,7 +482,7 @@ export default function PannelloPrenotazioni() {
       clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, filterStatus, viewMode, currentBarber, isAdmin]);
+  }, [selectedDate, filterStatus, viewMode, viewingBarber, currentBarber, isAdmin]);
 
   // Inizializza il barbiere selezionato per le chiusure
   useEffect(() => {
