@@ -181,17 +181,32 @@ export default function PannelloPrenotazioni() {
   // Funzioni helper per gestire più barbieri
   const getOtherBarbers = (currentEmail: string) => {
     const emails = Object.keys(barberMapping);
-    return emails.filter(email => email !== currentEmail);
+    const others = emails.filter(email => email !== currentEmail);
+    console.log('🔧 getOtherBarbers:', { currentEmail, emails, others });
+    return others;
   };
 
   const getNextBarberToView = (currentEmail: string, currentlyViewing: string) => {
     const otherBarbers = getOtherBarbers(currentEmail);
-    if (otherBarbers.length === 0) return '';
+    if (otherBarbers.length === 0) {
+      console.log('🔧 getNextBarberToView: No other barbers available');
+      return '';
+    }
     
     const currentIndex = otherBarbers.indexOf(currentlyViewing);
-    if (currentIndex === -1) return otherBarbers[0];
+    const nextBarber = currentIndex === -1 
+      ? otherBarbers[0] 
+      : otherBarbers[(currentIndex + 1) % otherBarbers.length];
     
-    return otherBarbers[(currentIndex + 1) % otherBarbers.length];
+    console.log('🔧 getNextBarberToView:', {
+      currentEmail,
+      currentlyViewing,
+      otherBarbers,
+      currentIndex,
+      nextBarber
+    });
+    
+    return nextBarber;
   };  // Verifica permessi tramite API invece che da sessione
   const checkPermissions = async () => {
     try {
@@ -438,7 +453,14 @@ export default function PannelloPrenotazioni() {
 
   // Debounce per evitare troppe chiamate API consecutive
   useEffect(() => {
-    console.log('🔄 Effect triggered - selectedDate:', selectedDate, 'filterStatus:', filterStatus);
+    console.log('🔄 Effect triggered:', {
+      selectedDate,
+      filterStatus,
+      viewMode,
+      viewingBarber,
+      currentBarber,
+      isAdmin
+    });
     
     // Controlla se abbiamo già le prenotazioni in cache
     const targetBarber = (!isAdmin && currentBarber) 
@@ -446,6 +468,8 @@ export default function PannelloPrenotazioni() {
       : 'all';
     const bookingsCacheKey = `${selectedDate}-${filterStatus}-${targetBarber}`;
     const statsCacheKey = selectedDate; // Le stats dipendono solo dalla data
+    
+    console.log('🔑 Cache keys:', { bookingsCacheKey, statsCacheKey, targetBarber });
     
     const hasBookingsCache = bookingsCache[bookingsCacheKey];
     const hasStatsCache = statsCache[statsCacheKey];
@@ -1485,10 +1509,18 @@ Grazie! 😊`;
                 </div>
                 <button
                   onClick={() => {
+                    console.log('🔵 Button clicked - Current state:', {
+                      viewMode,
+                      viewingBarber,
+                      currentBarber
+                    });
+                    
                     if (viewMode === 'own') {
                       // Passa alla modalità other e inizia con il primo altro barbiere
                       const otherBarbers = getOtherBarbers(currentBarber);
+                      console.log('🔵 Other barbers available:', otherBarbers);
                       if (otherBarbers.length > 0) {
+                        console.log('🔵 Switching to other mode, viewing:', otherBarbers[0]);
                         setViewMode('other');
                         setViewingBarber(otherBarbers[0]);
                       }
@@ -1497,9 +1529,14 @@ Grazie! 😊`;
                       const nextBarber = getNextBarberToView(currentBarber, viewingBarber);
                       const otherBarbers = getOtherBarbers(currentBarber);
                       
+                      console.log('🔵 Next barber to view:', nextBarber);
+                      console.log('🔵 Available others:', otherBarbers);
+                      
                       if (nextBarber && otherBarbers.includes(nextBarber)) {
+                        console.log('🔵 Switching to next barber:', nextBarber);
                         setViewingBarber(nextBarber);
                       } else {
+                        console.log('🔵 Returning to own bookings');
                         // Torna alle proprie prenotazioni
                         setViewMode('own');
                         setViewingBarber('');
