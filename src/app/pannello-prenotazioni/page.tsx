@@ -130,12 +130,32 @@ export default function PannelloPrenotazioni() {
   // Funzione helper per cambiare barbiere atomicamente
   const switchToBarber = (barberEmail: string) => {
     console.log('🔄 switchToBarber called with:', barberEmail);
+    
+    // Pulisci la cache per il barbiere target per forzare un reload
+    const targetCacheKey = `${selectedDate}-${filterStatus}-${barberEmail}`;
+    console.log('🗑️ Clearing cache for:', targetCacheKey);
+    setBookingsCache(prev => {
+      const newCache = { ...prev };
+      delete newCache[targetCacheKey];
+      return newCache;
+    });
+    
     setViewMode('other');
     setViewingBarber(barberEmail);
   };
   
   const switchToOwnBookings = () => {
     console.log('🔄 switchToOwnBookings called');
+    
+    // Pulisci la cache per le proprie prenotazioni per forzare un reload
+    const targetCacheKey = `${selectedDate}-${filterStatus}-${currentBarber}`;
+    console.log('🗑️ Clearing cache for own bookings:', targetCacheKey);
+    setBookingsCache(prev => {
+      const newCache = { ...prev };
+      delete newCache[targetCacheKey];
+      return newCache;
+    });
+    
     setViewMode('own');
     setViewingBarber('');
   };
@@ -484,7 +504,14 @@ export default function PannelloPrenotazioni() {
     const hasBookingsCache = bookingsCache[bookingsCacheKey];
     const hasStatsCache = statsCache[statsCacheKey];
     
-    if (hasBookingsCache && hasStatsCache) {
+    console.log('🔍 Cache check:', {
+      bookingsCacheKey,
+      hasBookingsCache: !!hasBookingsCache,
+      cacheSize: hasBookingsCache ? hasBookingsCache.length : 0,
+      allCacheKeys: Object.keys(bookingsCache)
+    });
+    
+    if (hasBookingsCache && hasStatsCache && false) { // Temporary: always fetch to debug
       console.log('💾 Using cached data for:', bookingsCacheKey, statsCacheKey);
       // Ordina le prenotazioni anche dalla cache per ora (crescente)
       const sortedCachedBookings = [...hasBookingsCache].sort((a, b) => {
