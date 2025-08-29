@@ -89,10 +89,8 @@ export async function GET(request: NextRequest) {  try {
           
           // If barberEmail is specified, show that barber's bookings (for viewing other barbers)
           if (barberEmail) {
-            console.log('🔍 API: Barber viewing another barber\'s bookings:', barberEmail);
             const targetBarber = allBarbers.find(b => b.email === barberEmail);
             if (!targetBarber) {
-              console.log('❌ API: Target barber not found:', barberEmail);
               return NextResponse.json(
                 { error: 'Barbiere non trovato' },
                 { status: 404 }
@@ -101,7 +99,6 @@ export async function GET(request: NextRequest) {  try {
             bookings = await DatabaseService.getBookingsByBarber(targetBarber.id);
           } else {
             // Default: show current barber's own bookings
-            console.log('🔍 API: Barber viewing own bookings');
             const currentBarber = allBarbers.find(b => b.email === userEmail);
             if (!currentBarber) {
               return NextResponse.json(

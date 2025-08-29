@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { format, parseISO, addDays, isToday, getDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { motion } from 'framer-motion';
+import CalendarGrid from '@/components/CalendarGrid';
 
 interface Booking {
   id: string;
@@ -121,19 +122,17 @@ export default function PannelloPrenotazioni() {
   const [isDebouncing, setIsDebouncing] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [permissionsChecked, setPermissionsChecked] = useState(false);
-    // Nuovi stati per gestione barbieri
+  // Nuovi stati per gestione barbieri
   const [currentBarber, setCurrentBarber] = useState<string>('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [viewMode, setViewMode] = useState<'own' | 'other'>('own'); // 'own' = proprie prenotazioni, 'other' = dell'altro barbiere
   const [viewingBarber, setViewingBarber] = useState<string>(''); // quale barbiere sta visualizzando quando è in modalità 'other'
+  const [displayMode, setDisplayMode] = useState<'grid' | 'table'>('grid'); // Modalità di visualizzazione: griglia o tabella
   
   // Funzione helper per cambiare barbiere atomicamente
   const switchToBarber = (barberEmail: string) => {
-    console.log('🔄 switchToBarber called with:', barberEmail);
-    
     // Pulisci la cache per il barbiere target per forzare un reload
     const targetCacheKey = `${selectedDate}-${filterStatus}-${barberEmail}`;
-    console.log('🗑️ Clearing cache for:', targetCacheKey);
     setBookingsCache(prev => {
       const newCache = { ...prev };
       delete newCache[targetCacheKey];
@@ -145,11 +144,8 @@ export default function PannelloPrenotazioni() {
   };
   
   const switchToOwnBookings = () => {
-    console.log('🔄 switchToOwnBookings called');
-    
     // Pulisci la cache per le proprie prenotazioni per forzare un reload
     const targetCacheKey = `${selectedDate}-${filterStatus}-${currentBarber}`;
-    console.log('🗑️ Clearing cache for own bookings:', targetCacheKey);
     setBookingsCache(prev => {
       const newCache = { ...prev };
       delete newCache[targetCacheKey];
@@ -329,7 +325,6 @@ export default function PannelloPrenotazioni() {
   const fetchBookings = async (retryCount = 0) => {
     try {
       setLoading(true);
-      console.log('📡 Fetching bookings for date:', selectedDate, 'status:', filterStatus);
       
       // Costruisci URL con parametri per il server-side filtering
       const params = new URLSearchParams();
@@ -341,30 +336,16 @@ export default function PannelloPrenotazioni() {
       // Filtro barbiere: solo se non sei admin e stai guardando le tue prenotazioni o quelle dell'altro
       if (!isAdmin && currentBarber) {
         if (viewMode === 'own') {
-          console.log('🔍 Adding barberEmail for own bookings:', currentBarber);
           params.append('barberEmail', currentBarber);
         } else if (viewMode === 'other' && viewingBarber) {
-          console.log('🔍 Adding barberEmail for other bookings:', viewingBarber);
           params.append('barberEmail', viewingBarber);
         }
       }
       
       const apiUrl = `/api/bookings?${params.toString()}`;
-      console.log('🌐 API URL being called:', apiUrl);
-      console.log('🔍 URL params:', {
-        date: params.get('date'),
-        status: params.get('status'),
-        barberEmail: params.get('barberEmail'),
-        isAdmin,
-        currentBarber,
-        viewMode,
-        viewingBarber
-      });
-      
       const response = await fetch(apiUrl);
         if (response.ok) {
         const data = await response.json();
-        console.log('✅ Bookings fetched successfully:', data);
         
         // Estrai l'array bookings dalla response
         const bookingsArray = data.bookings || [];
@@ -387,7 +368,6 @@ export default function PannelloPrenotazioni() {
         setBookings(sortedBookingsArray);
       } else {
         if (response.status === 429 && retryCount < 3) {
-          console.warn(`⚠️ Rate limited, retrying in ${(retryCount + 1) * 1000}ms...`);
           setTimeout(() => fetchBookings(retryCount + 1), (retryCount + 1) * 1000);
           return;
         }
@@ -402,8 +382,6 @@ export default function PannelloPrenotazioni() {
   };
   const fetchStats = async () => {
     try {
-      console.log('📊 Fetching stats for date:', selectedDate);
-      
       // Se non è admin, include il filtro per barbiere
       let url = `/api/admin/stats?date=${selectedDate}`;
       if (!isAdmin && currentBarber) {
@@ -417,7 +395,6 @@ export default function PannelloPrenotazioni() {
       }
       
       const data = await response.json();
-      console.log('✅ Stats fetched successfully:', data);
       
       // Aggiorna cache
       setStatsCache(prev => ({
@@ -427,7 +404,6 @@ export default function PannelloPrenotazioni() {
       
       setStats(data);
     } catch (error) {
-      console.error('❌ Error fetching stats:', error);
       setStats(null);
     }
   };
@@ -476,15 +452,6 @@ export default function PannelloPrenotazioni() {
 
   // Debounce per evitare troppe chiamate API consecutive
   useEffect(() => {
-    console.log('🔄 Effect triggered:', {
-      selectedDate,
-      filterStatus,
-      viewMode,
-      viewingBarber,
-      currentBarber,
-      isAdmin
-    });
-    
     // Controlla se abbiamo già le prenotazioni in cache
     const targetBarber = (!isAdmin && currentBarber) 
       ? (viewMode === 'own' ? currentBarber : viewingBarber)
@@ -492,27 +459,10 @@ export default function PannelloPrenotazioni() {
     const bookingsCacheKey = `${selectedDate}-${filterStatus}-${targetBarber}`;
     const statsCacheKey = selectedDate; // Le stats dipendono solo dalla data
     
-    console.log('🔑 Cache calculation:', {
-      isAdmin,
-      currentBarber,
-      viewMode,
-      viewingBarber,
-      targetBarber,
-      bookingsCacheKey
-    });
-    
     const hasBookingsCache = bookingsCache[bookingsCacheKey];
     const hasStatsCache = statsCache[statsCacheKey];
     
-    console.log('🔍 Cache check:', {
-      bookingsCacheKey,
-      hasBookingsCache: !!hasBookingsCache,
-      cacheSize: hasBookingsCache ? hasBookingsCache.length : 0,
-      allCacheKeys: Object.keys(bookingsCache)
-    });
-    
     if (hasBookingsCache && hasStatsCache) {
-      console.log('💾 Using cached data for:', bookingsCacheKey, statsCacheKey);
       // Ordina le prenotazioni anche dalla cache per ora (crescente)
       const sortedCachedBookings = [...hasBookingsCache].sort((a, b) => {
         return a.booking_time.localeCompare(b.booking_time);
@@ -528,7 +478,6 @@ export default function PannelloPrenotazioni() {
     
     // Debounce di 500ms per evitare rate limiting
     const timeoutId = setTimeout(async () => {
-      console.log('⏱️ Debounce completed, fetching data...');
       setIsDebouncing(false);
         // Fetch entrambi in parallelo per velocizzare il caricamento
       await Promise.all([
@@ -539,7 +488,6 @@ export default function PannelloPrenotazioni() {
 
     // Cleanup del timeout se l'effect viene richiamato prima del debounce
     return () => {
-      console.log('🧹 Cleaning up previous timeout');
       clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1648,6 +1596,37 @@ Grazie! 😊`;
               </select>
             </div>
 
+            {/* Toggle Modalità Visualizzazione */}
+            <div className="flex-shrink-0">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                👁️ Modalità Visualizzazione
+              </label>
+              <div className="flex bg-gray-800 border border-gray-600 rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode('grid')}
+                  className={`px-4 py-3 md:py-2 text-sm font-medium transition-colors ${
+                    displayMode === 'grid'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  📅 Calendario
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode('table')}
+                  className={`px-4 py-3 md:py-2 text-sm font-medium transition-colors ${
+                    displayMode === 'table'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  📋 Tabella
+                </button>
+              </div>
+            </div>
+
             {/* Reset filtri - Mobile Friendly */}
             <button
               type="button"
@@ -1661,19 +1640,36 @@ Grazie! 😊`;
             </button>
           </div>
         </div>
-      </div>      {/* Lista prenotazioni - Responsive: Card su mobile, Table su desktop */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg shadow overflow-hidden">
-        {bookings.length === 0 ? (
-          <div className="p-8 md:p-12 text-center">
-            <div className="text-4xl md:text-6xl mb-4">📅</div>
-            <div className="text-gray-400 text-base md:text-lg mb-2">
-              Nessuna prenotazione trovata per il {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}
-              {filterStatus !== 'all' && ` con status "${filterStatus}"`}
+      </div>      {/* Lista prenotazioni - Modalità Griglia o Tabella */}
+      {displayMode === 'grid' ? (
+        /* Modalità Calendario a Griglia */
+        <CalendarGrid
+          bookings={bookings}
+          selectedDate={selectedDate}
+          onWhatsAppClick={(booking) => openWhatsApp(
+            booking.customer_phone, 
+            booking.customer_name, 
+            booking.service_name, 
+            booking.booking_date, 
+            booking.booking_time
+          )}
+          onPhoneClick={makePhoneCall}
+        />
+      ) : (
+        /* Modalità Tabella Tradizionale */
+        <div className="bg-gray-900 border border-gray-800 rounded-lg shadow overflow-hidden">
+          {bookings.length === 0 ? (
+            <div className="p-8 md:p-12 text-center">
+              <div className="text-4xl md:text-6xl mb-4">📅</div>
+              <div className="text-gray-400 text-base md:text-lg mb-2">
+                Nessuna prenotazione trovata per il {format(parseISO(selectedDate + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}
+                {filterStatus !== 'all' && ` con status "${filterStatus}"`}
+              </div>
+              <div className="text-gray-500 text-sm mt-2">
+                Prova a selezionare un altro giorno o cambiare il filtro status
+              </div>
             </div>
-            <div className="text-gray-500 text-sm mt-2">
-              Prova a selezionare un altro giorno o cambiare il filtro status
-            </div>
-          </div>        ) : (
+          ) : (
           <>
             {/* Vista Mobile - Cards */}
             <div className="block md:hidden">
@@ -2022,10 +2018,12 @@ Grazie! 😊`;
                     </tr>
                   ))}
                 </tbody>
-              </table>            </div>
+              </table>
+            </div>
           </>
-        )}
-      </div>
+            )}
+        </div>
+      )}
 
       {/* SEZIONE STORICO PRENOTAZIONI */}
       {isAuthorized && (

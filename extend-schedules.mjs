@@ -23,14 +23,29 @@ async function extendSchedules() {
     
     console.log(`\n📅 Extending schedules from ${currentMaxDate.toISOString().split('T')[0]} to ${targetDate.toISOString().split('T')[0]}`);
     
-    // Generate the 14 time slots (same as in recreate-database.mjs)
-    const timeSlots = [
-      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', 
-      '12:00', '12:30', '15:00', '15:30', '16:00', '16:30', 
-      '17:00', '17:30'
-    ];
+    // Generate time slots based on day of the week
+    const generateSlots = (dayOfWeek) => {
+      // Monday (1) - Half day: only afternoon 15:00-17:30
+      if (dayOfWeek === 1) {
+        return ["15:00", "15:30", "16:00", "16:30", "17:00", "17:30"];
+      }
+      
+      // Saturday (6) - Modified hours: 9:00-12:30, 14:30-17:00
+      if (dayOfWeek === 6) {
+        return [
+          "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+          "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"
+        ];
+      }
+      
+      // Tuesday-Friday: Full day 9:00-12:30, 15:00-17:30
+      return [
+        "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+        "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
+      ];
+    };
     
-    const barbers = ['fabio', 'michele'];
+    const barbers = ['fabio', 'michele', 'marco'];
     let insertedRecords = 0;
     
     // Start from the day after current max date
@@ -42,7 +57,13 @@ async function extendSchedules() {
       const dateString = currentDate.toISOString().split('T')[0];
       
       // Skip Sundays (day 0)
-      if (dayOfWeek !== 0) {        for (const barberId of barbers) {
+      if (dayOfWeek !== 0) {
+        const timeSlots = generateSlots(dayOfWeek);
+        const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
+        
+        console.log(`📅 ${dateString} (${dayName}): ${timeSlots.length} slots - ${timeSlots.join(', ')}`);
+        
+        for (const barberId of barbers) {
           try {
             await sql`
               INSERT INTO barber_schedules (barber_id, date, day_off, available_slots, unavailable_slots)

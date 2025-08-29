@@ -260,18 +260,9 @@ export class DatabaseService {
       return slots;
     }
 
-    // Saturday has same hours as weekdays (9:00-12:30, 15:00-17:30)
-    if (dayOfWeek === 6) {
-      // Morning slots 9:00-12:30
-      for (let hour = 9; hour <= 12; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          if (hour === 12 && minute > 30) break;
-          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-          slots.push(timeString);
-        }
-      }
-      
-      // Afternoon slots 15:00-17:30
+    // Monday (1) - Half day: only afternoon 15:00-17:30
+    if (dayOfWeek === 1) {
+      // Only afternoon slots 15:00-17:30 for Monday
       for (let hour = 15; hour <= 17; hour++) {
         for (let minute = 0; minute < 60; minute += 30) {
           if (hour === 17 && minute > 30) break;
@@ -282,7 +273,30 @@ export class DatabaseService {
       return slots;
     }
 
-    // Weekdays: Morning slots 9:00-12:30
+    // Saturday has modified hours (9:00-12:30, 14:30-17:00)
+    if (dayOfWeek === 6) {
+      // Morning slots 9:00-12:30
+      for (let hour = 9; hour <= 12; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 12 && minute > 30) break;
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(timeString);
+        }
+      }
+      
+      // Afternoon slots 14:30-17:00 (aggiunto 14:30, rimosso 17:30)
+      slots.push('14:30'); // Nuovo orario aggiunto
+      for (let hour = 15; hour <= 17; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 17 && minute > 0) break; // Stop at 17:00 (no 17:30)
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(timeString);
+        }
+      }
+      return slots;
+    }
+
+    // Tuesday-Friday: Morning slots 9:00-12:30
     for (let hour = 9; hour <= 12; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         if (hour === 12 && minute > 30) break;
@@ -291,7 +305,7 @@ export class DatabaseService {
       }
     }
     
-    // Weekdays: Afternoon slots 15:00-17:30
+    // Tuesday-Friday: Afternoon slots 15:00-17:30
     for (let hour = 15; hour <= 17; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         if (hour === 17 && minute > 30) break;
