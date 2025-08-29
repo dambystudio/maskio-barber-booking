@@ -511,7 +511,7 @@ export default function PannelloPrenotazioni() {
       allCacheKeys: Object.keys(bookingsCache)
     });
     
-    if (hasBookingsCache && hasStatsCache && false) { // Temporary: always fetch to debug
+    if (hasBookingsCache && hasStatsCache) {
       console.log('💾 Using cached data for:', bookingsCacheKey, statsCacheKey);
       // Ordina le prenotazioni anche dalla cache per ora (crescente)
       const sortedCachedBookings = [...hasBookingsCache].sort((a, b) => {
