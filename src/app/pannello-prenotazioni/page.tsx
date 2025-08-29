@@ -127,6 +127,19 @@ export default function PannelloPrenotazioni() {
   const [viewMode, setViewMode] = useState<'own' | 'other'>('own'); // 'own' = proprie prenotazioni, 'other' = dell'altro barbiere
   const [viewingBarber, setViewingBarber] = useState<string>(''); // quale barbiere sta visualizzando quando è in modalità 'other'
   
+  // Funzione helper per cambiare barbiere atomicamente
+  const switchToBarber = (barberEmail: string) => {
+    console.log('🔄 switchToBarber called with:', barberEmail);
+    setViewMode('other');
+    setViewingBarber(barberEmail);
+  };
+  
+  const switchToOwnBookings = () => {
+    console.log('🔄 switchToOwnBookings called');
+    setViewMode('own');
+    setViewingBarber('');
+  };
+  
   // Cache per prenotazioni e statistiche separate
   const [bookingsCache, setBookingsCache] = useState<{[key: string]: Booking[]}>({});
   const [statsCache, setStatsCache] = useState<{[key: string]: Stats}>({});
@@ -469,7 +482,14 @@ export default function PannelloPrenotazioni() {
     const bookingsCacheKey = `${selectedDate}-${filterStatus}-${targetBarber}`;
     const statsCacheKey = selectedDate; // Le stats dipendono solo dalla data
     
-    console.log('🔑 Cache keys:', { bookingsCacheKey, statsCacheKey, targetBarber });
+    console.log('🔑 Cache calculation:', {
+      isAdmin,
+      currentBarber,
+      viewMode,
+      viewingBarber,
+      targetBarber,
+      bookingsCacheKey
+    });
     
     const hasBookingsCache = bookingsCache[bookingsCacheKey];
     const hasStatsCache = statsCache[statsCacheKey];
@@ -1521,8 +1541,7 @@ Grazie! 😊`;
                       console.log('🔵 Other barbers available:', otherBarbers);
                       if (otherBarbers.length > 0) {
                         console.log('🔵 Switching to other mode, viewing:', otherBarbers[0]);
-                        setViewMode('other');
-                        setViewingBarber(otherBarbers[0]);
+                        switchToBarber(otherBarbers[0]);
                       }
                     } else {
                       // Cicla al prossimo barbiere o torna alle proprie
@@ -1534,12 +1553,10 @@ Grazie! 😊`;
                       
                       if (nextBarber && otherBarbers.includes(nextBarber)) {
                         console.log('🔵 Switching to next barber:', nextBarber);
-                        setViewingBarber(nextBarber);
+                        switchToBarber(nextBarber);
                       } else {
                         console.log('🔵 Returning to own bookings');
-                        // Torna alle proprie prenotazioni
-                        setViewMode('own');
-                        setViewingBarber('');
+                        switchToOwnBookings();
                       }
                     }
                   }}
