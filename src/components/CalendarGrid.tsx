@@ -25,13 +25,15 @@ interface CalendarGridProps {
   selectedDate: string;
   onWhatsAppClick: (booking: Booking) => void;
   onPhoneClick: (phone: string) => void;
+  onCancelBooking: (bookingId: string) => void;
 }
 
 const CalendarGrid = ({ 
   bookings, 
   selectedDate, 
   onWhatsAppClick, 
-  onPhoneClick 
+  onPhoneClick,
+  onCancelBooking
 }: CalendarGridProps) => {
   // Definisco i barbieri fissi
   const BARBERS = [
@@ -392,6 +394,20 @@ const CalendarGrid = ({
                 >
                   📞 Chiama
                 </button>
+                {/* Pulsante Annulla - solo se la prenotazione non è già annullata */}
+                {selectedBooking.status !== 'cancelled' && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`Sei sicuro di voler annullare la prenotazione di ${selectedBooking.customer_name}?`)) {
+                        onCancelBooking(selectedBooking.id);
+                        closeBookingModal();
+                      }
+                    }}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1 text-sm"
+                  >
+                    ❌ Annulla
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>

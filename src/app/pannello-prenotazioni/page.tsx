@@ -1652,6 +1652,7 @@ Grazie! 😊`;
             booking.booking_time
           )}
           onPhoneClick={makePhoneCall}
+          onCancelBooking={(bookingId) => updateBookingStatus(bookingId, 'cancelled')}
         />
       ) : (
         /* Modalità Tabella Tradizionale */
