@@ -1,22 +1,26 @@
 // Service Worker per notifiche push - Maskio Barber Concept
 
-console.log('🔔 Service Worker: Caricamento in corso...');
-
-// Importa il service worker di Next.js esistente
-importScripts('./workbox-8363d77b.js');
-
-console.log('📦 Workbox caricato');
+console.log('🔔 SW-PUSH: INIZIO CARICAMENTO');
 
 // === PUSH NOTIFICATIONS HANDLER ===
-console.log('🔔 Service Worker: Registrando gestori notifiche push');
+console.log('� SW-PUSH: Registrando gestori notifiche push');
+
+// Test immediato per verificare il contesto
+console.log('🔔 SW-PUSH: Service Worker Context:', {
+  location: self.location.href,
+  registration: !!self.registration,
+  timestamp: new Date().toISOString()
+});
 
 // Gestisce la ricezione delle notifiche push
 self.addEventListener('push', function(event) {
-  console.log('📨 Push event ricevuto:', event);
+  console.log('🚨🚨🚨 PUSH EVENT RICEVUTO!!! 🚨🚨🚨');
+  console.log('📨 Push event:', event);
+  console.log('📊 Event data:', event.data);
   
   let notificationData = {
-    title: '🔔 Maskio Barber Concept',
-    body: 'Hai ricevuto una notifica!',
+    title: '🔔 MASKIO BARBER - TEST PUSH',
+    body: 'NOTIFICA PUSH RICEVUTA!!!',
     icon: '/icone/predefinita/192x192.png',
     badge: '/icone/predefinita/32x32.png',
     data: { 
