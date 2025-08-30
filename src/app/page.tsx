@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import BookingButton from '../components/BookingButton';
-import BookingInfoBanner from '../components/BookingInfoBanner';
 
 export default function Home() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -131,9 +130,6 @@ export default function Home() {
     }
   };  return (
     <div className="min-h-screen bg-black">
-      {/* Banner informativo */}
-      <BookingInfoBanner />
-      
       {/* Enhanced Luxury Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         {/* Static background elements for better performance */}
