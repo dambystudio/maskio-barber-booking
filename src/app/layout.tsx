@@ -13,6 +13,7 @@ import MobileBottomNav from '../components/MobileBottomNav';
 import PWAFloatingMenu from '../components/PWAFloatingMenu';
 import AddToHomeBanner from '../components/AddToHomeBanner';
 import PWANotificationBanner from '../components/PWANotificationBanner';
+import DebugConsole from '../components/DebugConsole';
 import DynamicManifest from '../components/DynamicManifest';
 // Importazione URL per metadataBase
 import { URL } from 'url';
@@ -168,6 +169,8 @@ export default function RootLayout({
               <script src="/js/dev-tools-detector.js" defer></script>
               {/* Schema.org JSON-LD script */}
               <JsonLdScript />
+              {/* Debug Console per PWA */}
+              {process.env.NODE_ENV === 'development' && <DebugConsole />}
             </SecurityProvider>
           </SessionProvider>
           <AddToHomeBanner />

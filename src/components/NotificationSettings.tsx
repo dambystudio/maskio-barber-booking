@@ -158,14 +158,37 @@ export default function NotificationSettings() {
 
   const handleTestNotification = async () => {
     try {
-      const response = await fetch('/api/push/test', { method: 'POST' });
+      console.log('🧪 Inviando notifica di test...');
+      
+      const response = await fetch('/api/push/test', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📡 Risposta test:', response.status);
+      
       if (response.ok) {
-        alert('Notifica di test inviata! Controlla se l\'hai ricevuta.');
+        const result = await response.json();
+        console.log('✅ Risultato test:', result);
+        
+        alert(`✅ Test completato!\n\n📊 Info:\n- Account: ${result.user?.email}\n- Dispositivi: ${result.subscriptions}\n- Inviati: ${result.results?.filter((r: any) => r.success).length}\n\n🔔 Controlla se hai ricevuto la notifica!`);
       } else {
-        throw new Error('Errore invio test');
+        const error = await response.text();
+        console.error('❌ Errore test:', error);
+        
+        if (response.status === 404) {
+          alert('❌ Nessuna subscription trovata.\n\nDevi prima:\n1. Attivare le notifiche\n2. Permettere al browser di inviare notifiche\n3. Riprovare il test');
+        } else if (response.status === 401) {
+          alert('❌ Non sei autenticato. Effettua il login e riprova.');
+        } else {
+          alert(`❌ Errore test: ${error}`);
+        }
       }
     } catch (error) {
-      alert('Errore inviando la notifica di test.');
+      console.error('❌ Errore inviando test:', error);
+      alert('❌ Errore di connessione durante il test.');
     }
   };
 
