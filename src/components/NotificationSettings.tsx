@@ -261,6 +261,24 @@ export default function NotificationSettings() {
                   🧪 Test
                 </button>
                 <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/push/test-simple', { method: 'POST' });
+                      const result = await response.json();
+                      if (response.ok) {
+                        alert(`✅ Test semplice: ${result.message}\n\n🔔 CHIUDI QUESTA FINESTRA e controlla se arriva la notifica!`);
+                      } else {
+                        alert(`❌ Errore: ${result.error}`);
+                      }
+                    } catch (error) {
+                      alert('❌ Errore di connessione');
+                    }
+                  }}
+                  className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-colors"
+                >
+                  🚨 Test Semplice
+                </button>
+                <button
                   onClick={handleDisableNotifications}
                   disabled={isLoading}
                   className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors disabled:opacity-50"
