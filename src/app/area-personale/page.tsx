@@ -8,7 +8,7 @@ import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import Link from 'next/link';
 import PhoneRequiredModal from '@/components/PhoneRequiredModal';
-import NotificationSettings from '@/components/NotificationSettings';
+// import NotificationSettings from '@/components/NotificationSettings';
 import { usePhoneRequired } from '@/hooks/usePhoneRequired';
 
 interface UserBooking {
@@ -742,7 +742,7 @@ export default function AreaPersonale() {
             </div>
 
             {/* Notification Settings */}
-            <NotificationSettings />
+            {/* <NotificationSettings /> */}
 
             {/* Logout Section */}
             <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6">

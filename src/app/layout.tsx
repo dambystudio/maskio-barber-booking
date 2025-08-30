@@ -12,7 +12,7 @@ import { GoogleAnalytics } from '../components/GoogleAnalytics';
 import MobileBottomNav from '../components/MobileBottomNav';
 import PWAFloatingMenu from '../components/PWAFloatingMenu';
 import AddToHomeBanner from '../components/AddToHomeBanner';
-import PWANotificationBanner from '../components/PWANotificationBanner';
+// import PWANotificationBanner from '../components/PWANotificationBanner';
 import DebugConsole from '../components/DebugConsole';
 import DynamicManifest from '../components/DynamicManifest';
 // Importazione URL per metadataBase
@@ -157,7 +157,7 @@ export default function RootLayout({
             <SecurityProvider>
               <DynamicManifest />
               <DailyUpdateManager />
-              <PWANotificationBanner />
+              {/* <PWANotificationBanner /> */}
               <Navbar />
               <main className="min-h-screen pt-[70px] standalone:pt-0">
                 {children}
