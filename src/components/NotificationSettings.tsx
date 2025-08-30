@@ -41,8 +41,20 @@ export default function NotificationSettings() {
     setIsLoading(true);
     
     try {
+      console.log('🔔 Iniziando attivazione notifiche...');
+      
+      // Controlla se abbiamo la chiave VAPID
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      console.log('🔑 VAPID key presente:', !!vapidKey);
+      
+      if (!vapidKey) {
+        throw new Error('Chiave VAPID mancante');
+      }
+
       // Richiedi permesso
+      console.log('📋 Richiedendo permesso notifiche...');
       const permission = await Notification.requestPermission();
+      console.log('✅ Permesso ottenuto:', permission);
       
       if (permission !== 'granted') {
         alert('Permesso negato. Abilita le notifiche dalle impostazioni del browser.');
@@ -51,33 +63,65 @@ export default function NotificationSettings() {
       }
 
       // Crea subscription
+      console.log('📱 Creando subscription...');
       const registration = await navigator.serviceWorker.ready;
+      console.log('🔧 Service worker ready:', !!registration);
+      
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!)
+        applicationServerKey: urlBase64ToUint8Array(vapidKey)
       });
+      console.log('✅ Subscription creata:', !!subscription);
 
       // Salva sul server
+      console.log('💾 Salvando subscription sul server...');
       const response = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subscription.toJSON())
       });
-
-      if (response.ok) {
-        setHasPermission(true);
-        setHasSubscription(true);
-        alert('🎉 Notifiche attivate con successo!');
-        
-        // Invia notifica di test
-        await fetch('/api/push/test', { method: 'POST' });
-      } else {
-        throw new Error('Errore salvando subscription');
+      
+      console.log('📡 Risposta server:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Errore server:', errorText);
+        throw new Error(`Errore server: ${response.status} - ${errorText}`);
       }
+
+      const result = await response.json();
+      console.log('✅ Subscription salvata:', result);
+
+      setHasPermission(true);
+      setHasSubscription(true);
+      alert('🎉 Notifiche attivate con successo!');
+      
+      // Invia notifica di test
+      console.log('🧪 Inviando notifica di test...');
+      const testResponse = await fetch('/api/push/test', { method: 'POST' });
+      console.log('🧪 Test response:', testResponse.status);
       
     } catch (error) {
-      console.error('Errore attivando notifiche:', error);
-      alert('Errore attivando le notifiche. Riprova più tardi.');
+      console.error('❌ Errore completo:', error);
+      console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'No stack');
+      
+      let errorMessage = 'Errore attivando le notifiche. ';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('VAPID')) {
+          errorMessage += 'Configurazione server non valida.';
+        } else if (error.message.includes('subscribe')) {
+          errorMessage += 'Problema con il browser. Prova a ricaricare la pagina.';
+        } else if (error.message.includes('server')) {
+          errorMessage += 'Problema di connessione. Riprova più tardi.';
+        } else {
+          errorMessage += `Dettaglio: ${error.message}`;
+        }
+      } else {
+        errorMessage += 'Riprova più tardi.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }
