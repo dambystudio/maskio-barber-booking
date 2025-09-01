@@ -7,7 +7,29 @@ import { it } from 'date-fns/locale';
 interface WaitlistEntry {
   id: string;
   user_id: string;
-  barber_id: string;
+                  {entries.map((entry, index) => (
+                    <div
+                      key={entry.id}
+                      className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+                    >
+                      {console.log('🔍 WaitlistPanel: Rendering entry:', {
+                        id: entry.id,
+                        name: entry.customer_name,
+                        phone: entry.customer_phone,
+                        email: entry.customer_email,
+                        hasPhone: !!entry.customer_phone
+                      })}
+                      
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="bg-amber-600 text-white text-sm px-2 py-1 rounded-full font-medium">
+                              #{entry.position}
+                            </span>
+                            <h5 className="text-white font-medium">
+                              {entry.customer_name}
+                            </h5>
+                          </div>ring;
   barber_name: string;
   date: string;
   service?: string;
@@ -70,6 +92,8 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
   }, [selectedDate]); // Ora selectedDate è l'unica dipendenza e fetchWaitlist è definita prima
 
   const openWhatsApp = (phone: string, name: string) => {
+    console.log('🔍 WaitlistPanel: openWhatsApp called with:', { phone, name });
+    
     if (!phone) {
       alert('Numero di telefono non disponibile');
       return;
@@ -77,19 +101,29 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
     
     const cleanPhone = phone.replace(/\s+/g, '').replace(/^\+/, '');
     const message = encodeURIComponent(
-      `Ciao ${name}! 👋\n\nHo un posto disponibile per ${format(new Date(selectedDate), 'EEEE d MMMM', { locale: it })}.\n\nSei ancora interessato? Fammi sapere! 😊\n\n- Maskio Barber`
+      `Ciao ${name}! 👋\n\nHo un posto disponibile per ${format(new Date(selectedDate), 'EEEE d MMMM', { locale: it })}.\n\nSei ancora interessato? Fammi sapere! 😊\n\n- Maskio Barber Concept`
     );
     
+    console.log('🔍 WaitlistPanel: Opening WhatsApp with phone:', cleanPhone);
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
   const approveFromWaitlist = async (waitlistId: string) => {
+    console.log('🔍 WaitlistPanel: approveFromWaitlist called with ID:', waitlistId);
+    
+    if (!confirm('Sei sicuro di voler approvare questa richiesta? Verrà creata una prenotazione automaticamente.')) {
+      return;
+    }
+    
     try {
+      console.log('🔍 WaitlistPanel: Sending approve request...');
       const response = await fetch('/api/waitlist/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ waitlistId })
       });
+
+      console.log('🔍 WaitlistPanel: Approve response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -97,35 +131,45 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
       }
 
       const result = await response.json();
+      console.log('🔍 WaitlistPanel: Approve success:', result);
       alert(`✅ ${result.message}`);
       
       fetchWaitlist(); // Ricarica la lista
       onRefresh?.(); // Ricarica le prenotazioni nel pannello principale
     } catch (error: any) {
-      console.error('Errore nell\'approvazione:', error);
+      console.error('❌ WaitlistPanel: Errore nell\'approvazione:', error);
       alert(`❌ Errore: ${error.message}`);
     }
   };
 
   const removeFromWaitlist = async (waitlistId: string) => {
+    console.log('🔍 WaitlistPanel: removeFromWaitlist called with ID:', waitlistId);
+    
     if (!confirm('Sei sicuro di voler rimuovere questa persona dalla lista d\'attesa?')) {
       return;
     }
 
     try {
+      console.log('🔍 WaitlistPanel: Sending remove request...');
       const response = await fetch('/api/waitlist', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ waitlistId })
       });
 
+      console.log('🔍 WaitlistPanel: Remove response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Errore nella rimozione dalla lista d\'attesa');
+        const errorText = await response.text();
+        throw new Error(`Errore nella rimozione: ${response.status} ${errorText}`);
       }
 
+      console.log('🔍 WaitlistPanel: Remove success');
+      alert('✅ Rimosso dalla lista d\'attesa');
+      
       fetchWaitlist(); // Ricarica la lista
     } catch (error: any) {
-      console.error('Errore nella rimozione:', error);
+      console.error('❌ WaitlistPanel: Errore nella rimozione:', error);
       alert(`❌ Errore: ${error.message}`);
     }
   };
@@ -138,6 +182,15 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
     acc[entry.barber_name].push(entry);
     return acc;
   }, {} as Record<string, WaitlistEntry[]>);
+
+  // Debug logging
+  console.log('🔍 WaitlistPanel: Rendering with:', {
+    selectedDate,
+    waitlistLength: waitlist.length,
+    waitlistEntries: waitlist,
+    waitlistByBarber,
+    loading
+  });
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-lg shadow overflow-hidden">

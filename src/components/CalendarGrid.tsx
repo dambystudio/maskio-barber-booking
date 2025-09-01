@@ -103,12 +103,17 @@ const CalendarGrid = ({
   };
 
   // Creo una mappa delle prenotazioni per barbiere e orario
+  // Escludo le prenotazioni cancellate per liberare gli slot
   const bookingGrid = useMemo(() => {
     const grid: { [key: string]: Booking } = {};
     
     dayBookings.forEach(booking => {
-      const key = `${booking.barber_name}-${booking.booking_time}`;
-      grid[key] = booking;
+      // Non mostrare le prenotazioni cancellate nel calendario
+      // Questo libera gli slot per nuove prenotazioni
+      if (booking.status !== 'cancelled') {
+        const key = `${booking.barber_name}-${booking.booking_time}`;
+        grid[key] = booking;
+      }
     });
     
     return grid;
@@ -271,8 +276,10 @@ const CalendarGrid = ({
       {/* Statistiche giornaliere */}
       <div className="mt-4 sm:mt-6 grid grid-cols-3 gap-2 sm:gap-4">
         <div className="bg-gray-700 p-3 sm:p-4 rounded-lg text-center">
-          <div className="text-lg sm:text-2xl font-bold text-white">{dayBookings.length}</div>
-          <div className="text-xs sm:text-sm text-gray-300">Totali</div>
+          <div className="text-lg sm:text-2xl font-bold text-white">
+            {dayBookings.filter(b => b.status !== 'cancelled').length}
+          </div>
+          <div className="text-xs sm:text-sm text-gray-300">Attive</div>
         </div>
         <div className="bg-gray-700 p-3 sm:p-4 rounded-lg text-center">
           <div className="text-lg sm:text-2xl font-bold text-green-400">
