@@ -53,10 +53,12 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
       
       const data = await response.json();
       console.log('🔍 WaitlistPanel: Response data:', data);
+      console.log('🔍 WaitlistPanel: Response data details:', JSON.stringify(data, null, 2));
       
       // L'API restituisce direttamente l'array, non wrapped in un oggetto
       const waitlistArray = Array.isArray(data) ? data : [];
       console.log('🔍 WaitlistPanel: Processed waitlist:', waitlistArray);
+      console.log('🔍 WaitlistPanel: Waitlist length:', waitlistArray.length);
       
       setWaitlist(waitlistArray);
     } catch (error) {
@@ -136,6 +138,10 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
     acc[entry.barber_name].push(entry);
     return acc;
   }, {} as Record<string, WaitlistEntry[]>);
+
+  console.log('🔍 WaitlistPanel: Rendering with waitlist:', waitlist);
+  console.log('🔍 WaitlistPanel: Grouped by barber:', waitlistByBarber);
+  console.log('🔍 WaitlistPanel: Object.entries result:', Object.entries(waitlistByBarber));
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-lg shadow overflow-hidden">
