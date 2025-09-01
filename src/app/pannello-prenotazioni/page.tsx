@@ -6,6 +6,7 @@ import { format, parseISO, addDays, isToday, getDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import CalendarGrid from '@/components/CalendarGrid';
+import WaitlistPanel from '@/components/WaitlistPanel';
 
 interface Booking {
   id: string;
@@ -2040,6 +2041,19 @@ Grazie! 😊`;
           />
         </div>
       )}
+
+      {/* Sezione Lista d'Attesa - Sempre visibile */}
+      <div className="mt-8">
+        <WaitlistPanel 
+          selectedDate={selectedDate}
+          onRefresh={() => {
+            fetchBookings();
+            if (displayMode === 'grid') {
+              fetchAllBarberBookings();
+            }
+          }}
+        />
+      </div>
     </div>
   );
 }

@@ -15,10 +15,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date');
     const barberId = searchParams.get('barberId');
+    const userEmail = searchParams.get('user_email');
 
     let waitlist;
 
-    if (date && barberId) {
+    if (userEmail) {
+      // Filtro per email utente - per il profilo utente
+      waitlist = await sql`
+        SELECT w.*, u.name as user_name, u.email as user_email
+        FROM waitlist w
+        LEFT JOIN users u ON w.user_id = u.id
+        WHERE w.status = 'waiting'
+        AND w.customer_email = ${userEmail}
+        ORDER BY w.date ASC, w.created_at ASC
+      `;
+    } else if (date && barberId) {
       waitlist = await sql`
         SELECT w.*, u.name as user_name, u.email as user_email
         FROM waitlist w
@@ -56,7 +67,7 @@ export async function GET(request: NextRequest) {
       `;
     }
 
-    return NextResponse.json({ waitlist });
+    return NextResponse.json(waitlist);
   } catch (error) {
     console.error('Errore nel recupero waitlist:', error);
     return NextResponse.json({ error: 'Errore interno del server' }, { status: 500 });

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import UserWaitlist from '@/components/UserWaitlist';
 
 interface UserProfile {
   id: string;
@@ -244,6 +245,9 @@ export default function ProfiloUtente() {
             </div>
           </form>
         </motion.div>
+
+        {/* Lista d'Attesa dell'Utente */}
+        <UserWaitlist userEmail={session.user.email} />
       </div>
     </div>
   );
