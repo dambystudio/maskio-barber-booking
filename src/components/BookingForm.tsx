@@ -8,6 +8,7 @@ import { BookingService, validateBookingData } from '../services/bookingService'
 import { fabioSpecificServices, micheleSpecificServices, marcoSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
 import { Session } from 'next-auth';
 import { trackEvent, trackConversion } from './GoogleAnalytics';
+import WaitlistModal from './WaitlistModal';
 import { FiClock, FiTag } from 'react-icons/fi'; // Import icons
 
 const steps = ['Barbiere', 'Servizi', 'Data e Ora', 'Dati Personali', 'Conferma'];
@@ -21,6 +22,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   const [displayedServices, setDisplayedServices] = useState<Service[]>([]); // Services to show based on barber
   const [barbers, setBarbers] = useState<Barber[]>([]);  
   const [showContactMessage, setShowContactMessage] = useState(false);
+  
+  // Waitlist modal state
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const [waitlistDate, setWaitlistDate] = useState('');
   
   // Distinguish between actual barbers and those who can make bookings for others
   const isBarber = userSession?.user?.role === 'barber';
@@ -1040,7 +1045,9 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                       onClick={() => {
                         if (dateButton.disabled) {
                           if (dateButton.hasNoAvailableSlots) {
-                            alert('Tutti gli orari per questo giorno sono già occupati. Prova un altro giorno!');
+                            // Apri modal lista d'attesa invece di alert
+                            setWaitlistDate(dateButton.date!);
+                            setShowWaitlistModal(true);
                           } else if (dateButton.isBarberClosed) {
                             alert(`${formData.selectedBarber?.name || 'Il barbiere'} è chiuso in questo giorno. Scegli un altro giorno!`);
                           } else if (dateButton.isClosed) {
@@ -1101,7 +1108,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                           ) : dateButton.isBarberClosed ? (
                             <span className="text-red-500 font-medium">Chiuso</span>
                           ) : dateButton.hasNoAvailableSlots ? (
-                            <span className="text-orange-400">Tutto occupato</span>
+                            <span className="text-orange-400">📋 Lista d'attesa</span>
                           ) : (
                             <span className="text-red-500 font-medium">Non disponibile</span>
                           )}
@@ -1122,7 +1129,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 </div>
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-orange-900/30 border border-orange-600 rounded mr-2"></div>
-                  <span>Tutto occupato</span>
+                  <span>📋 Lista d'attesa</span>
                 </div>
               </div>
               
@@ -1546,6 +1553,16 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       )}
         </>
       )}
+
+      {/* Waitlist Modal */}
+      <WaitlistModal
+        isOpen={showWaitlistModal}
+        onClose={() => setShowWaitlistModal(false)}
+        date={waitlistDate}
+        barberId={formData.selectedBarber?.id}
+        barberName={formData.selectedBarber?.name}
+        isBarber={canMakeBookingsForOthers}
+      />
     </div>
   );
 }
