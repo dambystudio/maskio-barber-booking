@@ -2025,8 +2025,8 @@ Grazie! 😊`;
         </div>
       )}
 
-      {/* SEZIONE STORICO PRENOTAZIONI */}
-      {isAuthorized && (
+      {/* SEZIONE STORICO PRENOTAZIONI - TEMPORANEAMENTE NASCOSTA */}
+      {false && isAuthorized && (
         <div className="mt-8">
           <AllBookingsTable 
             bookings={allBookings} 
