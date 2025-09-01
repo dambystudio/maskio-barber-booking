@@ -247,7 +247,7 @@ export default function ProfiloUtente() {
         </motion.div>
 
         {/* Lista d'Attesa dell'Utente */}
-        <UserWaitlist userEmail={session.user.email} />
+        {session?.user?.email && <UserWaitlist userEmail={session.user.email} />}
       </div>
     </div>
   );
