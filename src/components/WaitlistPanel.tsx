@@ -7,29 +7,6 @@ import { it } from 'date-fns/locale';
 interface WaitlistEntry {
   id: string;
   user_id: string;
-                  {entries.map((entry, index) => (
-                    <div
-                      key={entry.id}
-                      className="bg-gray-800 rounded-lg p-4 border border-gray-700"
-                    >
-                      {console.log('🔍 WaitlistPanel: Rendering entry:', {
-                        id: entry.id,
-                        name: entry.customer_name,
-                        phone: entry.customer_phone,
-                        email: entry.customer_email,
-                        hasPhone: !!entry.customer_phone
-                      })}
-                      
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="bg-amber-600 text-white text-sm px-2 py-1 rounded-full font-medium">
-                              #{entry.position}
-                            </span>
-                            <h5 className="text-white font-medium">
-                              {entry.customer_name}
-                            </h5>
-                          </div>ring;
   barber_name: string;
   date: string;
   service?: string;
