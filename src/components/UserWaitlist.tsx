@@ -23,18 +23,14 @@ export default function UserWaitlist({ userEmail }: UserWaitlistProps) {
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (userEmail) {
-      fetchUserWaitlist();
-    }
-  }, [userEmail]);
-
   const fetchUserWaitlist = async () => {
+    if (!userEmail) return;
+    
     try {
       setLoading(true);
       console.log('🔍 UserWaitlist: Fetching waitlist for email:', userEmail);
       
-      const url = `/api/waitlist?user_email=${encodeURIComponent(userEmail!)}`;
+      const url = `/api/waitlist?user_email=${encodeURIComponent(userEmail)}`;
       console.log('🔍 UserWaitlist: Request URL:', url);
       
       const response = await fetch(url);
@@ -46,10 +42,12 @@ export default function UserWaitlist({ userEmail }: UserWaitlistProps) {
       
       const data = await response.json();
       console.log('🔍 UserWaitlist: Response data:', data);
+      console.log('🔍 UserWaitlist: Response data details:', JSON.stringify(data, null, 2));
       
       // L'API restituisce direttamente l'array, non wrapped in un oggetto
       const waitlistArray = Array.isArray(data) ? data : [];
       console.log('🔍 UserWaitlist: Processed waitlist:', waitlistArray);
+      console.log('🔍 UserWaitlist: Waitlist length:', waitlistArray.length);
       
       setWaitlist(waitlistArray);
     } catch (error) {
@@ -59,6 +57,10 @@ export default function UserWaitlist({ userEmail }: UserWaitlistProps) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUserWaitlist();
+  }, [userEmail]); // Ora userEmail è l'unica dipendenza e fetchUserWaitlist è definita prima
 
   const removeFromWaitlist = async (waitlistId: string) => {
     if (!confirm('Sei sicuro di voler rimuovere questa richiesta di lista d\'attesa?')) {

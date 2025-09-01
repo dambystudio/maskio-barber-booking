@@ -30,13 +30,9 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (selectedDate) {
-      fetchWaitlist();
-    }
-  }, [selectedDate]);
-
   const fetchWaitlist = async () => {
+    if (!selectedDate) return;
+    
     try {
       setLoading(true);
       console.log('🔍 WaitlistPanel: Fetching waitlist for date:', selectedDate);
@@ -68,6 +64,10 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchWaitlist();
+  }, [selectedDate]); // Ora selectedDate è l'unica dipendenza e fetchWaitlist è definita prima
 
   const openWhatsApp = (phone: string, name: string) => {
     if (!phone) {
@@ -138,10 +138,6 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
     acc[entry.barber_name].push(entry);
     return acc;
   }, {} as Record<string, WaitlistEntry[]>);
-
-  console.log('🔍 WaitlistPanel: Rendering with waitlist:', waitlist);
-  console.log('🔍 WaitlistPanel: Grouped by barber:', waitlistByBarber);
-  console.log('🔍 WaitlistPanel: Object.entries result:', Object.entries(waitlistByBarber));
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-lg shadow overflow-hidden">
