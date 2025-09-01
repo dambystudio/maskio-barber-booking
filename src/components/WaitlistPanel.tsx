@@ -39,13 +39,28 @@ export default function WaitlistPanel({ selectedDate, onRefresh }: WaitlistPanel
   const fetchWaitlist = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/waitlist?date=${selectedDate}`);
-      if (!response.ok) throw new Error('Errore nel caricamento lista d\'attesa');
+      console.log('🔍 WaitlistPanel: Fetching waitlist for date:', selectedDate);
+      
+      const url = `/api/waitlist?date=${selectedDate}`;
+      console.log('🔍 WaitlistPanel: Request URL:', url);
+      
+      const response = await fetch(url);
+      console.log('🔍 WaitlistPanel: Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
       
       const data = await response.json();
-      setWaitlist(data || []);
+      console.log('🔍 WaitlistPanel: Response data:', data);
+      
+      // L'API restituisce direttamente l'array, non wrapped in un oggetto
+      const waitlistArray = Array.isArray(data) ? data : [];
+      console.log('🔍 WaitlistPanel: Processed waitlist:', waitlistArray);
+      
+      setWaitlist(waitlistArray);
     } catch (error) {
-      console.error('Errore nel fetch della lista d\'attesa:', error);
+      console.error('❌ WaitlistPanel: Errore nel caricamento lista d\'attesa:', error);
       setWaitlist([]);
     } finally {
       setLoading(false);

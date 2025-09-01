@@ -32,13 +32,28 @@ export default function UserWaitlist({ userEmail }: UserWaitlistProps) {
   const fetchUserWaitlist = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/waitlist?user_email=${encodeURIComponent(userEmail!)}`);
-      if (!response.ok) throw new Error('Errore nel caricamento lista d\'attesa');
+      console.log('🔍 UserWaitlist: Fetching waitlist for email:', userEmail);
+      
+      const url = `/api/waitlist?user_email=${encodeURIComponent(userEmail!)}`;
+      console.log('🔍 UserWaitlist: Request URL:', url);
+      
+      const response = await fetch(url);
+      console.log('🔍 UserWaitlist: Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
       
       const data = await response.json();
-      setWaitlist(data || []);
+      console.log('🔍 UserWaitlist: Response data:', data);
+      
+      // L'API restituisce direttamente l'array, non wrapped in un oggetto
+      const waitlistArray = Array.isArray(data) ? data : [];
+      console.log('🔍 UserWaitlist: Processed waitlist:', waitlistArray);
+      
+      setWaitlist(waitlistArray);
     } catch (error) {
-      console.error('Errore nel fetch della lista d\'attesa utente:', error);
+      console.error('❌ UserWaitlist: Errore nel fetch della lista d\'attesa utente:', error);
       setWaitlist([]);
     } finally {
       setLoading(false);
