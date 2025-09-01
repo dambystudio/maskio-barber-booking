@@ -1057,7 +1057,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                         }
                         handleDateChange(dateButton.date!);
                       }}
-                      disabled={dateButton.disabled}                      className={`p-3 rounded-lg border-2 transition-all duration-200 min-h-[80px] flex flex-col items-center justify-center relative ${
+                      className={`p-3 rounded-lg border-2 transition-all duration-200 min-h-[80px] flex flex-col items-center justify-center relative ${
                         formData.selectedDate === dateButton.date
                           ? 'border-yellow-400 bg-yellow-400 text-black shadow-lg'
                           : dateButton.disabled
@@ -1066,12 +1066,12 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                             : dateButton.isBarberClosed
                             ? 'border-red-600 bg-red-900/30 text-red-400 cursor-not-allowed'
                             : dateButton.hasNoAvailableSlots
-                            ? 'border-orange-600 bg-orange-900/30 text-orange-400 cursor-not-allowed'
+                            ? 'border-orange-600 bg-orange-900/30 text-orange-400 cursor-pointer hover:border-orange-500'
                             : 'border-gray-700 bg-gray-800 text-gray-500 cursor-not-allowed'
                           : 'border-green-400 bg-green-900/30 hover:border-green-500 hover:shadow-md text-green-300'
                       }`}
-                      whileHover={!dateButton.disabled ? { scale: 1.05 } : {}}
-                      whileTap={!dateButton.disabled ? { scale: 0.95 } : {}}
+                      whileHover={!dateButton.disabled || dateButton.hasNoAvailableSlots ? { scale: 1.05 } : {}}
+                      whileTap={!dateButton.disabled || dateButton.hasNoAvailableSlots ? { scale: 0.95 } : {}}
                     >
                       {dateButton.isToday && (
                         <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full">
