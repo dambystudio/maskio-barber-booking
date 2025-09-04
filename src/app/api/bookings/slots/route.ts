@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
     // Create TimeSlot objects with availability status, considerando le chiusure specifiche del barbiere
     const timeSlots: TimeSlot[] = [];
     
-    // Generate all possible time slots for comparison
-    const allPossibleSlots = generateAllTimeSlots(date);
+    // Generate all possible time slots for comparison based on barber
+    const allPossibleSlots = generateAllTimeSlots(date, barberId);
     
     for (const time of allPossibleSlots) {
       let available = availableSlotTimes.includes(time);
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Manteniamo questa funzione per generare tutti gli slot possibili per il confronto
-function generateAllTimeSlots(dateString: string): string[] {
+function generateAllTimeSlots(dateString: string, barberId?: string): string[] {
   const slots: string[] = [];
   const date = new Date(dateString);
   const dayOfWeek = date.getDay();
@@ -78,6 +78,11 @@ function generateAllTimeSlots(dateString: string): string[] {
   // Skip domenica (0) - giorno di chiusura standard
   if (dayOfWeek === 0) {
     return slots;
+  }
+
+  // *** CONFIGURAZIONE SPECIALE PER MARCO ***
+  if (barberId === 'marco') {
+    return generateMarcoHourlySlots(dateString);
   }
 
   // Monday (1) - Half day: only afternoon 15:00-17:30
@@ -138,4 +143,29 @@ function generateAllTimeSlots(dateString: string): string[] {
   }
   
   return slots;
+}
+
+// Funzione specifica per gli slot orari di Marco (1 ora ciascuno)
+function generateMarcoHourlySlots(dateString: string): string[] {
+  const slots: string[] = [];
+  const date = new Date(dateString);
+  const dayOfWeek = date.getDay();
+  
+  // Domenica - chiuso
+  if (dayOfWeek === 0) {
+    return slots;
+  }
+  
+  // Lunedì - solo pomeriggio (15:00-17:00) 
+  if (dayOfWeek === 1) {
+    return ['15:00', '16:00', '17:00'];
+  }
+  
+  // Sabato - orari modificati con pomeriggio speciale
+  if (dayOfWeek === 6) {
+    return ['09:00', '10:00', '11:00', '12:00', '14:30', '15:30', '16:30'];
+  }
+  
+  // Martedì-Venerdì - orari completi (9:00-12:00, 15:00-17:00)
+  return ['09:00', '10:00', '11:00', '12:00', '15:00', '16:00', '17:00'];
 }

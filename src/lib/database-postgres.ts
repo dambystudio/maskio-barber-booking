@@ -233,7 +233,7 @@ export class DatabaseService {
     } else if (!schedule || (schedule && !schedule.dayOff)) {
       // Se non esiste un record specifico o il giorno non è marcato come libero,
       // genera gli slot standard basandosi sugli orari di lavoro
-      availableSlots = this.generateStandardSlots(date);
+      availableSlots = this.generateStandardSlots(barberId, date);
     } else {
       // Il giorno è marcato come libero
       return [];
@@ -250,7 +250,7 @@ export class DatabaseService {
   }
 
   // Nuova funzione per generare gli slot standard
-  private static generateStandardSlots(dateString: string): string[] {
+  private static generateStandardSlots(barberId: string, dateString: string): string[] {
     const slots: string[] = [];
     const date = new Date(dateString);
     const dayOfWeek = date.getDay();
@@ -258,6 +258,11 @@ export class DatabaseService {
     // Skip domenica (0) - giorno di chiusura standard
     if (dayOfWeek === 0) {
       return slots;
+    }
+
+    // *** CONFIGURAZIONE SPECIALE PER MARCO ***
+    if (barberId === 'marco') {
+      return this.generateMarcoHourlySlots(dateString);
     }
 
     // Monday (1) - Half day: only afternoon 15:00-17:30
@@ -315,6 +320,31 @@ export class DatabaseService {
     }
     
     return slots;
+  }
+
+  // Funzione specifica per gli slot orari di Marco (1 ora ciascuno)
+  private static generateMarcoHourlySlots(dateString: string): string[] {
+    const slots: string[] = [];
+    const date = new Date(dateString);
+    const dayOfWeek = date.getDay();
+    
+    // Domenica - chiuso
+    if (dayOfWeek === 0) {
+      return slots;
+    }
+    
+    // Lunedì - solo pomeriggio (15:00-17:00) 
+    if (dayOfWeek === 1) {
+      return ['15:00', '16:00', '17:00'];
+    }
+    
+    // Sabato - orari modificati con pomeriggio speciale
+    if (dayOfWeek === 6) {
+      return ['09:00', '10:00', '11:00', '12:00', '14:30', '15:30', '16:30'];
+    }
+    
+    // Martedì-Venerdì - orari completi (9:00-12:00, 15:00-17:00)
+    return ['09:00', '10:00', '11:00', '12:00', '15:00', '16:00', '17:00'];
   }
 
   // === SERVICES MANAGEMENT ===
