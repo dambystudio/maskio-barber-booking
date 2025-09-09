@@ -236,14 +236,10 @@ export default function AreaPersonale() {
 
   const canCancelBooking = (bookingDate: string, bookingTime: string) => {
     try {
-      const bookingDateTime = new Date(`${bookingDate}T${bookingTime}`);
-      const now = new Date();
-      const timeDifference = bookingDateTime.getTime() - now.getTime();
-      const hoursDifference = timeDifference / (1000 * 60 * 60);
-      
-      return hoursDifference >= 48; // Almeno 48 ore prima
+      // Ora permettiamo l'annullamento in qualsiasi momento
+      return true;
     } catch (error) {
-      console.error('Error calculating booking time difference:', error);
+      console.error('Error checking booking cancellation:', error);
       return false;
     }
   };
@@ -507,7 +503,7 @@ export default function AreaPersonale() {
                                   <button
                                       disabled
                                       className="w-full bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed"
-                                      title="La cancellazione è disponibile fino a 48 ore prima dell'appuntamento."
+                                      title="L'annullamento è sempre disponibile per le prenotazioni confermate."
                                   >
                                       Non cancellabile
                                   </button>

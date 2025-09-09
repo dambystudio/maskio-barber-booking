@@ -153,7 +153,7 @@ export default function WaitlistModal({
     
     const cleanPhone = phone.replace(/\s+/g, '').replace(/^\+/, '');
     const message = encodeURIComponent(
-      `Ciao ${name}! 👋\n\nHo un posto disponibile per ${format(new Date(date), 'EEEE d MMMM', { locale: it })}.\n\nSei ancora interessato? Fammi sapere! 😊\n\n- Maskio Barber`
+      `Ciao ${name}! 👋\n\nHo un posto disponibile per ${format(new Date(date), 'EEEE d MMMM', { locale: it })}.\n\nSei ancora interessato? Fammi sapere! 😊\n\n- Maskio Barber Concept`
     );
     
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');

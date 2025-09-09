@@ -69,23 +69,23 @@ export default function TermsOfService() {
                   </ul>
                 </div>
                 
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-red-800 mb-2">Cancellazioni</h3>
-                  <ul className="list-disc list-inside text-red-700 space-y-1 text-sm">
-                    <li><strong>Gratuita:</strong> Fino a 48 ore prima</li>
-                    <li><strong>Penale:</strong> Cancellazioni tardive</li>
-                    <li><strong>No-show:</strong> Addebito del 50% del servizio</li>
-                    <li><strong>Emergenze:</strong> Valutate caso per caso</li>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-green-800 mb-2">Cancellazioni</h3>
+                  <ul className="list-disc list-inside text-green-700 space-y-1 text-sm">
+                    <li><strong>Sempre consentite:</strong> Puoi annullare in qualsiasi momento</li>
+                    <li><strong>Modalità:</strong> Tramite area personale o contattando il salone</li>
+                    <li><strong>No-show:</strong> Ti chiediamo cortesemente di avvisare</li>
+                    <li><strong>Emergenze:</strong> Comprensione totale per imprevisti</li>
                   </ul>
                 </div>
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-                <h3 className="text-lg font-semibold text-yellow-800 mb-2">⚠️ Politica di cancellazione</h3>
-                <p className="text-yellow-700 text-sm">
-                  Le cancellazioni devono essere effettuate almeno <strong>48 ore prima</strong> dell'appuntamento 
-                  tramite il sito web o contattando direttamente il salone. Cancellazioni tardive o mancate 
-                  presentazioni potrebbero comportare l'addebito di una penale.
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">✅ Politica di cancellazione flessibile</h3>
+                <p className="text-blue-700 text-sm">
+                  Puoi cancellare il tuo appuntamento <strong>in qualsiasi momento</strong> tramite la tua area personale 
+                  o contattando direttamente il salone. Non ci sono penali o restrizioni temporali. 
+                  Ti chiediamo solo la cortesia di avvisare in caso di imprevisti.
                 </p>
               </div>
             </section>

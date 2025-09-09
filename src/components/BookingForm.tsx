@@ -1448,7 +1448,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                 <div className="mt-3 pt-3 border-t border-gray-600">
                   <p className="flex items-start gap-2 font-medium text-yellow-300">
                     <span className="text-yellow-400">💡</span>
-                    <em>In caso di imprevisti, contattaci almeno 48 ore prima dell'appuntamento</em>
+                    <em>In caso di imprevisti, puoi annullare il tuo appuntamento direttamente dalla tua area personale</em>
                   </p>
                 </div>
               </div>
