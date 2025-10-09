@@ -4,6 +4,22 @@ import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Helper function to convert base64 to Uint8Array
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 export default function DebugPushPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -114,9 +130,12 @@ export default function DebugPushPage() {
         return;
       }
 
+      // Convert base64 VAPID key to Uint8Array
+      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+
       sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: vapidPublicKey,
+        applicationServerKey: applicationServerKey,
       });
 
       addLog('Subscription creata!');
