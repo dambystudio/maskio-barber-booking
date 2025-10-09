@@ -12,6 +12,7 @@ import { GoogleAnalytics } from '../components/GoogleAnalytics';
 import MobileBottomNav from '../components/MobileBottomNav';
 import PWAFloatingMenu from '../components/PWAFloatingMenu';
 import AddToHomeBanner from '../components/AddToHomeBanner';
+// import PWANotificationBanner from '../components/PWANotificationBanner';
 import DynamicManifest from '../components/DynamicManifest';
 // Importazione URL per metadataBase
 import { URL } from 'url';
@@ -155,6 +156,7 @@ export default function RootLayout({
             <SecurityProvider>
               <DynamicManifest />
               <DailyUpdateManager />
+              {/* <PWANotificationBanner /> */}
               <Navbar />
               <main className="min-h-screen pt-[70px] standalone:pt-0">
                 {children}
@@ -162,8 +164,6 @@ export default function RootLayout({
               <Footer />
               <MobileBottomNav />
               <PWAFloatingMenu />
-              {/* Script per nascondere i blocchi di codice se non è attiva l'ispezione */}
-              <script src="/js/dev-tools-detector.js" defer></script>
               {/* Schema.org JSON-LD script */}
               <JsonLdScript />
             </SecurityProvider>
