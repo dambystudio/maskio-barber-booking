@@ -159,6 +159,18 @@ export const authorizedRoles = pgTable('authorized_roles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Push Subscriptions Table (per notifiche push)
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -186,3 +198,5 @@ export type BarberRecurringClosure = typeof barberRecurringClosures.$inferSelect
 export type NewBarberRecurringClosure = typeof barberRecurringClosures.$inferInsert;
 export type AuthorizedRole = typeof authorizedRoles.$inferSelect;
 export type NewAuthorizedRole = typeof authorizedRoles.$inferInsert;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type NewPushSubscription = typeof pushSubscriptions.$inferInsert;
