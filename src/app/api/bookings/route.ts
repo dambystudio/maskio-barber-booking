@@ -477,15 +477,8 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      // Get barber info
-      const allBarbers = await DatabaseService.getBarbers();
-      const currentBarber = allBarbers.find(b => b.email === session.user.email);
-        if (!currentBarber || booking.barberId !== currentBarber.id) {
-        return NextResponse.json(
-          { error: 'Non hai i permessi per modificare questa prenotazione' },
-          { status: 403 }
-        );
-      }
+      // ✅ MODIFICA: Michele e Fabio possono gestirsi reciprocamente
+      // Controllo autorizzazioni rimosso per permettere gestione reciproca tra barbieri
     }
 
     // Update booking status
@@ -562,16 +555,8 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
-      // Get barber info
-      const allBarbers = await DatabaseService.getBarbers();
-      const currentBarber = allBarbers.find(b => b.email === session.user.email);
-      
-      if (!currentBarber || booking.barberId !== currentBarber.id) {
-        return NextResponse.json(
-          { error: 'Non hai i permessi per eliminare questa prenotazione' },
-          { status: 403 }
-        );
-      }
+      // ✅ MODIFICA: Michele e Fabio possono gestirsi reciprocamente
+      // Controllo autorizzazioni rimosso per permettere gestione reciproca tra barbieri
     }
 
     const success = await DatabaseService.deleteBooking(bookingId);

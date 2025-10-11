@@ -1082,26 +1082,14 @@ Grazie! 😊`;
 
   // Funzioni per il modal di scambio appuntamenti
   const openSwapModal = (booking: Booking) => {
-    // Verifica autorizzazioni: solo admin o barbiere proprietario può modificare
+    // ✅ MODIFICA: Michele e Fabio possono gestirsi reciprocamente
+    // Verifica solo che l'utente sia un barbiere autenticato
     if (!isAdmin && !currentBarber) {
       alert('Non autorizzato a modificare appuntamenti');
       return;
     }
     
-    // Se non è admin, verifica che il barbiere possa modificare solo i suoi appuntamenti
-    if (!isAdmin) {
-      // Mappa i nomi dei barbieri alle loro email per il controllo
-      const barberEmailMapping: { [key: string]: string } = {
-        'Fabio': 'fabio.cassano97@icloud.com',
-        'Michele': 'michelebiancofiore0230@gmail.com'
-      };
-      
-      const bookingBarberEmail = barberEmailMapping[booking.barber_name];
-      if (bookingBarberEmail !== currentBarber) {
-        alert('Puoi modificare solo i tuoi appuntamenti');
-        return;
-      }
-    }
+    // Controllo rimosso: barbieri possono modificare appuntamenti di altri barbieri
     
     setSelectedBookingForSwap(booking);
     setSwapModalOpen(true);
@@ -1132,8 +1120,8 @@ Grazie! 😊`;
     // Altrimenti parti da oggi
     const startDate = today < september1st ? september1st : today;
     
-    // Aggiungi 30 giorni a partire dalla data di partenza
-    for (let i = 0; i < 30; i++) {
+    // Esteso a 60 giorni per coprire fino a dicembre (era 30)
+    for (let i = 0; i < 60; i++) {
       dates.push(addDays(startDate, i));
     }
     return dates;
@@ -1838,8 +1826,8 @@ Grazie! 😊`;
                         </div>
                       )}
 
-                      {/* Pulsante per modificare appuntamento - Solo per barbieri autorizzati */}
-                      {(isAdmin || viewMode === 'own') && booking.status !== 'cancelled' && (
+                      {/* ✅ Pulsante per modificare appuntamento - Barbieri possono gestirsi reciprocamente */}
+                      {booking.status !== 'cancelled' && (
                         <div className="space-y-2">
                           <div className="text-xs text-gray-400 uppercase tracking-wider">Gestisci Appuntamento</div>
                           <button
@@ -1853,9 +1841,24 @@ Grazie! 😊`;
                         </div>
                       )}
 
-{/* Pulsanti di gestione prenotazione - Solo se modificabili */}                      {(isAdmin || viewMode === 'own') && (
-                        <div className="flex gap-2 flex-wrap">
-                          {booking.status === 'pending' && (
+                      {/* ✅ Pulsante per modificare appuntamento - Barbieri possono gestirsi reciprocamente */}
+                      {booking.status !== 'cancelled' && (
+                        <div className="space-y-2">
+                          <div className="text-xs text-gray-400 uppercase tracking-wider">Gestisci Appuntamento</div>
+                          <button
+                            type="button"
+                            onClick={() => openSwapModal(booking)}
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
+                            title="Modifica data/ora o scambia con altro appuntamento"
+                          >
+                            🔄 Modifica Appuntamento
+                          </button>
+                        </div>
+                      )}
+
+                      {/* ✅ Pulsanti di gestione prenotazione - Barbieri possono gestirsi reciprocamente */}
+                      <div className="flex gap-2 flex-wrap">
+                        {booking.status === 'pending' && (
                           <>
                             <button
                               type="button"
@@ -1893,15 +1896,7 @@ Grazie! 😊`;
                           >
                             🗑️ Elimina Definitivamente                          </button>
                         )}
-                        </div>
-                      )}
-                      
-                      {/* Indicatore modalità solo visualizzazione */}
-                      {!isAdmin && viewMode === 'other' && viewingBarber && (
-                        <div className="w-full bg-blue-900/20 border border-blue-500/30 text-blue-300 px-4 py-3 rounded-lg text-center text-sm">
-                          👁️ Solo visualizzazione - Prenotazioni di {barberMapping[viewingBarber as keyof typeof barberMapping]}
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </motion.div>                ))}
               </div>
@@ -2029,40 +2024,29 @@ Grazie! 😊`;
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {(isAdmin || viewMode === 'own') ? (
-                          <div className="flex gap-2 flex-wrap">
-                            {/* Pulsante modifica appuntamento */}
-                            {booking.status !== 'cancelled' && (
+                        {/* ✅ Barbieri possono gestirsi reciprocamente */}
+                        <div className="flex gap-2 flex-wrap">
+                          {/* Pulsante modifica appuntamento */}
+                          {booking.status !== 'cancelled' && (
+                            <button
+                              type="button"
+                              onClick={() => openSwapModal(booking)}
+                              className="text-indigo-400 hover:text-indigo-300 px-2 py-1 border border-indigo-500 rounded hover:bg-indigo-900/50 text-xs"
+                              title="Modifica data/ora o scambia con altro appuntamento"
+                            >
+                              🔄 Modifica
+                            </button>
+                          )}
+
+                          {booking.status === 'pending' && (
+                            <>
                               <button
                                 type="button"
-                                onClick={() => openSwapModal(booking)}
-                                className="text-indigo-400 hover:text-indigo-300 px-2 py-1 border border-indigo-500 rounded hover:bg-indigo-900/50 text-xs"
-                                title="Modifica data/ora o scambia con altro appuntamento"
+                                onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                                className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50"
                               >
-                                🔄 Modifica
+                                Conferma
                               </button>
-                            )}
-
-                            {booking.status === 'pending' && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => updateBookingStatus(booking.id, 'confirmed')}
-                                  className="text-green-400 hover:text-green-300 px-2 py-1 border border-green-500 rounded hover:bg-green-900/50"
-                                >
-                                  Conferma
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                                  className="text-red-400 hover:text-red-300 px-2 py-1 border border-red-500 rounded hover:bg-red-900/50"
-                                >
-                                  Annulla
-                                </button>
-                              </>
-                            )}
-
-                            {booking.status === 'confirmed' && (
                               <button
                                 type="button"
                                 onClick={() => updateBookingStatus(booking.id, 'cancelled')}
@@ -2070,22 +2054,28 @@ Grazie! 😊`;
                               >
                                 Annulla
                               </button>
-                            )}
+                            </>
+                          )}
 
-                            {booking.status === 'cancelled' && (                              <button
-                                type="button"
-                                onClick={() => deleteBooking(booking.id)}className="text-red-300 hover:text-red-200 px-2 py-1 bg-red-900/50 border border-red-500 rounded hover:bg-red-800/70 font-medium"
-                              title="Elimina definitivamente questa prenotazione"
+                          {booking.status === 'confirmed' && (
+                            <button
+                              type="button"
+                              onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                              className="text-red-400 hover:text-red-300 px-2 py-1 border border-red-500 rounded hover:bg-red-900/50"
                             >
-                              🗑️ Elimina
+                              Annulla
                             </button>
                           )}
-                          </div>
-                        ) : (
-                          <div className="text-blue-300 text-sm">
-                            👁️ Solo visualizzazione
-                          </div>
+
+                          {booking.status === 'cancelled' && (                              <button
+                              type="button"
+                              onClick={() => deleteBooking(booking.id)}className="text-red-300 hover:text-red-200 px-2 py-1 bg-red-900/50 border border-red-500 rounded hover:bg-red-800/70 font-medium"
+                            title="Elimina definitivamente questa prenotazione"
+                          >
+                            🗑️ Elimina
+                          </button>
                         )}
+                        </div>
                       </td>
                     </tr>
                   ))}

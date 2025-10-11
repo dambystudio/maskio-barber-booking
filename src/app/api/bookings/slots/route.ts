@@ -99,21 +99,25 @@ function generateAllTimeSlots(dateString: string, barberId?: string): string[] {
     return slots;
   }
 
-  // Monday (1) - Half day: only afternoon 15:00-17:30
+  // Monday (1) - Michele: pomeriggio 15:00-18:00 | Fabio: chiuso
   if (dayOfWeek === 1) {
-    // Only afternoon slots 15:00-17:30 for Monday
-    for (let hour = 15; hour <= 17; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        // Stop at 17:30 for the last afternoon slot
-        if (hour === 17 && minute > 30) break;
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push(timeString);
+    // Michele ha pomeriggio (15:00-18:00), Fabio è chiuso
+    if (barberId === 'michele') {
+      // Afternoon slots 15:00-18:00 for Michele
+      for (let hour = 15; hour <= 18; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          // 18:00 è l'ultimo slot del lunedì per Michele
+          if (hour === 18 && minute > 0) break;
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(timeString);
+        }
       }
     }
+    // Fabio è chiuso il lunedì, quindi ritorna array vuoto
     return slots;
   }
 
-  // Saturday has modified hours (9:00-12:30, 14:30-17:00)
+  // Saturday has modified hours (9:00-12:30, 14:30-17:00) - NO 17:30
   if (dayOfWeek === 6) {
     // Morning slots 9:00-12:30
     for (let hour = 9; hour <= 12; hour++) {
@@ -124,8 +128,8 @@ function generateAllTimeSlots(dateString: string, barberId?: string): string[] {
       }
     }
     
-    // Afternoon slots 14:30-17:00 (aggiunto 14:30, rimosso 17:30)
-    slots.push('14:30'); // Nuovo orario aggiunto
+    // Afternoon slots 14:30-17:00 (NO 17:30)
+    slots.push('14:30');
     for (let hour = 15; hour <= 17; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         if (hour === 17 && minute > 0) break; // Stop at 17:00 (no 17:30)
