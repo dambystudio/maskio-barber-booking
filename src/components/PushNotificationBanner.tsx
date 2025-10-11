@@ -133,7 +133,7 @@ export default function PushNotificationBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white shadow-2xl"
+          className="fixed top-[70px] left-0 right-0 z-40 bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white shadow-2xl"
         >
           {/* Padding-right extra per evitare sovrapposizione con menu hamburger (z-50) */}
           <div className="container mx-auto px-4 pr-20 py-3 max-w-5xl">
