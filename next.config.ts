@@ -6,67 +6,16 @@ const pwaConfig = {
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development', // DISABILITA in dev mode
+  disable: process.env.NODE_ENV === 'development',
   reloadOnOnline: true,
-  // Usa il nostro Service Worker personalizzato che include i push handler
-  swSrc: 'public/sw-custom.js',
+  // USA IL SERVICE WORKER STANDALONE (più semplice, no Workbox)
+  swSrc: 'public/sw-standalone.js',
   swDest: 'public/sw.js',
-  runtimeCaching: [
-    // Cache-First per risorse statiche (CSS, JS, immagini)
-    {
-      urlPattern: /\.(?:js|css|png|jpg|jpeg|svg|gif|webp|avif|ico|woff|woff2|ttf|eot)$/,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'static-resources',
-        expiration: {
-          maxEntries: 1000,
-          maxAgeSeconds: 60 * 60 * 24 * 30, // 30 giorni
-        },
-        cacheableResponse: {
-          statuses: [0, 200]
-        }
-      },
-    },
-    // Network-First per le API (sempre aggiornate)
-    {
-      urlPattern: /^https?:\/\/.*\/api\/.*/,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'api-cache',
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 60 * 5, // 5 minuti per le API
-        },
-        networkTimeoutSeconds: 3,
-      },
-    },
-    // Stale-While-Revalidate per le pagine HTML
-    {
-      urlPattern: /^https?:\/\/.*\.(?:html|htm)$/,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'pages-cache',
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 60 * 60 * 24, // 24 ore
-        },
-      },
-    },
-    // Network-First per tutto il resto (fallback)
-    {
-      urlPattern: /^https?.*/,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'fallback-cache',
-        expiration: {
-          maxEntries: 200,
-          maxAgeSeconds: 60 * 60 * 24, // 24 ore
-        },
-        networkTimeoutSeconds: 3,
-      },
-    },
-  ],
-  buildExcludes: [/middleware-manifest\.json$/],
+  // Disabilita tutto il resto di next-pwa, usiamo solo il nostro SW
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+  buildExcludes: [/middleware-manifest\.json$/, /\.map$/, /^build-manifest\.json$/],
 };
 
 const nextConfig: NextConfig = {
