@@ -6,9 +6,8 @@ const pwaConfig = {
   dest: "public",
   register: false, // Disabilita la registrazione automatica, la gestiamo noi
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
-  // Disabilita completamente next-pwa, usiamo solo il nostro SW
-  disable: true, // DISABILITATO - usiamo sw.js statico
+  // Disabilita completamente next-pwa, usiamo solo il nostro SW statico
+  disable: true, // SEMPRE disabilitato - usiamo sw.js statico senza build
 };
 
 const nextConfig: NextConfig = {
