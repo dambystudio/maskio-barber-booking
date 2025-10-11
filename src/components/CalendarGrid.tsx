@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { motion } from 'framer-motion';
@@ -18,6 +18,18 @@ interface Booking {
   status: 'confirmed' | 'pending' | 'cancelled';
   created_at: string;
   notes?: string;
+}
+
+interface WaitlistEntry {
+  id: string;
+  user_name: string;
+  user_email: string;
+  user_phone?: string;
+  barber_name: string;
+  date: string;
+  preferred_time?: string;
+  status: string;
+  created_at: string;
 }
 
 interface CalendarGridProps {
@@ -41,11 +53,34 @@ const CalendarGrid = ({
   canModifyBookings = false,
   currentUserEmail
 }: CalendarGridProps) => {
+  const [waitlistEntries, setWaitlistEntries] = useState<WaitlistEntry[]>([]);
+  const [loadingWaitlist, setLoadingWaitlist] = useState(false);
+  
   // Definisco i barbieri fissi
   const BARBERS = [
     { name: 'Fabio', email: 'fabio.cassano97@icloud.com' },
     { name: 'Michele', email: 'michelebiancofiore0230@gmail.com' }
   ];
+
+  // Fetch liste d'attesa per la data selezionata
+  useEffect(() => {
+    const fetchWaitlist = async () => {
+      try {
+        setLoadingWaitlist(true);
+        const response = await fetch(`/api/waitlist/route?date=${selectedDate}`);
+        if (response.ok) {
+          const data = await response.json();
+          setWaitlistEntries(data.entries || []);
+        }
+      } catch (error) {
+        console.error('Errore caricando liste d\'attesa:', error);
+      } finally {
+        setLoadingWaitlist(false);
+      }
+    };
+
+    fetchWaitlist();
+  }, [selectedDate]);
 
   // Filtro TUTTE le prenotazioni per la data selezionata (non più filtrate per barbiere)
   const dayBookings = useMemo(() => {
@@ -208,7 +243,7 @@ const CalendarGrid = ({
       <div className="overflow-x-auto">
         <div className="min-w-[280px] sm:min-w-[400px] lg:min-w-[600px]">
           {/* Header con i barbieri */}
-          <div className="grid grid-cols-4 gap-1 mb-1">
+          <div className="grid grid-cols-3 gap-1 mb-1">
             <div className="p-1 sm:p-2 text-center font-semibold text-gray-300 bg-gray-700 rounded text-xs">
               🕐 Orario
             </div>
@@ -226,7 +261,7 @@ const CalendarGrid = ({
           {timeSlots.map(timeSlot => (
             <motion.div 
               key={timeSlot}
-              className="grid grid-cols-4 gap-1 mb-1"
+              className="grid grid-cols-3 gap-1 mb-1"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -298,6 +333,98 @@ const CalendarGrid = ({
           </div>
           <div className="text-xs sm:text-sm text-gray-300">In Attesa</div>
         </div>
+      </div>
+
+      {/* Liste d'Attesa per questa data */}
+      <div className="mt-6 bg-gray-800 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            🔔 Liste d'Attesa del {format(parseISO(selectedDate), 'dd/MM/yyyy')}
+          </h3>
+          {loadingWaitlist && (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
+          )}
+        </div>
+
+        {waitlistEntries.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">
+            <p className="text-sm">📭 Nessuna lista d'attesa per questa data</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {waitlistEntries.map((entry, index) => (
+              <motion.div
+                key={entry.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="bg-gray-700 rounded-lg p-3 border-l-4 border-yellow-500"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-white">{entry.user_name}</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                        entry.status === 'active' ? 'bg-yellow-500 text-black' :
+                        entry.status === 'notified' ? 'bg-blue-500 text-white' :
+                        entry.status === 'booked' ? 'bg-green-500 text-white' :
+                        'bg-gray-500 text-white'
+                      }`}>
+                        {entry.status === 'active' ? '⏳ Attivo' :
+                         entry.status === 'notified' ? '🔔 Notificato' :
+                         entry.status === 'booked' ? '✅ Prenotato' :
+                         '❌ Scaduto'}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-300 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span>🧔 {entry.barber_name}</span>
+                        {entry.preferred_time && (
+                          <span className="text-yellow-400">• ⏰ {entry.preferred_time}</span>
+                        )}
+                      </div>
+                      {entry.user_phone && (
+                        <div className="flex items-center gap-2">
+                          <span>📞 {entry.user_phone}</span>
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-400">
+                        Iscritto: {format(parseISO(entry.created_at), 'dd/MM/yyyy HH:mm')}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {entry.user_phone && (
+                      <>
+                        <button
+                          onClick={() => {
+                            const phone = entry.user_phone!.replace(/\D/g, '');
+                            const message = encodeURIComponent(
+                              `Ciao ${entry.user_name}! 🎉 Ti contattiamo dalla Barberia Maskio. Riguardo alla tua richiesta in lista d'attesa per il ${format(parseISO(selectedDate), 'dd MMMM yyyy', { locale: it })}, ti informiamo che ora è disponibile un posto! Puoi prenotare sul nostro sito. Grazie! ✂️`
+                            );
+                            window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                          }}
+                          className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium transition-colors"
+                          title="Contatta via WhatsApp"
+                        >
+                          💬 WhatsApp
+                        </button>
+                        <button
+                          onClick={() => onPhoneClick(entry.user_phone!)}
+                          className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                          title="Chiama"
+                        >
+                          📞 Chiama
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Modal per dettagli prenotazione - ottimizzato per mobile PWA */}

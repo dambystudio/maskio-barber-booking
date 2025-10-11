@@ -5,15 +5,49 @@ import { authOptions } from '@/lib/auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-// GET - Recupera lista d'attesa per un utente
+// GET - Recupera lista d'attesa per un utente O per una data specifica (dashboard barbiere)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userEmail = searchParams.get('user_email');
+    const date = searchParams.get('date');
 
+    // Se è specificato date, restituisci tutte le entry per quella data (per dashboard barbiere)
+    if (date) {
+      const waitlistEntries = await sql`
+        SELECT 
+          w.*,
+          b.name as barber_name,
+          u.name as user_name,
+          u.email as user_email,
+          u.phone as user_phone
+        FROM waitlist w
+        LEFT JOIN barbers b ON w.barber_id = b.id
+        LEFT JOIN users u ON w.user_id = u.id
+        WHERE w.date = ${date}
+        AND w.status IN ('active', 'notified')
+        ORDER BY w.barber_id, w.created_at ASC
+      `;
+
+      return NextResponse.json({ 
+        entries: waitlistEntries.map(entry => ({
+          id: entry.id,
+          user_name: entry.user_name || entry.customer_name || 'Utente',
+          user_email: entry.user_email || entry.customer_email,
+          user_phone: entry.user_phone || entry.customer_phone,
+          barber_name: entry.barber_name,
+          date: entry.date,
+          preferred_time: entry.preferred_time,
+          status: entry.status,
+          created_at: entry.created_at
+        }))
+      });
+    }
+
+    // Altrimenti, query per utente specifico
     if (!userEmail) {
       return NextResponse.json(
-        { error: 'user_email è richiesto' },
+        { error: 'user_email o date è richiesto' },
         { status: 400 }
       );
     }
