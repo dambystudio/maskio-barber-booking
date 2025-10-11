@@ -182,6 +182,7 @@ export async function DELETE(request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.email) {
+      console.log('❌ DELETE: Non autenticato');
       return NextResponse.json(
         { error: 'Non autenticato' },
         { status: 401 }
@@ -195,43 +196,66 @@ export async function DELETE(request: NextRequest) {
       .limit(1);
 
     if (user.length === 0) {
+      console.log('❌ DELETE: Utente non trovato');
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const { endpoint } = await request.json();
+    console.log('👤 DELETE per utente:', session.user.email);
 
-    if (!endpoint) {
-      return NextResponse.json(
-        { error: 'Endpoint mancante' },
-        { status: 400 }
-      );
+    // Prova a leggere il body (potrebbe essere vuoto)
+    let endpoint: string | undefined;
+    try {
+      const body = await request.json();
+      endpoint = body.endpoint;
+    } catch (e) {
+      // Body vuoto o non JSON - elimina tutte le subscriptions
+      console.log('ℹ️ Nessun endpoint specificato, elimino tutte le subscriptions');
     }
 
-    // Elimina la subscription
-    await db
-      .delete(pushSubscriptions)
-      .where(
-        and(
-          eq(pushSubscriptions.userId, user[0].id),
-          eq(pushSubscriptions.endpoint, endpoint)
-        )
-      );
+    let result;
+    
+    if (endpoint) {
+      // Elimina subscription specifica
+      console.log('🗑️ Elimino subscription specifica:', endpoint.substring(0, 50) + '...');
+      result = await db
+        .delete(pushSubscriptions)
+        .where(
+          and(
+            eq(pushSubscriptions.userId, user[0].id),
+            eq(pushSubscriptions.endpoint, endpoint)
+          )
+        );
+    } else {
+      // Elimina TUTTE le subscriptions dell'utente
+      console.log('🗑️ Elimino TUTTE le subscriptions dell\'utente');
+      result = await db
+        .delete(pushSubscriptions)
+        .where(eq(pushSubscriptions.userId, user[0].id));
+    }
 
-    console.log('✅ Subscription rimossa per utente:', session.user.email);
+    console.log('✅ Subscription(s) rimossa/e per:', session.user.email);
 
     return NextResponse.json({
       success: true,
-      message: 'Subscription rimossa con successo'
+      message: endpoint 
+        ? 'Subscription rimossa con successo'
+        : 'Tutte le subscriptions rimosse con successo'
     });
 
   } catch (error: any) {
-    console.error('❌ Errore rimozione subscription:', error);
+    console.error('❌ Errore rimozione subscription:', {
+      message: error.message,
+      stack: error.stack
+    });
     
     return NextResponse.json(
-      { error: 'Errore nella rimozione della subscription' },
+      { 
+        error: 'Errore nella rimozione della subscription',
+        details: error.message 
+      },
       { status: 500 }
     );
   }

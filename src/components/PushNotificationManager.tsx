@@ -145,13 +145,16 @@ export default function PushNotificationManager() {
       const subscription = await registration.pushManager.getSubscription();
       
       if (subscription) {
+        // Rimuovi dal server PRIMA di unsubscribe locale
+        await fetch('/api/push/subscribe', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: subscription.endpoint })
+        });
+        
+        // Poi unsubscribe locale
         await subscription.unsubscribe();
       }
-
-      // Rimuovi dal server
-      await fetch('/api/push/subscribe', {
-        method: 'DELETE'
-      });
 
       setIsSubscribed(false);
       setStatus('idle');
