@@ -72,6 +72,14 @@ const pwaConfig = {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   
+  // Escludi web-push dal bundling Webpack (richiede moduli Node.js)
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...(config.externals || []), 'web-push'];
+    }
+    return config;
+  },
+  
   // Ottimizzazioni per produzione ultra-sicure
   compress: true,
   poweredByHeader: false,
