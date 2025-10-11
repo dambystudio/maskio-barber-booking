@@ -5,6 +5,51 @@ import { db } from '@/lib/database-postgres';
 import { pushSubscriptions, users } from '@/lib/schema';
 import { eq, and } from 'drizzle-orm';
 
+// GET - Controlla se l'utente ha già una subscription attiva
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { hasSubscription: false },
+        { status: 200 }
+      );
+    }
+
+    const user = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, session.user.email))
+      .limit(1);
+
+    if (user.length === 0) {
+      return NextResponse.json(
+        { hasSubscription: false },
+        { status: 200 }
+      );
+    }
+
+    const subscriptions = await db
+      .select()
+      .from(pushSubscriptions)
+      .where(eq(pushSubscriptions.userId, user[0].id))
+      .limit(1);
+
+    return NextResponse.json({
+      hasSubscription: subscriptions.length > 0,
+      count: subscriptions.length
+    });
+
+  } catch (error: any) {
+    console.error('❌ Errore check subscription:', error);
+    return NextResponse.json(
+      { hasSubscription: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('📝 === REGISTRAZIONE PUSH SUBSCRIPTION ===');
