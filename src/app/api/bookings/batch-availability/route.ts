@@ -85,7 +85,27 @@ export async function POST(request: NextRequest) {
         }
 
         // Generate all possible time slots for the day
-        const allTimeSlots = await generateAllTimeSlots(date, requestCache);
+        // IMPORTANT: Use schedule from database if available, as it may have custom hours
+        const schedule = await DatabaseService.getBarberSchedule(barberId, date);
+        let allTimeSlots: string[] = [];
+        
+        if (schedule && !schedule.dayOff && schedule.availableSlots) {
+          // Use slots from database (custom schedule for this specific day)
+          try {
+            const availableFromSchedule = JSON.parse(schedule.availableSlots);
+            const unavailableFromSchedule = schedule.unavailableSlots ? JSON.parse(schedule.unavailableSlots) : [];
+            // All possible slots = available + unavailable
+            allTimeSlots = [...new Set([...availableFromSchedule, ...unavailableFromSchedule])];
+          } catch (error) {
+            console.error(`Error parsing schedule for ${date}:`, error);
+            // Fallback to generated standard slots
+            allTimeSlots = await generateAllTimeSlots(date, requestCache);
+          }
+        } else {
+          // No specific schedule, use standard generated slots
+          allTimeSlots = await generateAllTimeSlots(date, requestCache);
+        }
+        
         const totalSlots = allTimeSlots.length;
 
         if (totalSlots === 0) {

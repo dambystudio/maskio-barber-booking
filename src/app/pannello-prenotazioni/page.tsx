@@ -6,6 +6,8 @@ import { format, parseISO, addDays, isToday, getDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import CalendarGrid from '@/components/CalendarGrid';
+// import WaitlistPanel from '@/components/WaitlistPanel'; // TODO: Create component
+import BookingSwapModal from '@/components/BookingSwapModal';
 
 interface Booking {
   id: string;
@@ -129,6 +131,10 @@ export default function PannelloPrenotazioni() {
   const [viewingBarber, setViewingBarber] = useState<string>(''); // quale barbiere sta visualizzando quando è in modalità 'other'
   const [displayMode, setDisplayMode] = useState<'grid' | 'table'>('grid'); // Modalità di visualizzazione: griglia o tabella
   
+  // Stati per il modal di scambio appuntamenti
+  const [swapModalOpen, setSwapModalOpen] = useState(false);
+  const [selectedBookingForSwap, setSelectedBookingForSwap] = useState<Booking | null>(null);
+  
   // Funzione helper per cambiare barbiere atomicamente
   const switchToBarber = (barberEmail: string) => {
     // Pulisci la cache per il barbiere target per forzare un reload
@@ -189,14 +195,13 @@ export default function PannelloPrenotazioni() {
   const [showClosureSettings, setShowClosureSettings] = useState(false);
   const [newClosureDate, setNewClosureDate] = useState('');
   const [newClosureEndDate, setNewClosureEndDate] = useState('');
-  const [newClosureReason, setNewClosureReason] = useState('');  const [selectedClosureBarber, setSelectedClosureBarber] = useState('all'); // 'all', 'fabio.cassano97@icloud.com', 'michelebiancofiore0230@gmail.com', 'marcocis2006@gmail.com'
+  const [newClosureReason, setNewClosureReason] = useState('');  const [selectedClosureBarber, setSelectedClosureBarber] = useState('all'); // 'all', 'fabio.cassano97@icloud.com', 'michelebiancofiore0230@gmail.com'
   const [selectedClosureType, setSelectedClosureType] = useState('full'); // 'full', 'morning', 'afternoon'
 
   // Mapping barbieri
   const barberMapping = {
     'fabio.cassano97@icloud.com': 'Fabio Cassano',
-    'michelebiancofiore0230@gmail.com': 'Michele Biancofiore',
-    'marcocis2006@gmail.com': 'Marco'
+    'michelebiancofiore0230@gmail.com': 'Michele Biancofiore'
   };
 
   // Nomi dei giorni della settimana
@@ -254,20 +259,18 @@ export default function PannelloPrenotazioni() {
   const fetchAllBarberBookings = async () => {
     if (!session?.user?.email) return;
 
-    console.log(`📡 Inizio fetch di TUTTE le prenotazioni per ${session.user.email}`);
+    console.log(`📡 Inizio fetch di TUTTE le prenotazioni per la modalità calendario`);
     try {
       const params = new URLSearchParams();
-      // Se non è admin, filtra per il suo ID. L'admin vede tutto.
-      if (!isAdmin) {
-        params.append('barberEmail', session.user.email);
-      }
-      // Aggiungiamo un parametro per segnalare che le vogliamo tutte
+      // Per la modalità calendario, vogliamo sempre TUTTE le prenotazioni di TUTTI i barbieri
+      // Non filtrare per barbiere specifico
       params.append('fetchAll', 'true');
+      params.append('allBarbers', 'true'); // Nuovo parametro per indicare che vogliamo tutti i barbieri
 
       const response = await fetch(`/api/bookings?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ TUTTE le prenotazioni ricevute:', data.bookings);
+        console.log('✅ TUTTE le prenotazioni di tutti i barbieri ricevute:', data.bookings);
         setAllBookings(data.bookings || []);
       } else {
         console.error('❌ Errore nel fetch di tutte le prenotazioni:', response.statusText);
@@ -1077,6 +1080,43 @@ Grazie! 😊`;
     window.open(whatsappUrl, '_blank');
   };
 
+  // Funzioni per il modal di scambio appuntamenti
+  const openSwapModal = (booking: Booking) => {
+    // Verifica autorizzazioni: solo admin o barbiere proprietario può modificare
+    if (!isAdmin && !currentBarber) {
+      alert('Non autorizzato a modificare appuntamenti');
+      return;
+    }
+    
+    // Se non è admin, verifica che il barbiere possa modificare solo i suoi appuntamenti
+    if (!isAdmin) {
+      // Mappa i nomi dei barbieri alle loro email per il controllo
+      const barberEmailMapping: { [key: string]: string } = {
+        'Fabio': 'fabio.cassano97@icloud.com',
+        'Michele': 'michelebiancofiore0230@gmail.com'
+      };
+      
+      const bookingBarberEmail = barberEmailMapping[booking.barber_name];
+      if (bookingBarberEmail !== currentBarber) {
+        alert('Puoi modificare solo i tuoi appuntamenti');
+        return;
+      }
+    }
+    
+    setSelectedBookingForSwap(booking);
+    setSwapModalOpen(true);
+  };
+
+  const closeSwapModal = () => {
+    setSwapModalOpen(false);
+    setSelectedBookingForSwap(null);
+  };
+
+  const onSwapComplete = () => {
+    // Ricarica le prenotazioni dopo lo scambio
+    fetchBookings();
+  };
+
   // Genera array di date per la selezione orizzontale
   const generateDates = () => {
     const dates = [];
@@ -1234,7 +1274,6 @@ Grazie! 😊`;
                         <option value="all">Tutti i barbieri</option>
                         <option value="fabio.cassano97@icloud.com">Fabio Cassano</option>
                         <option value="michelebiancofiore0230@gmail.com">Michele Biancofiore</option>
-                        <option value="marcocis2006@gmail.com">Marco</option>
                       </select>
                     </div>
                   )}
@@ -1654,8 +1693,10 @@ Grazie! 😊`;
             booking.booking_time
           )}
           onPhoneClick={makePhoneCall}
-          onCancelBooking={updateBookingStatus ? (id) => updateBookingStatus(id, 'cancelled') : undefined}
-          onConfirmBooking={updateBookingStatus ? (id) => updateBookingStatus(id, 'confirmed') : undefined}
+          onCancelBooking={(bookingId) => updateBookingStatus(bookingId, 'cancelled')}
+          onModifyBooking={(booking) => openSwapModal(booking)}
+          canModifyBookings={isAdmin || !!currentBarber}
+          currentUserEmail={currentBarber}
         />
       ) : (
         /* Modalità Tabella Tradizionale */
@@ -1795,7 +1836,24 @@ Grazie! 😊`;
                             </button>
                           </div>
                         </div>
-                      )}{/* Pulsanti di gestione prenotazione - Solo se modificabili */}                      {(isAdmin || viewMode === 'own') && (
+                      )}
+
+                      {/* Pulsante per modificare appuntamento - Solo per barbieri autorizzati */}
+                      {(isAdmin || viewMode === 'own') && booking.status !== 'cancelled' && (
+                        <div className="space-y-2">
+                          <div className="text-xs text-gray-400 uppercase tracking-wider">Gestisci Appuntamento</div>
+                          <button
+                            type="button"
+                            onClick={() => openSwapModal(booking)}
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-medium transition-colors touch-manipulation flex items-center justify-center gap-2"
+                            title="Modifica data/ora o scambia con altro appuntamento"
+                          >
+                            🔄 Modifica Appuntamento
+                          </button>
+                        </div>
+                      )}
+
+{/* Pulsanti di gestione prenotazione - Solo se modificabili */}                      {(isAdmin || viewMode === 'own') && (
                         <div className="flex gap-2 flex-wrap">
                           {booking.status === 'pending' && (
                           <>
@@ -1973,6 +2031,18 @@ Grazie! 😊`;
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {(isAdmin || viewMode === 'own') ? (
                           <div className="flex gap-2 flex-wrap">
+                            {/* Pulsante modifica appuntamento */}
+                            {booking.status !== 'cancelled' && (
+                              <button
+                                type="button"
+                                onClick={() => openSwapModal(booking)}
+                                className="text-indigo-400 hover:text-indigo-300 px-2 py-1 border border-indigo-500 rounded hover:bg-indigo-900/50 text-xs"
+                                title="Modifica data/ora o scambia con altro appuntamento"
+                              >
+                                🔄 Modifica
+                              </button>
+                            )}
+
                             {booking.status === 'pending' && (
                               <>
                                 <button
@@ -2027,8 +2097,8 @@ Grazie! 😊`;
         </div>
       )}
 
-      {/* SEZIONE STORICO PRENOTAZIONI */}
-      {isAuthorized && (
+      {/* SEZIONE STORICO PRENOTAZIONI - TEMPORANEAMENTE NASCOSTA */}
+      {false && isAuthorized && (
         <div className="mt-8">
           <AllBookingsTable 
             bookings={allBookings} 
@@ -2042,6 +2112,32 @@ Grazie! 😊`;
             onPhoneClick={makePhoneCall}
           />
         </div>
+      )}
+
+      {/* Sezione Lista d'Attesa - Sempre visibile */}
+      {/* TODO: Re-enable when WaitlistPanel component is created
+      <div className="mt-8">
+        <WaitlistPanel 
+          selectedDate={selectedDate}
+          onRefresh={() => {
+            fetchBookings();
+            if (displayMode === 'grid') {
+              fetchAllBarberBookings();
+            }
+          }}
+        />
+      </div>
+      */}
+
+      {/* Modal per scambio/modifica appuntamenti */}
+      {swapModalOpen && selectedBookingForSwap && (
+        <BookingSwapModal
+          booking={selectedBookingForSwap}
+          allBookings={bookings}
+          barberEmail={currentBarber}
+          onClose={closeSwapModal}
+          onSwapComplete={onSwapComplete}
+        />
       )}
     </div>
   );

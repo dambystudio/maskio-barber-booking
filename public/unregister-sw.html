@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Unregister Service Workers</title>
+  <style>
+    body {
+      font-family: system-ui;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+    .log {
+      background: #1a1a1a;
+      color: #0f0;
+      padding: 20px;
+      border-radius: 8px;
+      font-family: monospace;
+      margin-top: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧹 Service Worker Cleanup</h1>
+  <p>Questa pagina disregistra tutti i Service Workers e pulisce tutte le cache.</p>
+  
+  <button onclick="unregisterAll()">🗑️ Disregistra Tutti i SW</button>
+  <button onclick="clearAllCaches()">🧹 Pulisci Cache</button>
+  <button onclick="doEverything()">💣 RESET COMPLETO</button>
+  
+  <div class="log" id="log"></div>
+
+  <script>
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+      logDiv.innerHTML += `${emoji} ${message}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    async function unregisterAll() {
+      log('Cercando Service Workers...');
+      
+      if (!navigator.serviceWorker) {
+        log('Service Worker non supportato!', 'error');
+        return;
+      }
+
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        log(`Trovati ${registrations.length} Service Workers`);
+        
+        for (const registration of registrations) {
+          log(`Disregistrando: ${registration.scope}`);
+          await registration.unregister();
+          log(`✅ Disregistrato: ${registration.scope}`, 'success');
+        }
+        
+        log('Tutti i Service Workers sono stati disregistrati!', 'success');
+      } catch (error) {
+        log(`Errore: ${error.message}`, 'error');
+      }
+    }
+
+    async function clearAllCaches() {
+      log('Cercando cache...');
+      
+      try {
+        const cacheNames = await caches.keys();
+        log(`Trovate ${cacheNames.length} cache`);
+        
+        for (const name of cacheNames) {
+          log(`Eliminando cache: ${name}`);
+          await caches.delete(name);
+          log(`✅ Eliminata: ${name}`, 'success');
+        }
+        
+        log('Tutte le cache sono state eliminate!', 'success');
+      } catch (error) {
+        log(`Errore: ${error.message}`, 'error');
+      }
+    }
+
+    async function doEverything() {
+      log('=== RESET COMPLETO ===');
+      await unregisterAll();
+      await clearAllCaches();
+      log('');
+      log('✅ RESET COMPLETO TERMINATO!', 'success');
+      log('');
+      log('Aspetta 3 secondi prima del reload...');
+      
+      setTimeout(() => {
+        log('🔄 Ricaricamento pagina...');
+        window.location.href = '/';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

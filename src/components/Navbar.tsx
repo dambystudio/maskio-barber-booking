@@ -152,19 +152,17 @@ export default function Navbar() {
                     {/* User dropdown menu */}
                   <AnimatePresence>
                     {userMenuOpen && (                      <motion.div
-                        initial={{ opacity: 0, y: dropdownPosition === 'bottom' ? -10 : 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: dropdownPosition === 'bottom' ? -10 : 10 }}
-                        className={`absolute right-0 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-[9999] ${
-                          dropdownPosition === 'bottom' ? 'mt-2' : 'mb-2'
-                        }`}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="absolute right-0 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-[9999] mt-2"
                         style={{ 
-                          position: 'absolute',
-                          [dropdownPosition === 'bottom' ? 'top' : 'bottom']: '100%',
-                          right: 0,
+                          position: 'fixed',
+                          top: (userButtonRef.current?.getBoundingClientRect().bottom || 0) + 8 + 'px',
+                          right: Math.max(16, window.innerWidth - (userButtonRef.current?.getBoundingClientRect().right || 0)) + 'px',
                           zIndex: 9999,
-                          maxHeight: '200px',
-                          overflow: 'visible'
+                          maxHeight: Math.min(300, window.innerHeight - (userButtonRef.current?.getBoundingClientRect().bottom || 0) - 40) + 'px',
+                          overflow: 'auto'
                         }}
                       >                        <Link
                           href="/area-personale"
@@ -264,8 +262,8 @@ export default function Navbar() {
               }}              className="fixed inset-y-0 right-0 w-72 bg-black shadow-xl z-[99] border-l border-gray-800"
             >
               <div className="flex flex-col h-full pt-20">
-                {/* Navigation items */}
-                <div className="flex-1 px-6 py-4">
+                {/* Navigation items - Con scroll per evitare overflow */}
+                <div className="flex-1 overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(100vh - 180px)' }}>
                   <nav className="space-y-1">
                     {navigation.map((item) => {
                       const Icon = item.icon;
@@ -303,42 +301,58 @@ export default function Navbar() {
                           <div className="px-4 py-2 text-sm font-medium text-gray-400">
                             Ciao, {session.user.name}!
                           </div>
-                          <Link
-                            href="/area-personale"
-                            className="flex items-center gap-3 px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <UserIcon className="h-5 w-5" />
-                            Area Personale
-                          </Link>                          <Link
-                            href="/area-personale/profilo"
-                            className="flex items-center gap-3 px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <UserIcon className="h-5 w-5" />
-                            Profilo
-                          </Link>                          {(isAdmin || isBarber) && (
+                          
+                          {/* Sezione Account - Sempre visibile */}
+                          <div className="space-y-1 mb-3">
                             <Link
-                              href="/admin/users"
-                              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-yellow-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                              href="/area-personale"
+                              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              <UserIcon className="h-5 w-5" />
+                              Area Personale
+                            </Link>
+                            <Link
+                              href="/area-personale/profilo"
+                              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
                               onClick={() => setMobileMenuOpen(false)}
                             >
                               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                               </svg>
-                              Pannello Admin
+                              Profilo
                             </Link>
+                          </div>
+
+                          {/* Pannello Admin se disponibile */}
+                          {(isAdmin || isBarber) && (
+                            <div className="mb-3">
+                              <Link
+                                href="/admin/users"
+                                className="flex items-center gap-3 px-4 py-3 text-base font-medium text-yellow-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200"
+                                onClick={() => setMobileMenuOpen(false)}
+                              >
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                </svg>
+                                Pannello Admin
+                              </Link>
+                            </div>
                           )}
-                          <button
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              signOut();
-                            }}
-                            className="flex items-center gap-3 px-4 py-3 text-base font-medium text-red-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200 w-full text-left"
-                          >
-                            <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
-                            Logout
-                          </button>
+
+                          {/* Logout - Sempre visibile */}
+                          <div className="pt-2 border-t border-gray-800">
+                            <button
+                              onClick={() => {
+                                setMobileMenuOpen(false);
+                                signOut();
+                              }}
+                              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-red-400 rounded-lg hover:bg-gray-900/50 transition-colors duration-200 w-full text-left"
+                            >
+                              <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+                              Logout
+                            </button>
+                          </div>
                         </div>
                       </>
                     )}
@@ -357,8 +371,8 @@ export default function Navbar() {
                       </div>
                     )}
                   </nav>
-                </div>                  {/* Booking/Panel Button - Fixed at bottom */}
-                <div className="px-6 pb-6 border-t border-gray-900 mt-2">
+                </div>                  {/* Booking/Panel Button - Fixed at bottom sempre visibile */}
+                <div className="flex-shrink-0 px-6 pb-6 border-t border-gray-900 bg-black">
                   <div className="pt-4" onClick={() => setMobileMenuOpen(false)}>
                     {isBarber ? (
                       <Link

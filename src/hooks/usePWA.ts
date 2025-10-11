@@ -47,6 +47,9 @@ export const usePWA = () => {
       return;
     }
 
+    // NOTA: Registrazione Service Worker ora gestita da sw-init.js
+    // Non registriamo qui per evitare conflitti
+    /*
     const registerPWA = async () => {
       // Usa workbox-window
       const { Workbox } = await import('workbox-window');
@@ -68,6 +71,7 @@ export const usePWA = () => {
     };
 
     registerPWA();
+    */
   }, []);
 
   return { 

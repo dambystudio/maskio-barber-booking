@@ -8,6 +8,7 @@ import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import Link from 'next/link';
 import PhoneRequiredModal from '@/components/PhoneRequiredModal';
+// import NotificationSettings from '@/components/NotificationSettings';
 import { usePhoneRequired } from '@/hooks/usePhoneRequired';
 
 interface UserBooking {
@@ -235,14 +236,10 @@ export default function AreaPersonale() {
 
   const canCancelBooking = (bookingDate: string, bookingTime: string) => {
     try {
-      const bookingDateTime = new Date(`${bookingDate}T${bookingTime}`);
-      const now = new Date();
-      const timeDifference = bookingDateTime.getTime() - now.getTime();
-      const hoursDifference = timeDifference / (1000 * 60 * 60);
-      
-      return hoursDifference >= 48; // Almeno 48 ore prima
+      // Ora permettiamo l'annullamento in qualsiasi momento
+      return true;
     } catch (error) {
-      console.error('Error calculating booking time difference:', error);
+      console.error('Error checking booking cancellation:', error);
       return false;
     }
   };
@@ -506,7 +503,7 @@ export default function AreaPersonale() {
                                   <button
                                       disabled
                                       className="w-full bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed"
-                                      title="La cancellazione è disponibile fino a 48 ore prima dell'appuntamento."
+                                      title="L'annullamento è sempre disponibile per le prenotazioni confermate."
                                   >
                                       Non cancellabile
                                   </button>
@@ -739,6 +736,9 @@ export default function AreaPersonale() {
                 <span className="text-gray-400 group-hover:text-amber-400 transition duration-300">→</span>
               </Link>
             </div>
+
+            {/* Notification Settings */}
+            {/* <NotificationSettings /> */}
 
             {/* Logout Section */}
             <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6">

@@ -5,10 +5,12 @@ import withPWA from "@ducanh2912/next-pwa";
 const pwaConfig = {
   dest: "public",
   register: true,
-  skipWaiting: true, // FORZA L'AGGIORNAMENTO IMMEDIATO
-  disable: process.env.NODE_ENV === "development",
-  reloadOnOnline: true, // Ricarica quando torna online
-  // Strategia di caching ottimizzata per aggiornamenti automatici
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development', // DISABILITA in dev mode
+  reloadOnOnline: true,
+  // Usa il nostro Service Worker personalizzato che include i push handler
+  swSrc: 'public/sw-custom.js',
+  swDest: 'public/sw.js',
   runtimeCaching: [
     // Cache-First per risorse statiche (CSS, JS, immagini)
     {

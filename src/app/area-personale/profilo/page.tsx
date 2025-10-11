@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import UserWaitlist from '@/components/UserWaitlist';
+import PushNotificationManager from '@/components/PushNotificationManager';
 
 interface UserProfile {
   id: string;
@@ -244,6 +246,26 @@ export default function ProfiloUtente() {
             </div>
           </form>
         </motion.div>
+
+        {/* Gestione Notifiche Push */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-8 bg-gray-800 border border-gray-700 rounded-xl p-8"
+        >
+          <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+            <span className="mr-3">🔔</span>
+            Notifiche Push
+          </h2>
+          <p className="text-gray-300 mb-6">
+            Gestisci le notifiche push per rimanere aggiornato su liste d'attesa, promemoria e conferme.
+          </p>
+          <PushNotificationManager />
+        </motion.div>
+
+        {/* Lista d'Attesa dell'Utente */}
+        {session?.user?.email && <UserWaitlist userEmail={session.user.email} />}
       </div>
     </div>
   );

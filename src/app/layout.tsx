@@ -12,7 +12,10 @@ import { GoogleAnalytics } from '../components/GoogleAnalytics';
 import MobileBottomNav from '../components/MobileBottomNav';
 import PWAFloatingMenu from '../components/PWAFloatingMenu';
 import AddToHomeBanner from '../components/AddToHomeBanner';
+import CacheHelperButton from '../components/CacheHelperButton';
 // import PWANotificationBanner from '../components/PWANotificationBanner';
+import NotificationPrompt from '../components/NotificationPrompt';
+import PushNotificationBanner from '../components/PushNotificationBanner';
 import DynamicManifest from '../components/DynamicManifest';
 // Importazione URL per metadataBase
 import { URL } from 'url';
@@ -149,6 +152,10 @@ export default function RootLayout({
           <link rel="icon" type="image/png" sizes="32x32" href="/icone/predefinita/32x32.png" />
           <link rel="icon" type="image/png" sizes="16x16" href="/icone/predefinita/16x16.png" />
           <link rel="shortcut icon" href="/icone/predefinita/32x32.png" />
+          
+          {/* Service Worker Initialization System - Coordinates registration and push manager */}
+          <script src="/sw-init.js"></script>
+          <script src="/push-manager.js"></script>
         </head>
         <body className={inter.className}>
           <GoogleAnalytics />
@@ -156,6 +163,8 @@ export default function RootLayout({
             <SecurityProvider>
               <DynamicManifest />
               <DailyUpdateManager />
+              {/* Banner custom per richiedere notifiche prima del sistema */}
+              <PushNotificationBanner />
               {/* <PWANotificationBanner /> */}
               <Navbar />
               <main className="min-h-screen pt-[70px] standalone:pt-0">
@@ -164,6 +173,8 @@ export default function RootLayout({
               <Footer />
               <MobileBottomNav />
               <PWAFloatingMenu />
+              {/* <CacheHelperButton /> */} {/* Disabilitato in produzione - riabilitare solo per debug */}
+              <NotificationPrompt />
               {/* Schema.org JSON-LD script */}
               <JsonLdScript />
             </SecurityProvider>

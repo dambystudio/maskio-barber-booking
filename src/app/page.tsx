@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import BookingButton from '../components/BookingButton';
-import BookingInfoBanner from '../components/BookingInfoBanner';
 
 export default function Home() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -131,9 +130,6 @@ export default function Home() {
     }
   };  return (
     <div className="min-h-screen bg-black">
-      {/* Banner informativo */}
-      <BookingInfoBanner />
-      
       {/* Enhanced Luxury Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         {/* Static background elements for better performance */}
@@ -416,78 +412,76 @@ export default function Home() {
               variants={fadeInUp}
               className="flex flex-col sm:flex-row gap-8 justify-center items-center pt-2" /* Further reduced from pt-4 to pt-2 */
             >
-              <Link href="/debug-push">
-                <motion.div
-                  whileHover={{
-                    scale: 1.05,
-                    y: -5
+              <motion.div
+                whileHover={{
+                  scale: 1.05,
+                  y: -5
+                }}
+                whileTap={{ scale: 0.97 }}
+                className="relative"
+              >
+                {/* Glow effect behind primary button */}
+                <motion.div 
+                  className="absolute -inset-1 rounded-xl bg-yellow-500/30 blur-md -z-10"
+                  animate={{
+                    opacity: [0.3, 0.5, 0.3],
+                    scale: [1, 1.05, 1]
                   }}
-                  whileTap={{ scale: 0.97 }}
-                  className="relative"
-                >
-                  {/* Glow effect behind primary button */}
-                  <motion.div 
-                    className="absolute -inset-1 rounded-xl bg-blue-500/30 blur-md -z-10"
-                    animate={{
-                      opacity: [0.3, 0.5, 0.3],
-                      scale: [1, 1.05, 1]
-                    }}
-                    transition={{
-                      duration: 2.5,
-                      ease: "easeInOut",
-                      repeat: Infinity
-                    }}
-                  />
-                  <motion.button className="text-base bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 border-0 shadow-xl px-10 py-5 uppercase tracking-wider font-medium rounded-lg text-white">
-                    <span className="relative flex items-center gap-2 z-10">
-                      {/* Small decorative element before text */}
-                      <motion.span
-                        className="absolute -left-5 top-1/2 transform -translate-y-1/2 w-3 h-[1px] bg-white/70"
-                        initial={{ scaleX: 0, opacity: 0 }}
-                        animate={{ scaleX: 1, opacity: 1 }}
-                        transition={{ delay: 1.5, duration: 0.5 }}
-                      />
-                      
-                      <span>🧪 Debug Notifiche</span>
-                      
-                      {/* Animated arrow with enhanced styling */}
-                      <motion.svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="18" 
-                        height="18" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                        className="ml-1"
-                        animate={{ x: [0, 3, 0], opacity: [0.7, 1, 0.7] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <path d="M5 12h14"></path>
-                        <path d="m12 5 7 7-7 7"></path>
-                      </motion.svg>
-                      
-                      {/* Small decorative element after text */}
-                      <motion.span
-                        className="absolute -right-5 top-1/2 transform -translate-y-1/2 w-3 h-[1px] bg-white/70"
-                        initial={{ scaleX: 0, opacity: 0 }}
-                        animate={{ scaleX: 1, opacity: 1 }}
-                        transition={{ delay: 1.5, duration: 0.5 }}
-                      />
-                      
-                      {/* Underline animation on hover */}
-                      <motion.span
-                        className="absolute bottom-0 left-0 w-full h-[1px] bg-white/30"
-                        initial={{ scaleX: 0 }}
-                        whileHover={{ scaleX: 1 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </span>
-                  </motion.button>
-                </motion.div>
-              </Link>
+                  transition={{
+                    duration: 2.5,
+                    ease: "easeInOut",
+                    repeat: Infinity
+                  }}
+                />
+                <BookingButton size="lg" className="text-base bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 border-0 shadow-xl px-10 py-5 uppercase tracking-wider font-medium text-white rounded-lg">
+                  <span className="relative flex items-center gap-2 z-10">
+                    {/* Small decorative element before text */}
+                    <motion.span
+                      className="absolute -left-5 top-1/2 transform -translate-y-1/2 w-3 h-[1px] bg-white/70"
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      transition={{ delay: 1.5, duration: 0.5 }}
+                    />
+                    
+                    <span>Prenota Ora</span>
+                    
+                    {/* Animated arrow with enhanced styling */}
+                    <motion.svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="18" 
+                      height="18" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      className="ml-1"
+                      animate={{ x: [0, 3, 0], opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <path d="M5 12h14"></path>
+                      <path d="m12 5 7 7-7 7"></path>
+                    </motion.svg>
+                    
+                    {/* Small decorative element after text */}
+                    <motion.span
+                      className="absolute -right-5 top-1/2 transform -translate-y-1/2 w-3 h-[1px] bg-white/70"
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      transition={{ delay: 1.5, duration: 0.5 }}
+                    />
+                    
+                    {/* Underline animation on hover */}
+                    <motion.span
+                      className="absolute bottom-0 left-0 w-full h-[1px] bg-white/30"
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </span>
+                </BookingButton>
+              </motion.div>
                 <Link href="/servizi">                <motion.button 
                   className="relative border border-yellow-400/30 text-white px-10 py-5 rounded-lg font-medium text-base transition-all duration-300 hover:border-yellow-300/70 hover:text-yellow-100 uppercase tracking-wider bg-black/50 backdrop-blur-sm overflow-hidden group"
                   whileHover={{

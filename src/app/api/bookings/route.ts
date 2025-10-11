@@ -59,16 +59,21 @@ export async function GET(request: NextRequest) {  try {
     const status = url.searchParams.get('status');
     const userId = url.searchParams.get('userId');
     const fetchAll = url.searchParams.get('fetchAll'); // <-- NUOVO
+    const showAllBarbers = url.searchParams.get('allBarbers'); // <-- NUOVO parametro per calendario
 
     let bookings: Booking[] = [];
 
     // <-- NUOVA LOGICA per fetchAll -->
     if (fetchAll === 'true') {
-        if (userRole === 'admin') {
+        // Se richiede allBarbers, restituisce tutte le prenotazioni di tutti i barbieri
+        if (showAllBarbers === 'true') {
+            console.log('🔍 API: Richiesta tutte le prenotazioni di tutti i barbieri per calendario');
+            bookings = await DatabaseService.getAllBookings();
+        } else if (userRole === 'admin') {
             bookings = await DatabaseService.getAllBookings();
         } else if (userRole === 'barber') {
-            const allBarbers = await DatabaseService.getBarbers();
-            const currentBarber = allBarbers.find(b => b.email === userEmail);
+            const allBarbersData = await DatabaseService.getBarbers();
+            const currentBarber = allBarbersData.find(b => b.email === userEmail);
             if (!currentBarber) {
                 return NextResponse.json({ error: 'Barbiere non trovato' }, { status: 404 });
             }
@@ -390,6 +395,18 @@ export async function PUT(request: NextRequest) {
         price: parseFloat(updatedBooking.price),
         bookingId: updatedBooking.id,
       }).catch(error => console.error('Cancellation email failed:', error));
+
+      // Invia notifica push agli utenti in lista d'attesa per questo slot
+      fetch(`${process.env.NEXTAUTH_URL}/api/notifications/send-waitlist-alert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: updatedBooking.id,
+          barberId: updatedBooking.barberId,
+          date: updatedBooking.date,
+          time: updatedBooking.time
+        })
+      }).catch(error => console.error('❌ Errore notifica waitlist:', error));
     }
 
     return NextResponse.json(updatedBooking);
@@ -479,6 +496,20 @@ export async function PATCH(request: NextRequest) {
         { error: 'Prenotazione non trovata o aggiornamento fallito' },
         { status: 404 }
       );
+    }
+
+    // Se la prenotazione viene cancellata, invia notifica push agli utenti in lista d'attesa
+    if (requestData.status === 'cancelled') {
+      fetch(`${process.env.NEXTAUTH_URL}/api/notifications/send-waitlist-alert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: updatedBooking.id,
+          barberId: updatedBooking.barberId,
+          date: updatedBooking.date,
+          time: updatedBooking.time
+        })
+      }).catch(error => console.error('❌ Errore notifica waitlist:', error));
     }
 
     return NextResponse.json({

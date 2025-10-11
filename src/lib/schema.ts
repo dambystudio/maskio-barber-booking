@@ -9,6 +9,8 @@ export const users = pgTable('users', {  id: uuid('id').primaryKey().defaultRand
   phone: varchar('phone', { length: 20 }),
   password: text('password'), // Optional for OAuth users
   image: text('image'), // Per avatar/foto profilo
+  securityQuestion: varchar('security_question', { length: 500 }), // Domanda di sicurezza
+  securityAnswerHash: text('security_answer_hash'), // Risposta hashata
   emailVerified: timestamp('emailVerified', { mode: 'date' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   lastLogin: timestamp('last_login'),
@@ -159,16 +161,33 @@ export const authorizedRoles = pgTable('authorized_roles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Push Subscriptions Table (per notifiche push)
+// Push Subscriptions Table - for PWA notifications
 export const pushSubscriptions = pgTable('push_subscriptions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   endpoint: text('endpoint').notNull(),
   p256dh: text('p256dh').notNull(),
   auth: text('auth').notNull(),
   userAgent: text('user_agent'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Waitlist Table - Lista d'attesa per slot occupati
+// Sistema "first come, first served": tutti ricevono notifica, chi prenota per primo vince
+export const waitlist = pgTable('waitlist', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  barberId: varchar('barber_id', { length: 50 }).notNull().references(() => barbers.id),
+  barberName: varchar('barber_name', { length: 255 }).notNull(),
+  date: varchar('date', { length: 10 }).notNull(), // YYYY-MM-DD - Giorno per cui vuole essere avvisato
+  customerName: varchar('customer_name', { length: 255 }).notNull(),
+  customerEmail: varchar('customer_email', { length: 255 }),
+  customerPhone: varchar('customer_phone', { length: 20 }),
+  notes: text('notes'),
+  status: varchar('status', { length: 20 }).default('waiting'), // 'waiting' | 'notified' | 'cancelled' | 'booked'
+  position: integer('position').notNull().default(1), // Posizione nella coda (FIFO - first in, first out)
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // Export types
@@ -200,3 +219,5 @@ export type AuthorizedRole = typeof authorizedRoles.$inferSelect;
 export type NewAuthorizedRole = typeof authorizedRoles.$inferInsert;
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type NewPushSubscription = typeof pushSubscriptions.$inferInsert;
+export type WaitlistEntry = typeof waitlist.$inferSelect;
+export type NewWaitlistEntry = typeof waitlist.$inferInsert;

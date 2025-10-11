@@ -4,7 +4,7 @@ async function generatePasswordHash() {
   console.log('🔐 GENERAZIONE HASH PASSWORD TEMPORANEA');
   console.log('======================================\n');
 
-  const temporaryPassword = '123456';
+  const temporaryPassword = 'ziopera';
   
   try {
     // Genera l'hash con lo stesso round usato dall'app (12)
@@ -16,7 +16,7 @@ async function generatePasswordHash() {
     console.log('📋 ISTRUZIONI:');
     console.log('1. Copia l\'hash generato');
     console.log('2. Aggiorna il campo "password" nel database con questo hash');
-    console.log('3. L\'utente potrà loggarsi con password "123456"');
+    console.log('3. L\'utente potrà loggarsi con password "ziopera"');
     console.log('');
     console.log('⚠️  IMPORTANTE:');
     console.log('• La password originale sarà PERSA per sempre');

@@ -38,8 +38,27 @@ export async function GET(request: NextRequest) {
     // Create TimeSlot objects with availability status, considerando le chiusure specifiche del barbiere
     const timeSlots: TimeSlot[] = [];
     
-    // Generate all possible time slots for comparison
-    const allPossibleSlots = generateAllTimeSlots(date);
+    // Get schedule from database to determine ALL possible slots for this specific day
+    // This is important because barber_schedules might have custom hours (e.g., Monday with morning slots)
+    const schedule = await DatabaseService.getBarberSchedule(barberId, date);
+    let allPossibleSlots: string[] = [];
+    
+    if (schedule && !schedule.dayOff && schedule.availableSlots) {
+      // Use slots from database schedule (includes both available and unavailable)
+      try {
+        const availableFromSchedule = JSON.parse(schedule.availableSlots);
+        const unavailableFromSchedule = schedule.unavailableSlots ? JSON.parse(schedule.unavailableSlots) : [];
+        // All possible slots = available + unavailable (everything configured for that day)
+        allPossibleSlots = [...new Set([...availableFromSchedule, ...unavailableFromSchedule])];
+      } catch (error) {
+        console.error('Error parsing schedule slots:', error);
+        // Fallback to generated slots
+        allPossibleSlots = generateAllTimeSlots(date, barberId);
+      }
+    } else {
+      // No specific schedule found, use standard generated slots
+      allPossibleSlots = generateAllTimeSlots(date, barberId);
+    }
     
     for (const time of allPossibleSlots) {
       let available = availableSlotTimes.includes(time);
@@ -70,7 +89,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Manteniamo questa funzione per generare tutti gli slot possibili per il confronto
-function generateAllTimeSlots(dateString: string): string[] {
+function generateAllTimeSlots(dateString: string, barberId?: string): string[] {
   const slots: string[] = [];
   const date = new Date(dateString);
   const dayOfWeek = date.getDay();
@@ -139,3 +158,4 @@ function generateAllTimeSlots(dateString: string): string[] {
   
   return slots;
 }
+

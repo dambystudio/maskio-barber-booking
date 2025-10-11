@@ -37,6 +37,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === 'phone' && phone) {
+      // TODO: Implement SMS verification
+      return NextResponse.json(
+        { error: 'SMS verification not yet implemented' },
+        { status: 501 }
+      );
+      
+      /* 
       const success = await VerificationService.sendSMSVerification(
         session.user.id,
         phone
@@ -53,6 +60,7 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
+      */
     }
 
     return NextResponse.json(
@@ -91,10 +99,17 @@ export async function PUT(request: NextRequest) {
         code
       );
     } else if (type === 'phone') {
+      // TODO: Implement phone verification
+      return NextResponse.json(
+        { error: 'Phone verification not yet implemented' },
+        { status: 501 }
+      );
+      /* 
       success = await VerificationService.verifyPhoneCode(
         session.user.id,
         code
       );
+      */
     }
 
     if (success) {
