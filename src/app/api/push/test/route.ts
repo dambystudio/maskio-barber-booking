@@ -85,23 +85,37 @@ export async function POST(request: NextRequest) {
     const results = [];
     for (const sub of subscriptions) {
       try {
-        console.log('📱 Invio a:', sub.endpoint.substring(0, 50) + '...');
+        console.log('📱 Invio a:', sub.endpoint.substring(0, 60) + '...');
+        console.log('   Tipo:', 
+          sub.endpoint.includes('fcm.googleapis') ? '🤖 Android/Chrome' :
+          sub.endpoint.includes('web.push.apple') ? '🍎 iOS/Safari' :
+          sub.endpoint.includes('mozilla') ? '🦊 Firefox' : '❓'
+        );
         
-        await webPush.sendNotification({
+        const result = await webPush.sendNotification({
           endpoint: sub.endpoint,
           keys: { p256dh: sub.p256dh, auth: sub.auth }
         }, JSON.stringify(notification));
         
-        console.log('✅ Inviato con successo');
-        results.push({ success: true, subscriptionId: sub.id });
+        console.log('✅ Inviato con successo:', result.statusCode);
+        results.push({ success: true, subscriptionId: sub.id, statusCode: result.statusCode });
       } catch (error: any) {
-        console.error('❌ Errore invio:', error.message, error.statusCode);
+        console.error('❌ Errore invio a subscription:', sub.id);
+        console.error('   StatusCode:', error.statusCode);
+        console.error('   Message:', error.message);
+        console.error('   Body:', error.body);
         
         if (error.statusCode === 410 || error.statusCode === 404) {
+          console.log('🗑️ Subscription scaduta, rimuovo dal database...');
           await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, sub.id));
-          console.log('🗑️ Subscription rimossa:', sub.id);
+          console.log('✅ Subscription rimossa:', sub.id);
         }
-        results.push({ success: false, error: error.message });
+        results.push({ 
+          success: false, 
+          subscriptionId: sub.id,
+          error: error.message,
+          statusCode: error.statusCode 
+        });
       }
     }
 
