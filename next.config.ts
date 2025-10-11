@@ -4,18 +4,11 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const pwaConfig = {
   dest: "public",
-  register: true,
+  register: false, // Disabilita la registrazione automatica, la gestiamo noi
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
-  reloadOnOnline: true,
-  // USA IL SERVICE WORKER STANDALONE (più semplice, no Workbox)
-  swSrc: 'public/sw-standalone.js',
-  swDest: 'public/sw.js',
-  // Disabilita tutto il resto di next-pwa, usiamo solo il nostro SW
-  workboxOptions: {
-    disableDevLogs: true,
-  },
-  buildExcludes: [/middleware-manifest\.json$/, /\.map$/, /^build-manifest\.json$/],
+  // Disabilita completamente next-pwa, usiamo solo il nostro SW
+  disable: true, // DISABILITATO - usiamo sw.js statico
 };
 
 const nextConfig: NextConfig = {

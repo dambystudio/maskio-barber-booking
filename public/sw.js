@@ -1,88 +1,171 @@
-/**
- * Copyright 2018 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *     http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Service Worker SEMPLIFICATO per Push Notifications
+// NO Workbox, NO next-pwa - SOLO push handlers
 
-// If the loader is already loaded, just stop.
-if (!self.define) {
-  let registry = {};
+console.log('[SW] 🚀 Service Worker inizializzato');
 
-  // Used for `eval` and `importScripts` where we can't get script URL by other means.
-  // In both cases, it's safe to use a global var because those functions are synchronous.
-  let nextDefineUri;
+// Versione del SW per forzare l'aggiornamento
+const SW_VERSION = 'v1.0.1';
+const CACHE_NAME = `maskio-cache-${SW_VERSION}`;
 
-  const singleRequire = (uri, parentUri) => {
-    uri = new URL(uri + ".js", parentUri).href;
-    return registry[uri] || (
-      
-        new Promise(resolve => {
-          if ("document" in self) {
-            const script = document.createElement("script");
-            script.src = uri;
-            script.onload = resolve;
-            document.head.appendChild(script);
-          } else {
-            nextDefineUri = uri;
-            importScripts(uri);
-            resolve();
-          }
-        })
-      
-      .then(() => {
-        let promise = registry[uri];
-        if (!promise) {
-          throw new Error(`Module ${uri} didn’t register its module`);
+// Install event
+self.addEventListener('install', (event) => {
+  console.log(`[SW] Install ${SW_VERSION}`);
+  self.skipWaiting(); // Attiva immediatamente
+});
+
+// Activate event
+self.addEventListener('activate', (event) => {
+  console.log(`[SW] Activate ${SW_VERSION}`);
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => {
+            console.log('[SW] Deleting old cache:', name);
+            return caches.delete(name);
+          })
+      );
+    }).then(() => {
+      console.log('[SW] Claiming clients');
+      return self.clients.claim();
+    })
+  );
+});
+
+// ===== PUSH NOTIFICATION HANDLERS =====
+
+console.log('[SW] 🔔 Registering push event listener...');
+
+self.addEventListener('push', function(event) {
+  console.log('🚨 [PUSH EVENT RECEIVED]', event);
+  console.log('🚨 [PUSH] Has data?', event.data !== null);
+  
+  let notificationData = {
+    title: '🔔 Maskio Barber Concept',
+    body: 'Hai una nuova notifica',
+    icon: '/icone/predefinita/192x192.png',
+    badge: '/icone/predefinita/32x32.png',
+    tag: 'maskio-notification',
+    requireInteraction: false,
+    data: {
+      url: '/area-personale',
+      timestamp: Date.now()
+    }
+  };
+
+  // Parse payload
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      console.log('📦 [PUSH] Payload JSON:', payload);
+      notificationData = {
+        title: payload.title || notificationData.title,
+        body: payload.body || notificationData.body,
+        icon: payload.icon || notificationData.icon,
+        badge: payload.badge || notificationData.badge,
+        tag: payload.tag || notificationData.tag,
+        requireInteraction: payload.requireInteraction || false,
+        data: payload.data || notificationData.data,
+        actions: payload.actions || []
+      };
+    } catch (error) {
+      console.error('❌ [PUSH] Error parsing JSON:', error);
+      try {
+        const text = event.data.text();
+        console.log('📦 [PUSH] Payload text:', text);
+        notificationData.body = text;
+      } catch (e) {
+        console.error('❌ [PUSH] Could not read as text:', e);
+      }
+    }
+  } else {
+    console.warn('⚠️ [PUSH] No data in event');
+  }
+
+  console.log('📱 [PUSH] Showing notification:', notificationData);
+
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      tag: notificationData.tag,
+      requireInteraction: notificationData.requireInteraction,
+      data: notificationData.data,
+      actions: notificationData.actions || [],
+      silent: false,
+      renotify: true,
+      vibrate: [200, 100, 200]
+    }).then(() => {
+      console.log('✅ [PUSH] Notification shown successfully!');
+    }).catch((error) => {
+      console.error('❌ [PUSH] Error showing notification:', error);
+    })
+  );
+});
+
+console.log('[SW] ✅ Push event listener registered');
+
+// Notification click
+self.addEventListener('notificationclick', function(event) {
+  console.log('👆 [NOTIFICATION CLICK]', event.action);
+  
+  event.notification.close();
+  
+  const urlToOpen = event.notification.data?.url || '/';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+      // Cerca finestra già aperta
+      for (const client of clientList) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
         }
-        return promise;
+      }
+      // Apri nuova finestra
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+
+// Notification close
+self.addEventListener('notificationclose', function(event) {
+  console.log('❌ [NOTIFICATION] Closed:', event.notification.tag);
+});
+
+// Message handler
+self.addEventListener('message', (event) => {
+  console.log('[SW] Message received:', event.data);
+  
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] SKIP_WAITING requested');
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    console.log('[SW] CLEAR_CACHE requested');
+    event.waitUntil(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }).then(() => {
+        console.log('[SW] All caches cleared ✅');
+        if (event.ports && event.ports[0]) {
+          event.ports[0].postMessage({ success: true });
+        }
       })
     );
-  };
+  }
+});
 
-  self.define = (depsNames, factory) => {
-    const uri = nextDefineUri || ("document" in self ? document.currentScript.src : "") || location.href;
-    if (registry[uri]) {
-      // Module is already loading or loaded.
-      return;
-    }
-    let exports = {};
-    const require = depUri => singleRequire(depUri, uri);
-    const specialDeps = {
-      module: { uri },
-      exports,
-      require
-    };
-    registry[uri] = Promise.all(depsNames.map(
-      depName => specialDeps[depName] || require(depName)
-    )).then(deps => {
-      factory(...deps);
-      return exports;
-    });
-  };
-}
-define(['./workbox-63364639'], (function (workbox) { 'use strict';
+// Fetch handler (passthrough - no caching)
+self.addEventListener('fetch', (event) => {
+  // Passthrough - non facciamo caching per ora
+  event.respondWith(fetch(event.request));
+});
 
-  importScripts();
-  self.skipWaiting();
-  workbox.clientsClaim();
-  workbox.registerRoute("/", new workbox.NetworkFirst({
-    "cacheName": "start-url",
-    plugins: [{
-      cacheWillUpdate: function (_) {
-        return _ref.apply(this, arguments);
-      }
-    }]
-  }), 'GET');
-  workbox.registerRoute(/.*/i, new workbox.NetworkOnly({
-    "cacheName": "dev",
-    plugins: []
-  }), 'GET');
-
-}));
+console.log('[SW] ✅ All event listeners registered');
