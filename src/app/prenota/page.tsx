@@ -20,11 +20,11 @@ export default function Page() {
       return;
     }
 
-    // Controlla se il modal è già stato mostrato
-    const hasSeenNotification = localStorage.getItem('maskio-booking-notification-dismissed');
-    if (!hasSeenNotification) {
-      setShowNotificationModal(true);
-    }
+    // ✅ MODIFICA: Banner rimosso - Non mostrare più il modal di notifica
+    // const hasSeenNotification = localStorage.getItem('maskio-booking-notification-dismissed');
+    // if (!hasSeenNotification) {
+    //   setShowNotificationModal(true);
+    // }
   }, [session, status, router]);
 
   // Show loading while checking auth
@@ -63,11 +63,11 @@ export default function Page() {
         <BookingForm userSession={session} />
       </div>
 
-      {/* Modal di notifica */}
-      <BookingNotificationModal
+      {/* ✅ MODIFICA: Modal banner rimosso */}
+      {/* <BookingNotificationModal
         isOpen={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}
-      />
+      /> */}
     </div>
   );
 }

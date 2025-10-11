@@ -46,10 +46,13 @@ function TimeSlotGrid({
     [time: string]: { available: boolean; occupiedBy?: any; loading: boolean }
   }>({});
 
-  // Genera gli slot orari
+  // Genera gli slot orari basati sulla data (sabato ha orari diversi)
   const generateTimeSlots = () => {
     const slots = [];
-    // Mattina: 9:00-12:30
+    const date = new Date(selectedDate);
+    const dayOfWeek = date.getDay();
+    
+    // Mattina: 9:00-12:30 (tutti i giorni)
     for (let hour = 9; hour <= 12; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         if (hour === 12 && minute > 30) break;
@@ -57,12 +60,26 @@ function TimeSlotGrid({
         slots.push(time);
       }
     }
-    // Pomeriggio: 15:00-17:30
-    for (let hour = 15; hour <= 17; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        if (hour === 17 && minute > 30) break;
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push(time);
+    
+    // Pomeriggio: dipende dal giorno
+    if (dayOfWeek === 6) {
+      // ✅ SABATO: 14:30-17:00 (NO 17:30)
+      slots.push('14:30');
+      for (let hour = 15; hour <= 17; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 17 && minute > 0) break; // Stop at 17:00 (no 17:30)
+          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(time);
+        }
+      }
+    } else {
+      // Altri giorni: 15:00-17:30
+      for (let hour = 15; hour <= 17; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 17 && minute > 30) break;
+          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(time);
+        }
       }
     }
     return slots;
@@ -230,10 +247,13 @@ export default function BookingSwapModal({
   const [slotAvailability, setSlotAvailability] = useState<{ available: boolean; occupiedBy?: any } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Generiamo gli slot orari disponibili
+  // Generiamo gli slot orari disponibili (basati sulla data selezionata)
   const generateTimeSlots = () => {
     const slots = [];
-    // Mattina: 9:00-12:30
+    const date = new Date(selectedDate);
+    const dayOfWeek = date.getDay();
+    
+    // Mattina: 9:00-12:30 (tutti i giorni)
     for (let hour = 9; hour <= 12; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         if (hour === 12 && minute > 30) break;
@@ -241,12 +261,26 @@ export default function BookingSwapModal({
         slots.push(time);
       }
     }
-    // Pomeriggio: 15:00-17:30
-    for (let hour = 15; hour <= 17; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        if (hour === 17 && minute > 30) break;
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push(time);
+    
+    // Pomeriggio: dipende dal giorno
+    if (dayOfWeek === 6) {
+      // ✅ SABATO: 14:30-17:00 (NO 17:30)
+      slots.push('14:30');
+      for (let hour = 15; hour <= 17; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 17 && minute > 0) break; // Stop at 17:00 (no 17:30)
+          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(time);
+        }
+      }
+    } else {
+      // Altri giorni: 15:00-17:30
+      for (let hour = 15; hour <= 17; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 17 && minute > 30) break;
+          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(time);
+        }
       }
     }
     return slots;
