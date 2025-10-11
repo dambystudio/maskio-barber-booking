@@ -67,13 +67,19 @@ const CalendarGrid = ({
     const fetchWaitlist = async () => {
       try {
         setLoadingWaitlist(true);
-        const response = await fetch(`/api/waitlist/route?date=${selectedDate}`);
+        console.log('🔍 Fetching waitlist for date:', selectedDate);
+        const response = await fetch(`/api/waitlist?date=${selectedDate}`);
+        console.log('📡 Response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('📊 Waitlist data received:', data);
           setWaitlistEntries(data.entries || []);
+        } else {
+          console.error('❌ Response not OK:', await response.text());
         }
       } catch (error) {
-        console.error('Errore caricando liste d\'attesa:', error);
+        console.error('❌ Errore caricando liste d\'attesa:', error);
       } finally {
         setLoadingWaitlist(false);
       }
