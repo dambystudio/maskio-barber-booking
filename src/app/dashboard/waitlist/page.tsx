@@ -3,6 +3,9 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import WaitlistDashboard from '@/components/WaitlistDashboard';
 
+// Force dynamic rendering (no static prerendering)
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'La Mia Lista d\'Attesa | Maskio Barber Concept',
   description: 'Gestisci le tue iscrizioni alla lista d\'attesa',
