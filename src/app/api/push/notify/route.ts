@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import webpush from 'web-push';
 
+// Force Node.js runtime (web-push requires Node.js modules)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 // Configura VAPID keys

@@ -6,6 +6,10 @@ import { pushSubscriptions, users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import webPush from 'web-push';
 
+// Force Node.js runtime (web-push requires Node.js modules)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 webPush.setVapidDetails(
   `mailto:${process.env.VAPID_EMAIL}`,
   process.env.VAPID_PUBLIC_KEY!,
