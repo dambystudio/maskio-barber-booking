@@ -365,12 +365,12 @@ const CalendarGrid = ({
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-semibold text-white">{entry.user_name}</span>
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        entry.status === 'active' ? 'bg-yellow-500 text-black' :
+                        entry.status === 'active' || entry.status === 'waiting' ? 'bg-yellow-500 text-black' :
                         entry.status === 'notified' ? 'bg-blue-500 text-white' :
                         entry.status === 'booked' ? 'bg-green-500 text-white' :
                         'bg-gray-500 text-white'
                       }`}>
-                        {entry.status === 'active' ? '⏳ Attivo' :
+                        {entry.status === 'active' || entry.status === 'waiting' ? '⏳ In Attesa' :
                          entry.status === 'notified' ? '🔔 Notificato' :
                          entry.status === 'booked' ? '✅ Prenotato' :
                          '❌ Scaduto'}

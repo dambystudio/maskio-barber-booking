@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN barbers b ON w.barber_id = b.id
         LEFT JOIN users u ON w.user_id = u.id
         WHERE w.date = ${date}
-        AND w.status IN ('active', 'notified')
+        AND w.status IN ('active', 'waiting', 'notified')
         ORDER BY w.barber_id, w.created_at ASC
       `;
 
