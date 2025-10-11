@@ -10,6 +10,16 @@ import webPush from 'web-push';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Verifica configurazione VAPID
+if (!process.env.VAPID_EMAIL || !process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  console.error('❌ [TEST] VAPID keys non configurate!');
+  console.error('VAPID_EMAIL:', !!process.env.VAPID_EMAIL);
+  console.error('VAPID_PUBLIC_KEY:', !!process.env.VAPID_PUBLIC_KEY);
+  console.error('VAPID_PRIVATE_KEY:', !!process.env.VAPID_PRIVATE_KEY);
+} else {
+  console.log('✅ [TEST] VAPID keys configurate');
+}
+
 webPush.setVapidDetails(
   `mailto:${process.env.VAPID_EMAIL}`,
   process.env.VAPID_PUBLIC_KEY!,
@@ -18,29 +28,41 @@ webPush.setVapidDetails(
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔵 [TEST] Inizio test notifica push');
+    
     const session = await getServerSession(authOptions);
+    console.log('🔵 [TEST] Session:', session?.user?.email);
     
     if (!session?.user?.email) {
+      console.log('❌ [TEST] Utente non autenticato');
       return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
     }
 
+    console.log('🔵 [TEST] Cerco utente nel database...');
     const user = await db
       .select({ id: users.id, email: users.email })
       .from(users)
       .where(eq(users.email, session.user.email))
       .limit(1);
 
+    console.log('🔵 [TEST] Utente trovato:', user.length > 0 ? user[0].id : 'Nessuno');
+    
     if (user.length === 0) {
       return NextResponse.json({ error: 'Account non trovato' }, { status: 404 });
     }
 
+    console.log('🔵 [TEST] Cerco subscriptions per user_id:', user[0].id);
     const subscriptions = await db
       .select()
       .from(pushSubscriptions)
       .where(eq(pushSubscriptions.userId, user[0].id));
 
+    console.log('🔵 [TEST] Subscriptions trovate:', subscriptions.length);
+    
     if (subscriptions.length === 0) {
-      return NextResponse.json({ error: 'Nessuna subscription' }, { status: 404 });
+      return NextResponse.json({ 
+        error: 'Nessuna subscription trovata. Prova a ricaricare la pagina e attivare le notifiche.' 
+      }, { status: 404 });
     }
 
     const notification = {

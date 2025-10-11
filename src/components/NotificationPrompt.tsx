@@ -25,7 +25,7 @@ export default function NotificationPrompt() {
 
     // Controlla se ha già una subscription
     try {
-      const response = await fetch('/api/push/subscription');
+      const response = await fetch('/api/push/subscribe');
       const data = await response.json();
       
       if (data.hasSubscription) {
