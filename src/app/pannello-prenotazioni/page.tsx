@@ -982,6 +982,8 @@ export default function PannelloPrenotazioni() {
 
   const updateBookingStatus = async (bookingId: string, newStatus: 'confirmed' | 'cancelled') => {
     try {
+      console.log('🔄 Updating booking status:', { bookingId, newStatus });
+      
       const response = await fetch('/api/bookings', {
         method: 'PATCH',
         headers: {
@@ -991,14 +993,21 @@ export default function PannelloPrenotazioni() {
           id: bookingId,
           status: newStatus
         }),
-      });      if (response.ok) {
+      });
+      
+      console.log('📡 Response status:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Booking status updated successfully:', result);
+        
         // Invalida la cache per forzare il refresh
         setBookingsCache({});
         setStatsCache({});
         fetchBookings(); // Ricarica le prenotazioni
         fetchStats(); // Ricarica le statistiche
       } else {
-        console.error(`Failed to update booking status: ${response.status} ${response.statusText}`);
+        console.error(`❌ Failed to update booking status: ${response.status} ${response.statusText}`);
         
         // Prova a leggere il corpo della risposta se disponibile
         try {
@@ -1013,7 +1022,7 @@ export default function PannelloPrenotazioni() {
         alert(`Errore nell'aggiornamento dello stato: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error updating booking status:', error);
+      console.error('❌ Error updating booking status:', error);
       alert('Errore di rete nell\'aggiornamento dello stato');
     }
   };  const deleteBooking = async (bookingId: string) => {

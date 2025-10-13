@@ -421,9 +421,14 @@ export async function PUT(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    console.log('📥 PATCH /api/bookings - Request received');
+    
     // Check authentication
     const session = await getServerSession(authOptions);
+    console.log('👤 Session user:', session?.user?.email, 'Role:', session?.user?.role);
+    
     if (!session?.user?.email) {
+      console.log('❌ No session - Unauthorized');
       return NextResponse.json(
         { error: 'Devi essere loggato per modificare le prenotazioni' },
         { status: 401 }
@@ -433,6 +438,7 @@ export async function PATCH(request: NextRequest) {
     // Get IP for rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     if (!checkRateLimit(ip)) {
+      console.log('❌ Rate limit exceeded');
       return NextResponse.json(
         { error: 'Troppi tentativi. Riprova tra qualche minuto.' },
         { status: 429 }
@@ -440,9 +446,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     const requestData = await request.json();
+    console.log('📦 Request data:', requestData);
     
     // Validate required fields
     if (!requestData.id) {
+      console.log('❌ Missing booking ID');
       return NextResponse.json(
         { error: 'ID prenotazione è obbligatorio' },
         { status: 400 }
@@ -450,6 +458,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (!requestData.status) {
+      console.log('❌ Missing status');
       return NextResponse.json(
         { error: 'Status è obbligatorio' },
         { status: 400 }
@@ -458,6 +467,7 @@ export async function PATCH(request: NextRequest) {
 
     // Validate status value
     if (!['confirmed', 'cancelled', 'pending'].includes(requestData.status)) {
+      console.log('❌ Invalid status value:', requestData.status);
       return NextResponse.json(
         { error: 'Status non valido. Deve essere: confirmed, cancelled, o pending' },
         { status: 400 }
@@ -471,28 +481,37 @@ export async function PATCH(request: NextRequest) {
       const booking = allBookings.find(b => b.id === requestData.id);
       
       if (!booking) {
+        console.log('❌ Booking not found:', requestData.id);
         return NextResponse.json(
           { error: 'Prenotazione non trovata' },
           { status: 404 }
         );
       }
+      
+      console.log('✅ Booking found:', booking.id, 'Barber:', booking.barberName);
 
       // ✅ MODIFICA: Michele e Fabio possono gestirsi reciprocamente
       // Controllo autorizzazioni rimosso per permettere gestione reciproca tra barbieri
+      console.log('✅ Authorization check passed (reciprocal management enabled)');
     }
 
+    console.log('🔄 Updating booking status...');
     // Update booking status
     const updatedBooking = await DatabaseService.updateBookingStatus(requestData.id, requestData.status);
     
     if (!updatedBooking) {
+      console.log('❌ Booking not found or update failed');
       return NextResponse.json(
         { error: 'Prenotazione non trovata o aggiornamento fallito' },
         { status: 404 }
       );
     }
+    
+    console.log('✅ Booking status updated successfully:', updatedBooking.id, 'New status:', updatedBooking.status);
 
     // Se la prenotazione viene cancellata, invia notifica push agli utenti in lista d'attesa
     if (requestData.status === 'cancelled') {
+      console.log('📢 Sending waitlist notifications...');
       fetch(`${process.env.NEXTAUTH_URL}/api/notifications/send-waitlist-alert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -513,7 +532,7 @@ export async function PATCH(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error updating booking status:', error);
+    console.error('❌ Error updating booking status:', error);
     return NextResponse.json(
       { error: 'Errore interno del server' },
       { status: 500 }
