@@ -197,6 +197,10 @@ export default function PannelloPrenotazioni() {
   const [newClosureEndDate, setNewClosureEndDate] = useState('');
   const [newClosureReason, setNewClosureReason] = useState('');  const [selectedClosureBarber, setSelectedClosureBarber] = useState('all'); // 'all', 'fabio.cassano97@icloud.com', 'michelebiancofiore0230@gmail.com'
   const [selectedClosureType, setSelectedClosureType] = useState('full'); // 'full', 'morning', 'afternoon'
+  
+  // ✅ NUOVO: Checkbox per selezionare barbieri per chiusure specifiche (date)
+  const [closureFabioChecked, setClosureFabioChecked] = useState(true);
+  const [closureMicheleChecked, setClosureMicheleChecked] = useState(true);
 
   // Mapping barbieri
   const barberMapping = {
@@ -519,6 +523,24 @@ export default function PannelloPrenotazioni() {
       loadClosureSettingsFromServer();
     }
   }, [selectedClosureBarber, permissionsChecked, currentBarber]);
+  
+  // ✅ NUOVO: Inizializza checkbox per barbieri non-admin
+  useEffect(() => {
+    if (permissionsChecked && !isAdmin && currentBarber) {
+      // Barbiere non-admin: pre-seleziona solo sé stesso
+      if (currentBarber === 'fabio.cassano97@icloud.com') {
+        setClosureFabioChecked(true);
+        setClosureMicheleChecked(false);
+      } else if (currentBarber === 'michelebiancofiore0230@gmail.com') {
+        setClosureFabioChecked(false);
+        setClosureMicheleChecked(true);
+      }
+    } else if (permissionsChecked && isAdmin) {
+      // Admin: entrambi selezionati di default
+      setClosureFabioChecked(true);
+      setClosureMicheleChecked(true);
+    }
+  }, [permissionsChecked, isAdmin, currentBarber]);
 
   // If still loading session or permissions, show loading
   if (status === 'loading' || !permissionsChecked) {
@@ -645,48 +667,72 @@ export default function PannelloPrenotazioni() {
     if (newClosureEndDate && newClosureEndDate < newClosureDate) {
       alert('La data di fine deve essere successiva alla data di inizio');
       return;
-    }    // Determina quale barbiere utilizzare
-    let targetBarber = selectedClosureBarber;
+    }
     
-    // Se non è admin, usa sempre il barbiere corrente
-    if (!isAdmin && currentBarber) {
-      targetBarber = currentBarber;
+    // ✅ NUOVO: Verifica che almeno un barbiere sia selezionato
+    if (!closureFabioChecked && !closureMicheleChecked) {
+      alert('Seleziona almeno un barbiere per la chiusura');
+      return;
     }
 
-    // Se è selezionato un barbiere specifico o non è admin, usa la logica per barbieri
-    if (targetBarber !== 'all') {
-      await addBarberClosureRange(newClosureDate, newClosureEndDate, targetBarber, selectedClosureType);
-    } else {
-      // Logica esistente per chiusure generali (solo admin con "tutti i barbieri")
-      const newDates = new Set(closedDates);
-      
-      if (newClosureEndDate) {
-        // Aggiunge un intervallo di date
-        const startDate = new Date(newClosureDate + 'T00:00:00');
-        const endDate = new Date(newClosureEndDate + 'T00:00:00');
-        
-        let currentDate = new Date(startDate);
-        while (currentDate <= endDate) {
-          const dateStr = format(currentDate, 'yyyy-MM-dd');
-          newDates.add(dateStr);
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-      } else {
-        // Aggiunge una singola data
-        newDates.add(newClosureDate);
+    // ✅ NUOVO: Costruisce lista dei barbieri target basandosi sui checkbox
+    const targetBarbers = [];
+    
+    if (isAdmin) {
+      // Admin può selezionare entrambi i barbieri tramite checkbox
+      if (closureFabioChecked) {
+        targetBarbers.push('fabio.cassano97@icloud.com');
       }
+      if (closureMicheleChecked) {
+        targetBarbers.push('michelebiancofiore0230@gmail.com');
+      }
+    } else if (currentBarber) {
+      // I barbieri possono impostare chiusure per:
+      // - Se stessi (sempre)
+      // - L'altro barbiere (gestione reciproca)
+      if (currentBarber === 'fabio.cassano97@icloud.com') {
+        // Fabio può impostare per sé stesso e per Michele
+        if (closureFabioChecked) targetBarbers.push('fabio.cassano97@icloud.com');
+        if (closureMicheleChecked) targetBarbers.push('michelebiancofiore0230@gmail.com');
+      } else if (currentBarber === 'michelebiancofiore0230@gmail.com') {
+        // Michele può impostare per sé stesso e per Fabio
+        if (closureMicheleChecked) targetBarbers.push('michelebiancofiore0230@gmail.com');
+        if (closureFabioChecked) targetBarbers.push('fabio.cassano97@icloud.com');
+      }
+    }
+    
+    if (targetBarbers.length === 0) {
+      alert('Nessun barbiere valido selezionato');
+      return;
+    }
 
-      const success = await saveClosureSettingsToServer(closedDays, newDates);
-      if (success) {
-        setClosedDates(newDates);
-        setNewClosureDate('');
-        setNewClosureEndDate('');
-        setNewClosureReason('');
-        console.log('✅ Closure dates added successfully');
-      } else {
-        console.error('❌ Failed to save closure dates');
-        alert('Errore nel salvare le date di chiusura. Riprova.');
+    // ✅ NUOVO: Applica chiusura per ogni barbiere selezionato
+    try {
+      for (const barberEmail of targetBarbers) {
+        await addBarberClosureRange(newClosureDate, newClosureEndDate, barberEmail, selectedClosureType);
       }
+      
+      // Reset form dopo tutte le operazioni
+      setNewClosureDate('');
+      setNewClosureEndDate('');
+      setNewClosureReason('');
+      setSelectedClosureType('full');
+      // I checkbox rimangono agli stessi valori per facilitare inserimenti multipli
+      
+      // Mostra messaggio di successo
+      const barberNames = targetBarbers.map(email => 
+        email === 'fabio.cassano97@icloud.com' ? 'Fabio' : 'Michele'
+      ).join(' e ');
+      
+      const daysCount = newClosureEndDate 
+        ? Math.ceil((new Date(newClosureEndDate).getTime() - new Date(newClosureDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
+        : 1;
+        
+      alert(`✅ Chiusura aggiunta per ${barberNames} - ${daysCount} giorno${daysCount > 1 ? 'i' : ''}`);
+      
+    } catch (error) {
+      console.error('❌ Error adding closures:', error);
+      alert('Errore nell\'aggiungere le chiusure. Riprova.');
     }
   };
 
@@ -713,18 +759,13 @@ export default function PannelloPrenotazioni() {
         await addBarberClosure(dateStr, barberEmail, closureType as 'full' | 'morning' | 'afternoon');
       }
 
-      // Reset form
-      setNewClosureDate('');
-      setNewClosureEndDate('');
-      setNewClosureReason('');
-      setSelectedClosureBarber('all');
-      setSelectedClosureType('full');
+      // Reset form (chiamato solo dall'ultima iterazione)
+      // Non resettare qui - il reset viene fatto da addClosureDates dopo tutte le iterazioni
       
       // Ricarica le chiusure per aggiornare la visualizzazione
       await loadBarberClosures();
       
       console.log(`✅ Barber closures added for ${barberEmail}: ${dates.length} dates`);
-      alert(`Chiusura aggiunta per ${barberMapping[barberEmail as keyof typeof barberMapping]} - ${dates.length} giorni`);
       
     } catch (error) {
       console.error('❌ Error adding barber closure range:', error);
@@ -1306,6 +1347,47 @@ Grazie! 😊`;
 
               {/* Form per aggiungere nuove chiusure - Mobile Friendly */}
               <div className="bg-gray-800 border border-gray-700 p-4 md:p-6 rounded-xl mb-4 md:mb-6">
+                {/* ✅ NUOVO: Checkbox per selezionare barbieri */}
+                <div className="mb-4 pb-4 border-b border-gray-700">
+                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-3">
+                    Applica chiusura a: *
+                  </label>
+                  <div className="flex gap-4">
+                    {/* Fabio checkbox - visibile solo se admin o se è Fabio stesso */}
+                    {(isAdmin || currentBarber === 'fabio.cassano97@icloud.com') && (
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={closureFabioChecked}
+                          onChange={(e) => setClosureFabioChecked(e.target.checked)}
+                          className="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-800 cursor-pointer"
+                        />
+                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                          🧔 Fabio
+                        </span>
+                      </label>
+                    )}
+                    
+                    {/* Michele checkbox - visibile solo se admin o se è Michele stesso */}
+                    {(isAdmin || currentBarber === 'michelebiancofiore0230@gmail.com') && (
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={closureMicheleChecked}
+                          onChange={(e) => setClosureMicheleChecked(e.target.checked)}
+                          className="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-800 cursor-pointer"
+                        />
+                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                          🧔 Michele
+                        </span>
+                      </label>
+                    )}
+                  </div>
+                  {!closureFabioChecked && !closureMicheleChecked && (
+                    <p className="text-xs text-red-400 mt-2">⚠️ Seleziona almeno un barbiere</p>
+                  )}
+                </div>
+                
                 <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-4 md:gap-4 md:items-end">
                   <div className="space-y-2">
                     <label htmlFor="newClosureDate" className="block text-xs md:text-sm font-medium text-gray-300">
