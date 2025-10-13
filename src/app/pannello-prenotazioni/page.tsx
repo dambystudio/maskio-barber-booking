@@ -1347,41 +1347,37 @@ Grazie! 😊`;
 
               {/* Form per aggiungere nuove chiusure - Mobile Friendly */}
               <div className="bg-gray-800 border border-gray-700 p-4 md:p-6 rounded-xl mb-4 md:mb-6">
-                {/* ✅ NUOVO: Checkbox per selezionare barbieri */}
+                {/* ✅ NUOVO: Checkbox per selezionare barbieri - Gestione Reciproca */}
                 <div className="mb-4 pb-4 border-b border-gray-700">
                   <label className="block text-xs md:text-sm font-medium text-gray-300 mb-3">
                     Applica chiusura a: *
                   </label>
                   <div className="flex gap-4">
-                    {/* Fabio checkbox - visibile solo se admin o se è Fabio stesso */}
-                    {(isAdmin || currentBarber === 'fabio.cassano97@icloud.com') && (
-                      <label className="flex items-center gap-2 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={closureFabioChecked}
-                          onChange={(e) => setClosureFabioChecked(e.target.checked)}
-                          className="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-800 cursor-pointer"
-                        />
-                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          🧔 Fabio
-                        </span>
-                      </label>
-                    )}
+                    {/* ✅ Fabio checkbox - Visibile per admin e TUTTI i barbieri (gestione reciproca) */}
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={closureFabioChecked}
+                        onChange={(e) => setClosureFabioChecked(e.target.checked)}
+                        className="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-800 cursor-pointer"
+                      />
+                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                        🧔 Fabio
+                      </span>
+                    </label>
                     
-                    {/* Michele checkbox - visibile solo se admin o se è Michele stesso */}
-                    {(isAdmin || currentBarber === 'michelebiancofiore0230@gmail.com') && (
-                      <label className="flex items-center gap-2 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={closureMicheleChecked}
-                          onChange={(e) => setClosureMicheleChecked(e.target.checked)}
-                          className="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-800 cursor-pointer"
-                        />
-                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          🧔 Michele
-                        </span>
-                      </label>
-                    )}
+                    {/* ✅ Michele checkbox - Visibile per admin e TUTTI i barbieri (gestione reciproca) */}
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={closureMicheleChecked}
+                        onChange={(e) => setClosureMicheleChecked(e.target.checked)}
+                        className="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-800 cursor-pointer"
+                      />
+                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                        🧔 Michele
+                      </span>
+                    </label>
                   </div>
                   {!closureFabioChecked && !closureMicheleChecked && (
                     <p className="text-xs text-red-400 mt-2">⚠️ Seleziona almeno un barbiere</p>
