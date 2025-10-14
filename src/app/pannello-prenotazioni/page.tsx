@@ -1165,6 +1165,11 @@ Grazie! 😊`;
   const onSwapComplete = () => {
     // Ricarica le prenotazioni dopo lo scambio
     fetchBookings();
+    
+    // Se siamo in vista grid, ricarica anche i dati del calendario
+    if (displayMode === 'grid') {
+      fetchAllBarberBookings();
+    }
   };
 
   // Genera array di date per la selezione orizzontale
