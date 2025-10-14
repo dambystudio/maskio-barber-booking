@@ -52,12 +52,37 @@ function TimeSlotGrid({
     const date = new Date(selectedDate);
     const dayOfWeek = date.getDay();
     
-    // Mattina: 9:00-12:30 (tutti i giorni)
-    for (let hour = 9; hour <= 12; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        if (hour === 12 && minute > 30) break;
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push(time);
+    // ✅ LUNEDÌ (giorno 1) - Logica speciale
+    if (dayOfWeek === 1) {
+      // Michele: NO mattina, pomeriggio 15:00-18:00
+      // Fabio: CHIUSO completamente
+      const barberName = booking.barber_name.toLowerCase();
+      
+      if (barberName === 'fabio') {
+        // Fabio è chiuso il lunedì - nessuno slot
+        return [];
+      } else if (barberName === 'michele') {
+        // Michele: solo pomeriggio 15:00-18:00 (7 slot)
+        for (let hour = 15; hour <= 18; hour++) {
+          if (hour === 18) {
+            slots.push('18:00'); // Solo 18:00, no 18:30
+          } else {
+            slots.push(`${hour.toString().padStart(2, '0')}:00`);
+            slots.push(`${hour.toString().padStart(2, '0')}:30`);
+          }
+        }
+        return slots;
+      }
+    }
+    
+    // Mattina: 9:00-12:30 (tutti gli altri giorni eccetto lunedì)
+    if (dayOfWeek !== 1) {
+      for (let hour = 9; hour <= 12; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 12 && minute > 30) break;
+          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(time);
+        }
       }
     }
     
@@ -72,8 +97,8 @@ function TimeSlotGrid({
           slots.push(time);
         }
       }
-    } else {
-      // Altri giorni: 15:00-17:30
+    } else if (dayOfWeek !== 1) {
+      // Altri giorni (non lunedì): 15:00-17:30
       for (let hour = 15; hour <= 17; hour++) {
         for (let minute = 0; minute < 60; minute += 30) {
           if (hour === 17 && minute > 30) break;
@@ -82,6 +107,7 @@ function TimeSlotGrid({
         }
       }
     }
+    
     return slots;
   };
 
@@ -253,12 +279,37 @@ export default function BookingSwapModal({
     const date = new Date(selectedDate);
     const dayOfWeek = date.getDay();
     
-    // Mattina: 9:00-12:30 (tutti i giorni)
-    for (let hour = 9; hour <= 12; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        if (hour === 12 && minute > 30) break;
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push(time);
+    // ✅ LUNEDÌ (giorno 1) - Logica speciale
+    if (dayOfWeek === 1) {
+      // Michele: NO mattina, pomeriggio 15:00-18:00
+      // Fabio: CHIUSO completamente
+      const barberName = booking.barber_name.toLowerCase();
+      
+      if (barberName === 'fabio') {
+        // Fabio è chiuso il lunedì - nessuno slot
+        return [];
+      } else if (barberName === 'michele') {
+        // Michele: solo pomeriggio 15:00-18:00 (7 slot)
+        for (let hour = 15; hour <= 18; hour++) {
+          if (hour === 18) {
+            slots.push('18:00'); // Solo 18:00, no 18:30
+          } else {
+            slots.push(`${hour.toString().padStart(2, '0')}:00`);
+            slots.push(`${hour.toString().padStart(2, '0')}:30`);
+          }
+        }
+        return slots;
+      }
+    }
+    
+    // Mattina: 9:00-12:30 (tutti gli altri giorni eccetto lunedì)
+    if (dayOfWeek !== 1) {
+      for (let hour = 9; hour <= 12; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 12 && minute > 30) break;
+          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(time);
+        }
       }
     }
     
@@ -273,8 +324,8 @@ export default function BookingSwapModal({
           slots.push(time);
         }
       }
-    } else {
-      // Altri giorni: 15:00-17:30
+    } else if (dayOfWeek !== 1) {
+      // Altri giorni (non lunedì): 15:00-17:30
       for (let hour = 15; hour <= 17; hour++) {
         for (let minute = 0; minute < 60; minute += 30) {
           if (hour === 17 && minute > 30) break;
@@ -283,6 +334,7 @@ export default function BookingSwapModal({
         }
       }
     }
+    
     return slots;
   };
 
@@ -505,33 +557,50 @@ export default function BookingSwapModal({
                   Seleziona orario per {format(parseISO(selectedDate), 'dd/MM/yyyy', { locale: it })}:
                 </label>
                 
-                {/* Legenda colori */}
-                <div className="flex gap-4 mb-4 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded"></div>
-                    <span className="text-gray-400">Libero</span>
+                {/* ✅ NUOVO: Messaggio se nessuno slot disponibile (es. Fabio il lunedì) */}
+                {generateTimeSlots().length === 0 ? (
+                  <div className="bg-red-900/30 border border-red-500 rounded-lg p-6 text-center">
+                    <div className="text-red-400 text-4xl mb-3">🔒</div>
+                    <div className="text-red-300 font-semibold text-lg mb-2">Giorno chiuso</div>
+                    <div className="text-gray-300 text-sm">
+                      {booking.barber_name} è chiuso il{' '}
+                      {format(parseISO(selectedDate), 'EEEE', { locale: it })}
+                    </div>
+                    <div className="mt-4 text-xs text-gray-400">
+                      Seleziona un'altra data per spostare l'appuntamento
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded"></div>
-                    <span className="text-gray-400">Occupato</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                    <span className="text-gray-400">Selezionato</span>
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    {/* Legenda colori */}
+                    <div className="flex gap-4 mb-4 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-green-500 rounded"></div>
+                        <span className="text-gray-400">Libero</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-red-500 rounded"></div>
+                        <span className="text-gray-400">Occupato</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                        <span className="text-gray-400">Selezionato</span>
+                      </div>
+                    </div>
 
-                <TimeSlotGrid 
-                  selectedDate={selectedDate}
-                  selectedTime={selectedTime}
-                  barberEmail={barberEmail}
-                  excludeBookingId={booking.id}
-                  allBookings={allBookings}
-                  onTimeSelect={(time, availability) => {
-                    setSelectedTime(time);
-                    setSlotAvailability(availability);
-                  }}
-                />
+                    <TimeSlotGrid 
+                      selectedDate={selectedDate}
+                      selectedTime={selectedTime}
+                      barberEmail={barberEmail}
+                      excludeBookingId={booking.id}
+                      allBookings={allBookings}
+                      onTimeSelect={(time, availability) => {
+                        setSelectedTime(time);
+                        setSlotAvailability(availability);
+                      }}
+                    />
+                  </>
+                )}
               </div>
             )}
 

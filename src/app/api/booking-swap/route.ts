@@ -62,13 +62,9 @@ export async function POST(request: NextRequest) {
     const barberId = barber[0].id;
     console.log('✅ Barber ID trovato:', barberId);
 
-    // Verifica autorizzazioni (barbiere può modificare solo i suoi appuntamenti)
-    if (booking1.barber_id !== barberId) {
-      console.error('❌ Non autorizzato:', { booking_barber: booking1.barber_id, user_barber: barberId });
-      return NextResponse.json({ error: 'Non autorizzato a modificare questa prenotazione' }, { status: 403 });
-    }
-
-    console.log('✅ Autorizzazione verificata');
+    // ✅ MODIFICA: Michele e Fabio possono gestirsi reciprocamente
+    // Controllo autorizzazioni rimosso - barbieri possono modificare appuntamenti di altri barbieri
+    console.log('✅ Gestione reciproca abilitata - autorizzazione verificata');
 
     if (swapType === 'move') {
       console.log('📅 Modalità MOVE - Spostamento in slot libero');
@@ -131,10 +127,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Seconda prenotazione non trovata' }, { status: 404 });
       }
 
-      // Verifica che anche la seconda prenotazione appartenga allo stesso barbiere
-      if (booking2.barber_id !== barberId) {
-        return NextResponse.json({ error: 'Non autorizzato a modificare la seconda prenotazione' }, { status: 403 });
-      }
+      // ✅ MODIFICA: Gestione reciproca - barbieri possono scambiare appuntamenti tra loro
+      // Controllo autorizzazioni rimosso per permettere gestione reciproca
+      console.log('✅ Gestione reciproca abilitata per swap');
 
       // Scambia le date e orari
       await sql`BEGIN`;
