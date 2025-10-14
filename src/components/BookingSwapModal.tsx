@@ -29,6 +29,7 @@ interface TimeSlotGridProps {
   selectedDate: string;
   selectedTime: string;
   barberEmail: string;
+  barberName: string; // ✅ AGGIUNTO: Nome del barbiere per logica lunedì
   excludeBookingId: string;
   allBookings: Booking[];
   onTimeSelect: (time: string, availability: { available: boolean; occupiedBy?: any }) => void;
@@ -38,6 +39,7 @@ function TimeSlotGrid({
   selectedDate,
   selectedTime,
   barberEmail,
+  barberName, // ✅ AGGIUNTO
   excludeBookingId,
   allBookings,
   onTimeSelect
@@ -56,12 +58,12 @@ function TimeSlotGrid({
     if (dayOfWeek === 1) {
       // Michele: NO mattina, pomeriggio 15:00-18:00
       // Fabio: CHIUSO completamente
-      const barberName = booking.barber_name.toLowerCase();
+      const barberNameLower = barberName.toLowerCase();
       
-      if (barberName === 'fabio') {
+      if (barberNameLower === 'fabio') {
         // Fabio è chiuso il lunedì - nessuno slot
         return [];
-      } else if (barberName === 'michele') {
+      } else if (barberNameLower === 'michele') {
         // Michele: solo pomeriggio 15:00-18:00 (7 slot)
         for (let hour = 15; hour <= 18; hour++) {
           if (hour === 18) {
@@ -592,6 +594,7 @@ export default function BookingSwapModal({
                       selectedDate={selectedDate}
                       selectedTime={selectedTime}
                       barberEmail={barberEmail}
+                      barberName={booking.barber_name} 
                       excludeBookingId={booking.id}
                       allBookings={allBookings}
                       onTimeSelect={(time, availability) => {
