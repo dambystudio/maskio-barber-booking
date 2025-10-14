@@ -4,7 +4,7 @@ import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-// Standard time slots for all barbers
+// Standard time slots for all barbers (Tuesday-Friday)
 const STANDARD_TIME_SLOTS = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
     "12:00", "12:30",  // Lunch time slots
@@ -14,6 +14,12 @@ const STANDARD_TIME_SLOTS = [
 // Michele's Monday afternoon slots (15:00-18:00)
 const MICHELE_MONDAY_SLOTS = [
     "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"
+];
+
+// Saturday slots (9:00-12:30, 14:30, 15:00-17:00)
+const SATURDAY_SLOTS = [
+    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+    "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"
 ];
 
 // Helper function to check if a barber is closed on a specific day of week
@@ -49,7 +55,13 @@ function getSlotsForBarberAndDay(barberEmail: string, dayOfWeek: number): string
         }
     }
     
-    // Other days: standard slots
+    // Saturday (6) special handling
+    if (dayOfWeek === 6) {
+        // Both barbers: 9:00-12:30, 14:30, 15:00-17:00 (NO 17:30)
+        return SATURDAY_SLOTS;
+    }
+    
+    // Other days (Tuesday-Friday): standard slots
     return STANDARD_TIME_SLOTS;
 }
 
