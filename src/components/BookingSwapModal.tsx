@@ -301,6 +301,38 @@ export default function BookingSwapModal({
   const [isChecking, setIsChecking] = useState(false);
   const [slotAvailability, setSlotAvailability] = useState<{ available: boolean; occupiedBy?: any } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // ✅ NUOVO: State per prenotazioni del barbiere corretto
+  const [barberBookings, setBarberBookings] = useState<Booking[]>(allBookings);
+  const [loadingBarberBookings, setLoadingBarberBookings] = useState(true);
+
+  // ✅ NUOVO: Fetch prenotazioni del barbiere dell'appuntamento
+  useEffect(() => {
+    const fetchBarberBookings = async () => {
+      try {
+        setLoadingBarberBookings(true);
+        console.log('🔄 Fetching bookings for barber:', barberEmail);
+        
+        const response = await fetch(`/api/bookings?barberEmail=${encodeURIComponent(barberEmail)}`);
+        if (response.ok) {
+          const data = await response.json();
+          const bookingsArray = data.bookings || [];
+          console.log('✅ Fetched bookings:', bookingsArray.length);
+          setBarberBookings(bookingsArray);
+        } else {
+          console.error('❌ Failed to fetch barber bookings:', response.status);
+          setBarberBookings(allBookings); // Fallback
+        }
+      } catch (error) {
+        console.error('❌ Error fetching barber bookings:', error);
+        setBarberBookings(allBookings); // Fallback
+      } finally {
+        setLoadingBarberBookings(false);
+      }
+    };
+    
+    fetchBarberBookings();
+  }, [barberEmail]); // Dipende solo da barberEmail
 
   // 🔍 DEBUG: Log props ricevute
   useEffect(() => {
@@ -311,9 +343,10 @@ export default function BookingSwapModal({
       bookingDate: booking.booking_date,
       bookingTime: booking.booking_time,
       totalBookings: allBookings.length,
-      bookingsForBarber: allBookings.filter(b => b.barber_name === booking.barber_name).length
+      bookingsForBarber: allBookings.filter(b => b.barber_name === booking.barber_name).length,
+      barberBookingsLoaded: barberBookings.length
     });
-  }, [booking, barberEmail, allBookings]);
+  }, [booking, barberEmail, allBookings, barberBookings]);
 
   // Generiamo gli slot orari disponibili (basati sulla data selezionata)
   const generateTimeSlots = () => {
@@ -456,7 +489,7 @@ export default function BookingSwapModal({
   };
 
   // Filtra le prenotazioni per lo scambio (escludi quella corrente)
-  const availableBookingsForSwap = allBookings.filter(b => 
+  const availableBookingsForSwap = barberBookings.filter(b => 
     b.id !== booking.id && 
     b.status !== 'cancelled'
   );
@@ -517,9 +550,12 @@ export default function BookingSwapModal({
             <div className="text-white space-y-1">
               <div>Barbiere appuntamento: <span className="font-bold text-yellow-300">{booking.barber_name}</span></div>
               <div>Email ricevuta: <span className="font-bold text-yellow-300">{barberEmail}</span></div>
-              <div>Prenotazioni totali: <span className="font-bold text-yellow-300">{allBookings.length}</span></div>
-              <div>Prenotazioni {booking.barber_name}: <span className="font-bold text-yellow-300">
+              <div>Prenotazioni totali (prop): <span className="font-bold text-yellow-300">{allBookings.length}</span></div>
+              <div>Prenotazioni {booking.barber_name} (prop): <span className="font-bold text-yellow-300">
                 {allBookings.filter(b => b.barber_name === booking.barber_name).length}
+              </span></div>
+              <div>✅ Prenotazioni caricate (API): <span className="font-bold text-green-300">
+                {loadingBarberBookings ? 'Caricamento...' : barberBookings.length}
               </span></div>
               <div>Data selezionata: <span className="font-bold text-yellow-300">{selectedDate}</span></div>
             </div>
@@ -651,7 +687,7 @@ export default function BookingSwapModal({
                       barberEmail={barberEmail}
                       barberName={booking.barber_name} 
                       excludeBookingId={booking.id}
-                      allBookings={allBookings}
+                      allBookings={barberBookings}
                       onTimeSelect={(time, availability) => {
                         setSelectedTime(time);
                         setSlotAvailability(availability);
