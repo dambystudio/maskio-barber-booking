@@ -257,12 +257,12 @@ function TimeSlotGrid({
       {/* Slot pomeridiani */}
       <div>
         <h4 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
-          🌆 Pomeriggio (15:00 - 17:30)
+          🌆 Pomeriggio (15:00 - 18:00)
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {generateTimeSlots().filter(time => {
             const hour = parseInt(time.split(':')[0]);
-            return hour >= 15 && hour <= 17;
+            return hour >= 15 && hour <= 18; // ✅ Include anche 18:00
           }).map(time => (
             <button
               key={time}
