@@ -118,20 +118,6 @@ function TimeSlotGrid({
     const checkAllSlots = () => {
       const slots = generateTimeSlots();
       
-      // 🔍 DEBUG: Log informazioni controllo slot
-      console.log('🔍 TimeSlotGrid checkAllSlots:', {
-        selectedDate,
-        barberName,
-        slotsGenerated: slots.length,
-        slots: slots,
-        totalBookings: allBookings.length,
-        bookingsForBarber: allBookings.filter(b => b.barber_name === barberName).length,
-        bookingsForDate: allBookings.filter(b => b.booking_date === selectedDate).length,
-        bookingsForBarberAndDate: allBookings.filter(b => 
-          b.barber_name === barberName && b.booking_date === selectedDate
-        ).length
-      });
-      
       // Controlla gli slot usando le prenotazioni esistenti
       const slotsMap: typeof slotsAvailability = {};
       
@@ -212,18 +198,6 @@ function TimeSlotGrid({
 
   return (
     <div className="space-y-4">
-      {/* 🔍 DEBUG BANNER TimeSlotGrid */}
-      <div className="bg-blue-900/50 border border-blue-500 rounded-lg p-2 mb-3 text-xs">
-        <div className="font-bold text-blue-300 mb-1">🔍 TimeSlotGrid DEBUG:</div>
-        <div className="text-white space-y-1">
-          <div>Barbiere: <span className="font-bold text-yellow-300">{barberName}</span></div>
-          <div>Slot generati: <span className="font-bold text-yellow-300">{generateTimeSlots().length}</span></div>
-          <div>Prenotazioni barber per data: <span className="font-bold text-yellow-300">
-            {allBookings.filter(b => b.barber_name === barberName && b.booking_date === selectedDate).length}
-          </span></div>
-        </div>
-      </div>
-      
       {/* Slot mattutini */}
       <div>
         <h4 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
@@ -311,13 +285,11 @@ export default function BookingSwapModal({
     const fetchBarberBookings = async () => {
       try {
         setLoadingBarberBookings(true);
-        console.log('🔄 Fetching bookings for barber:', barberEmail);
         
         const response = await fetch(`/api/bookings?barberEmail=${encodeURIComponent(barberEmail)}`);
         if (response.ok) {
           const data = await response.json();
           const bookingsArray = data.bookings || [];
-          console.log('✅ Fetched bookings:', bookingsArray.length);
           setBarberBookings(bookingsArray);
         } else {
           console.error('❌ Failed to fetch barber bookings:', response.status);
@@ -333,20 +305,6 @@ export default function BookingSwapModal({
     
     fetchBarberBookings();
   }, [barberEmail]); // Dipende solo da barberEmail
-
-  // 🔍 DEBUG: Log props ricevute
-  useEffect(() => {
-    console.log('📋 BookingSwapModal Props:', {
-      bookingId: booking.id,
-      barberName: booking.barber_name,
-      barberEmail: barberEmail,
-      bookingDate: booking.booking_date,
-      bookingTime: booking.booking_time,
-      totalBookings: allBookings.length,
-      bookingsForBarber: allBookings.filter(b => b.barber_name === booking.barber_name).length,
-      barberBookingsLoaded: barberBookings.length
-    });
-  }, [booking, barberEmail, allBookings, barberBookings]);
 
   // Generiamo gli slot orari disponibili (basati sulla data selezionata)
   const generateTimeSlots = () => {
@@ -544,23 +502,6 @@ export default function BookingSwapModal({
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-6 py-4" style={{ paddingBottom: '120px' }}>
           
-          {/* 🔍 DEBUG BANNER - Visibile su telefono */}
-          <div className="bg-purple-900/50 border border-purple-500 rounded-lg p-3 mb-4 text-xs">
-            <div className="font-bold text-purple-300 mb-2">🔍 DEBUG INFO:</div>
-            <div className="text-white space-y-1">
-              <div>Barbiere appuntamento: <span className="font-bold text-yellow-300">{booking.barber_name}</span></div>
-              <div>Email ricevuta: <span className="font-bold text-yellow-300">{barberEmail}</span></div>
-              <div>Prenotazioni totali (prop): <span className="font-bold text-yellow-300">{allBookings.length}</span></div>
-              <div>Prenotazioni {booking.barber_name} (prop): <span className="font-bold text-yellow-300">
-                {allBookings.filter(b => b.barber_name === booking.barber_name).length}
-              </span></div>
-              <div>✅ Prenotazioni caricate (API): <span className="font-bold text-green-300">
-                {loadingBarberBookings ? 'Caricamento...' : barberBookings.length}
-              </span></div>
-              <div>Data selezionata: <span className="font-bold text-yellow-300">{selectedDate}</span></div>
-            </div>
-          </div>
-
           {/* Info appuntamento corrente */}
           <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
           <h3 className="text-lg font-semibold text-amber-400 mb-2">Appuntamento da modificare:</h3>
