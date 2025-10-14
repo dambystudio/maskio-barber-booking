@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     // Ottieni l'email del barbiere dal database
     const barberData = await DatabaseService.getBarberById(barberId);
     const barberEmail = barberData?.email;
+    const barberName = barberData?.name || '';
     
     // Create TimeSlot objects with availability status, considerando le chiusure specifiche del barbiere
     const timeSlots: TimeSlot[] = [];
@@ -53,11 +54,11 @@ export async function GET(request: NextRequest) {
       } catch (error) {
         console.error('Error parsing schedule slots:', error);
         // Fallback to generated slots
-        allPossibleSlots = generateAllTimeSlots(date, barberId);
+        allPossibleSlots = generateAllTimeSlots(date, barberName);
       }
     } else {
       // No specific schedule found, use standard generated slots
-      allPossibleSlots = generateAllTimeSlots(date, barberId);
+      allPossibleSlots = generateAllTimeSlots(date, barberName);
     }
     
     for (const time of allPossibleSlots) {
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Manteniamo questa funzione per generare tutti gli slot possibili per il confronto
-function generateAllTimeSlots(dateString: string, barberId?: string): string[] {
+function generateAllTimeSlots(dateString: string, barberName?: string): string[] {
   const slots: string[] = [];
   const date = new Date(dateString);
   const dayOfWeek = date.getDay();
@@ -101,15 +102,18 @@ function generateAllTimeSlots(dateString: string, barberId?: string): string[] {
 
   // Monday (1) - Michele: pomeriggio 15:00-18:00 | Fabio: chiuso
   if (dayOfWeek === 1) {
-    // Michele ha pomeriggio (15:00-18:00), Fabio è chiuso
-    if (barberId === 'michele') {
+    const barberNameLower = (barberName || '').toLowerCase();
+    
+    // Michele ha pomeriggio (15:00-18:00)
+    if (barberNameLower.includes('michele')) {
       // Afternoon slots 15:00-18:00 for Michele
       for (let hour = 15; hour <= 18; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          // 18:00 è l'ultimo slot del lunedì per Michele
-          if (hour === 18 && minute > 0) break;
-          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-          slots.push(timeString);
+        if (hour === 18) {
+          // Solo 18:00, no 18:30
+          slots.push('18:00');
+        } else {
+          slots.push(`${hour.toString().padStart(2, '0')}:00`);
+          slots.push(`${hour.toString().padStart(2, '0')}:30`);
         }
       }
     }
