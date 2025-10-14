@@ -11,11 +11,53 @@ const STANDARD_TIME_SLOTS = [
     "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
 ];
 
+// Michele's Monday afternoon slots (15:00-18:00)
+const MICHELE_MONDAY_SLOTS = [
+    "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"
+];
+
+// Helper function to check if a barber is closed on a specific day of week
+async function isBarberClosedOnDay(barberEmail: string, dayOfWeek: number): Promise<boolean> {
+    try {
+        const closures = await sql`
+            SELECT closed_days FROM barber_recurring_closures
+            WHERE barber_email = ${barberEmail}
+        `;
+        
+        if (closures.length > 0) {
+            const closedDays = JSON.parse(closures[0].closed_days);
+            return closedDays.includes(dayOfWeek);
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('Error checking barber closure:', error);
+        return false;
+    }
+}
+
+// Helper function to get correct slots for a barber on a specific day
+function getSlotsForBarberAndDay(barberEmail: string, dayOfWeek: number): string[] {
+    // Monday (1) special handling
+    if (dayOfWeek === 1) {
+        if (barberEmail === 'michelebiancofiore0230@gmail.com') {
+            // Michele: afternoon only 15:00-18:00
+            return MICHELE_MONDAY_SLOTS;
+        } else if (barberEmail === 'fabio.cassano97@icloud.com') {
+            // Fabio: closed on Monday
+            return [];
+        }
+    }
+    
+    // Other days: standard slots
+    return STANDARD_TIME_SLOTS;
+}
+
 export async function POST(request: NextRequest) {
     try {
         console.log('🌅 Starting daily update via API...');
-          // Get all active barbers
-        const barbers = await sql`SELECT id FROM barbers WHERE is_active = true`;
+          // Get all active barbers with their email
+        const barbers = await sql`SELECT id, email FROM barbers WHERE is_active = true`;
         
         // Calculate date range: today + next 60 days
         const today = new Date();
@@ -27,15 +69,23 @@ export async function POST(request: NextRequest) {
             const date = new Date(today);
             date.setDate(today.getDate() + i);
             const dateString = date.toISOString().split('T')[0];
+            const dayOfWeek = date.getDay();
             
             // Skip Sundays (barbershop closed)
-            if (date.getDay() === 0) {
+            if (dayOfWeek === 0) {
                 skippedCount++;
                 continue;
             }
             
             for (const barber of barbers) {
                 try {
+                    // Get correct slots for this barber and day
+                    const slotsForDay = getSlotsForBarberAndDay(barber.email, dayOfWeek);
+                    const isDayOff = slotsForDay.length === 0;
+                    
+                    // Check if barber has recurring closure for this day
+                    const isRecurringClosed = await isBarberClosedOnDay(barber.email, dayOfWeek);
+                    
                     // Check if schedule already exists
                     const existingSchedule = await sql`
                         SELECT id, available_slots FROM barber_schedules 
@@ -46,23 +96,18 @@ export async function POST(request: NextRequest) {
                         // Create new schedule for this date
                         await sql`
                             INSERT INTO barber_schedules (barber_id, date, available_slots, unavailable_slots, day_off)
-                            VALUES (${barber.id}, ${dateString}, ${JSON.stringify(STANDARD_TIME_SLOTS)}, ${JSON.stringify([])}, false)
+                            VALUES (${barber.id}, ${dateString}, ${JSON.stringify(slotsForDay)}, ${JSON.stringify([])}, ${isDayOff || isRecurringClosed})
                         `;
                         addedCount++;
                     } else {
-                        // Check if existing schedule has lunch slots
-                        const slots = JSON.parse(existingSchedule[0].available_slots);
-                        const hasLunchSlots = slots.includes('12:00') && slots.includes('12:30');
-                        
-                        if (!hasLunchSlots) {
-                            // Update to include lunch slots
-                            await sql`
-                                UPDATE barber_schedules 
-                                SET available_slots = ${JSON.stringify(STANDARD_TIME_SLOTS)}
-                                WHERE barber_id = ${barber.id} AND date = ${dateString}
-                            `;
-                            updatedCount++;
-                        }
+                        // Update existing schedule with correct slots
+                        await sql`
+                            UPDATE barber_schedules 
+                            SET available_slots = ${JSON.stringify(slotsForDay)},
+                                day_off = ${isDayOff || isRecurringClosed}
+                            WHERE barber_id = ${barber.id} AND date = ${dateString}
+                        `;
+                        updatedCount++;
                     }
                 } catch (error) {
                     console.error(`Error processing ${barber.id} on ${dateString}:`, error);
