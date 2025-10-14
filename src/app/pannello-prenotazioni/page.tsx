@@ -208,6 +208,18 @@ export default function PannelloPrenotazioni() {
     'michelebiancofiore0230@gmail.com': 'Michele Biancofiore'
   };
 
+  // Funzione helper per ottenere email dal nome del barbiere
+  const getBarberEmailFromName = (barberName: string): string => {
+    const nameLower = barberName.toLowerCase();
+    if (nameLower.includes('fabio')) {
+      return 'fabio.cassano97@icloud.com';
+    } else if (nameLower.includes('michele')) {
+      return 'michelebiancofiore0230@gmail.com';
+    }
+    // Default: ritorna il primo barbiere disponibile
+    return Object.keys(barberMapping)[0];
+  };
+
   // Nomi dei giorni della settimana
   const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
   
@@ -2211,7 +2223,7 @@ Grazie! 😊`;
         <BookingSwapModal
           booking={selectedBookingForSwap}
           allBookings={bookings}
-          barberEmail={currentBarber}
+          barberEmail={getBarberEmailFromName(selectedBookingForSwap.barber_name)}
           onClose={closeSwapModal}
           onSwapComplete={onSwapComplete}
         />

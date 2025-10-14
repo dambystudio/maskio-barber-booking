@@ -127,7 +127,8 @@ function TimeSlotGrid({
           booking.booking_date === selectedDate && 
           booking.booking_time === time && 
           booking.id !== excludeBookingId && 
-          booking.status !== 'cancelled'
+          booking.status !== 'cancelled' &&
+          booking.barber_name === barberName // ✅ Filtra per barbiere specifico
         );
 
         if (existingBooking) {
