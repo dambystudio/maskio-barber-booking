@@ -511,6 +511,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         
         setIsCheckingAvailability(true); // Inizia il check
         console.log('🚀 Starting optimized availability check for barber:', formData.selectedBarber.name);
+        console.log('🔍 barberClosedDays at start:', Array.from(barberClosedDays));
         
         const today = new Date();
         const dates: string[] = [];
@@ -595,7 +596,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     // Debounce ridotto per mostrare subito i giorni occupati
     const timeoutId = setTimeout(updateUnavailableDatesOptimized, 100);
     return () => clearTimeout(timeoutId);
-  }, [formData.selectedBarber]);
+  }, [formData.selectedBarber, barberClosedDays]); // ✅ FIX: Wait for barberClosedDays to be loaded
   // Helper function to generate date buttons for the next 2 months (60 days)
   const generateDateButtons = () => {
     const dates = [];
