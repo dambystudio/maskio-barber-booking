@@ -209,6 +209,10 @@ export default function PannelloPrenotazioni() {
     [date: string]: string[]; // date -> array of barber emails that are open
   }>({});
 
+  // ✅ NUOVO: Stati per collapsare sezioni
+  const [showBarberClosuresList, setShowBarberClosuresList] = useState(true);
+  const [showExceptionalOpeningsList, setShowExceptionalOpeningsList] = useState(true);
+
   // Mapping barbieri
   const barberMapping = {
     'fabio.cassano97@icloud.com': 'Fabio Cassano',
@@ -1645,13 +1649,23 @@ Grazie! 😊`;
               )}
             </div>
 
-            {/* Chiusure Barbieri Esistenti - Nuova Sezione */}
+            {/* Chiusure Barbieri Esistenti - Nuova Sezione Collapsabile */}
             {Object.keys(barberClosures).length > 0 && (
               <div className="border-t border-gray-700 pt-4 md:pt-6">
-                <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4 flex items-center gap-2">
-                  🧔 Chiusure Barbieri Attive
-                </h3>
-                <div className="space-y-4">
+                <button
+                  onClick={() => setShowBarberClosuresList(!showBarberClosuresList)}
+                  className="w-full flex items-center justify-between text-base md:text-lg font-semibold text-white mb-3 md:mb-4 hover:text-amber-400 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    🧔 Chiusure Barbieri Attive ({Object.keys(barberClosures).length})
+                  </span>
+                  <span className="text-sm">
+                    {showBarberClosuresList ? '🔼 Nascondi' : '🔽 Mostra'}
+                  </span>
+                </button>
+                
+                {showBarberClosuresList && (
+                  <div className="space-y-4">
                   {Object.entries(barberClosures)
                     .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
                     .map(([date, barbersClosures]) => (
@@ -1727,7 +1741,8 @@ Grazie! 😊`;
                         </div>
                       </div>
                     ))}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1781,10 +1796,21 @@ Grazie! 😊`;
                 </div>
               </div>
 
-              {/* Lista Aperture Eccezionali Applicate */}
+              {/* Lista Aperture Eccezionali Applicate - Collapsabile */}
               {Object.keys(exceptionsApplied).length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-gray-300">Aperture Eccezionali Attive:</h4>
+                <div className="space-y-3 mt-4">
+                  <button
+                    onClick={() => setShowExceptionalOpeningsList(!showExceptionalOpeningsList)}
+                    className="w-full flex items-center justify-between text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                  >
+                    <span>Aperture Eccezionali Attive ({Object.keys(exceptionsApplied).length})</span>
+                    <span className="text-xs">
+                      {showExceptionalOpeningsList ? '🔼 Nascondi' : '🔽 Mostra'}
+                    </span>
+                  </button>
+                  
+                  {showExceptionalOpeningsList && (
+                    <div className="space-y-3">
                   {Object.entries(exceptionsApplied)
                     .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
                     .map(([date, barbers]) => {
@@ -1822,6 +1848,8 @@ Grazie! 😊`;
                         </div>
                       );
                     })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
