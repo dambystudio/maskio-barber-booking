@@ -463,6 +463,16 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       const date = new Date(Date.UTC(year, month - 1, day));
       const dayOfWeek = date.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
       
+      // Debug for October 30
+      if (dateString === '2025-10-30') {
+        console.log(`🔍 isBarberClosedRecurring for ${dateString}:`, {
+          dayOfWeek,
+          barberClosedDays: Array.from(barberClosedDays),
+          hasDay: barberClosedDays.has(dayOfWeek),
+          result: barberClosedDays.has(dayOfWeek)
+        });
+      }
+      
       // Check if this day of the week is in the barber's closed days
       return barberClosedDays.has(dayOfWeek);
     } catch (error) {
