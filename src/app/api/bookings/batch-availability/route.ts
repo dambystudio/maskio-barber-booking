@@ -87,13 +87,40 @@ export async function POST(request: NextRequest) {
               // Get available slots
               const availableSlotTimes = await DatabaseService.getAvailableSlots(barberId, date);
               
-              // Filter by barber-specific closures
+              // ✅ FIX: Per aperture eccezionali, controlla SOLO le chiusure specifiche per orario
+              // NON controllare le chiusure ricorrenti (sono già sovrascritte dallo schedule)
               let finalAvailableSlots = availableSlotTimes;
               if (barberEmail) {
                 finalAvailableSlots = [];
+                
+                // Carica le chiusure specifiche per questa data (solo se non già in cache)
+                if (!requestCache.barberSpecificClosures!.has(date)) {
+                  const originalConsoleLog = console.log;
+                  console.log = () => {}; // Disabilita temporaneamente i log
+                  const specificClosures = await getBarberClosures(barberEmail, date);
+                  console.log = originalConsoleLog; // Ripristina i log
+                  requestCache.barberSpecificClosures!.set(date, specificClosures);
+                }
+                
+                const specificClosures = requestCache.barberSpecificClosures!.get(date) || [];
+                
                 for (const time of availableSlotTimes) {
-                  const barberIsClosed = await isBarberClosedCached(barberEmail, date, time, requestCache);
-                  if (!barberIsClosed) {
+                  // Controlla SOLO le chiusure specifiche per orario, ignora quelle ricorrenti
+                  let isClosedSpecific = false;
+                  
+                  if (specificClosures.length > 0) {
+                    const hour = parseInt(time.split(':')[0]);
+                    const isMorning = hour < 14;
+                    
+                    isClosedSpecific = specificClosures.some(closure => {
+                      if (closure.closureType === 'full') return true;
+                      if (closure.closureType === 'morning' && isMorning) return true;
+                      if (closure.closureType === 'afternoon' && !isMorning) return true;
+                      return false;
+                    });
+                  }
+                  
+                  if (!isClosedSpecific) {
                     finalAvailableSlots.push(time);
                   }
                 }
