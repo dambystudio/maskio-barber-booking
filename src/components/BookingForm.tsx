@@ -76,6 +76,8 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   // Add state for tracking days with no available slots
   const [unavailableDates, setUnavailableDates] = useState<Set<string>>(new Set());
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+  // Add state for tracking exceptional openings (days that ARE available despite recurring closures)
+  const [exceptionalOpenings, setExceptionalOpenings] = useState<Set<string>>(new Set());
   // Load closure settings from localStorage and server
   useEffect(() => {
     // Prima carica dal localStorage per un'esperienza più veloce
@@ -491,6 +493,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
   useEffect(() => {
     if (!formData.selectedBarber) {
       setUnavailableDates(new Set());
+      setExceptionalOpenings(new Set());
       return;
     }    const updateUnavailableDatesOptimized = async () => {
       try {
@@ -522,7 +525,19 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         
         // Process results
         const newUnavailableDates = new Set<string>();
+        const newExceptionalOpenings = new Set<string>();
+        
         for (const [dateString, availability] of Object.entries(batchAvailability)) {
+          // Check if day is normally closed by recurring closures
+          const isRecurringClosed = isBarberClosedRecurring(dateString);
+          
+          // If day has slots AND is normally closed → it's an exceptional opening
+          if (availability.hasSlots && isRecurringClosed) {
+            newExceptionalOpenings.add(dateString);
+            console.log(`🔓 ${dateString}: EXCEPTIONAL OPENING (hasSlots=${availability.hasSlots}, normally closed)`);
+          }
+          
+          // If day has NO slots and is NOT generally closed → add to unavailable
           if (!availability.hasSlots && !isDateClosed(dateString)) {
             newUnavailableDates.add(dateString);
             console.log(`📅 ${dateString}: hasSlots=${availability.hasSlots}, availableCount=${availability.availableCount} → ADDED to unavailable`);
@@ -530,6 +545,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         }
         
         setUnavailableDates(newUnavailableDates);
+        setExceptionalOpenings(newExceptionalOpenings);
         setIsCheckingAvailability(false); // Finito il check
         console.log(`✅ Optimized availability check completed: ${newUnavailableDates.size} unavailable dates found`);
         console.log(`📋 Unavailable dates:`, Array.from(newUnavailableDates).sort());
@@ -608,6 +624,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       // Check different types of closures
       const isGenerallyClosed = isDateClosed(dateString);
       const isBarberClosedForDate = isBarberClosed(dateString);
+      
+      // ✅ PRIORITY: If it's an exceptional opening, it's ALWAYS available (overrides closures)
+      const isExceptionalOpening = formData.selectedBarber && exceptionalOpenings.has(dateString);
+      
       const hasNoAvailableSlots = formData.selectedBarber && unavailableDates.has(dateString) && !isGenerallyClosed && !isBarberClosedForDate;
       
       // Debug per 5 dicembre
@@ -622,18 +642,30 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         });
       }
       
+      // Debug for exceptional openings
+      if (dateString === '2025-10-30' && formData.selectedBarber) {
+        console.log(`🔍 Debug 30 ottobre:`, {
+          isGenerallyClosed,
+          isBarberClosedForDate,
+          isExceptionalOpening,
+          inExceptionalOpenings: exceptionalOpenings.has(dateString),
+          barber: formData.selectedBarber.name
+        });
+      }
+      
       dates.push({
         type: 'dateButton',
         date: dateString,
         dayName: dayNames[date.getDay()],
         dayNumber: date.getDate(),
         monthName: monthNames[date.getMonth()],
-        disabled: isGenerallyClosed || isBarberClosedForDate || !!hasNoAvailableSlots,
+        // ✅ FIXED: Exceptional openings override closures
+        disabled: isExceptionalOpening ? false : (isGenerallyClosed || isBarberClosedForDate || !!hasNoAvailableSlots),
         isToday,
         isNextWeek,
         isNextMonth,
         isClosed: isGenerallyClosed,
-        isBarberClosed: isBarberClosedForDate,
+        isBarberClosed: isExceptionalOpening ? false : isBarberClosedForDate, // Override barber closure flag
         hasNoAvailableSlots
       });}
     
