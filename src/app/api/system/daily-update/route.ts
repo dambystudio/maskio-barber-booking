@@ -75,7 +75,8 @@ export async function POST(request: NextRequest) {
         const today = new Date();
         let addedCount = 0;
         let updatedCount = 0;
-        let skippedCount = 0;
+        let skippedSundaysCount = 0;
+        let skippedExceptionalCount = 0;
         
         for (let i = 0; i < 60; i++) {
             const date = new Date(today);
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
             
             // Skip Sundays (barbershop closed)
             if (dayOfWeek === 0) {
-                skippedCount++;
+                skippedSundaysCount++;
                 continue;
             }
             
@@ -112,14 +113,26 @@ export async function POST(request: NextRequest) {
                         `;
                         addedCount++;
                     } else {
-                        // Update existing schedule with correct slots
-                        await sql`
-                            UPDATE barber_schedules 
-                            SET available_slots = ${JSON.stringify(slotsForDay)},
-                                day_off = ${isDayOff || isRecurringClosed}
-                            WHERE barber_id = ${barber.id} AND date = ${dateString}
-                        `;
-                        updatedCount++;
+                        // ✅ FIX: NON sovrascrivere schedule eccezionali (day_off=false su giorni normalmente chiusi)
+                        // Se lo schedule esistente ha day_off=false su un giorno con chiusura ricorrente,
+                        // è un'apertura eccezionale e NON deve essere sovrascritto dal daily update
+                        const currentSchedule = existingSchedule[0];
+                        const isExceptionalOpening = !currentSchedule.day_off && isRecurringClosed;
+                        
+                        if (isExceptionalOpening) {
+                            // Skip exceptional openings - they are manually managed
+                            skippedExceptionalCount++;
+                            console.log(`⚠️ Skipping exceptional opening for ${barber.email} on ${dateString}`);
+                        } else {
+                            // Update existing schedule with correct slots
+                            await sql`
+                                UPDATE barber_schedules 
+                                SET available_slots = ${JSON.stringify(slotsForDay)},
+                                    day_off = ${isDayOff || isRecurringClosed}
+                                WHERE barber_id = ${barber.id} AND date = ${dateString}
+                            `;
+                            updatedCount++;
+                        }
                     }
                 } catch (error) {
                     console.error(`Error processing ${barber.id} on ${dateString}:`, error);
@@ -142,7 +155,8 @@ export async function POST(request: NextRequest) {
             statistics: {
                 newSchedulesAdded: addedCount,
                 existingSchedulesUpdated: updatedCount,
-                sundaysSkipped: skippedCount,
+                sundaysSkipped: skippedSundaysCount,
+                exceptionalOpeningsPreserved: skippedExceptionalCount,
                 oldSchedulesCleaned: Array.isArray(deletedResult) ? deletedResult.length : 0,
                 activeBarbersCount: barbers.length
             },
