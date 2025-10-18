@@ -61,15 +61,46 @@ export async function GET(request: NextRequest) {
       allPossibleSlots = generateAllTimeSlots(date, barberName);
     }
     
+    // ✅ FIX: Determina se questo è un'apertura eccezionale
+    // Se lo schedule esiste e ha day_off=false, NON controllare le chiusure ricorrenti
+    const isExceptionalOpening = schedule && !schedule.dayOff;
+    
     for (const time of allPossibleSlots) {
       let available = availableSlotTimes.includes(time);
       
       // Controlla se il barbiere è chiuso per questo orario specifico
+      // MA: per aperture eccezionali, controlla SOLO chiusure specifiche per orario,
+      // NON le chiusure ricorrenti (sono già sovrascritte dallo schedule)
       if (available && barberEmail) {
-        const barberIsClosed = await isBarberClosed(barberEmail, date, time);
-        if (barberIsClosed) {
-          available = false;
-          console.log(`Barber ${barberEmail} is closed at ${time} on ${date}`);
+        if (isExceptionalOpening) {
+          // Per aperture eccezionali: controlla SOLO chiusure specifiche per orario
+          // (ignora le chiusure ricorrenti)
+          const { getBarberClosures } = await import('@/lib/barber-closures');
+          const specificClosures = await getBarberClosures(barberEmail, date);
+          
+          if (specificClosures.length > 0) {
+            const hour = parseInt(time.split(':')[0]);
+            const isMorning = hour < 14;
+            
+            const isClosedSpecific = specificClosures.some(closure => {
+              if (closure.closureType === 'full') return true;
+              if (closure.closureType === 'morning' && isMorning) return true;
+              if (closure.closureType === 'afternoon' && !isMorning) return true;
+              return false;
+            });
+            
+            if (isClosedSpecific) {
+              available = false;
+              console.log(`Barber ${barberEmail} has specific closure at ${time} on ${date}`);
+            }
+          }
+        } else {
+          // Per giorni normali: controlla tutte le chiusure (ricorrenti + specifiche)
+          const barberIsClosed = await isBarberClosed(barberEmail, date, time);
+          if (barberIsClosed) {
+            available = false;
+            console.log(`Barber ${barberEmail} is closed at ${time} on ${date}`);
+          }
         }
       }
       
