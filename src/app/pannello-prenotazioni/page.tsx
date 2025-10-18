@@ -202,6 +202,13 @@ export default function PannelloPrenotazioni() {
   const [closureFabioChecked, setClosureFabioChecked] = useState(true);
   const [closureMicheleChecked, setClosureMicheleChecked] = useState(true);
 
+  // ✅ NUOVO: Stati per Aperture Eccezionali (override chiusure ricorrenti)
+  const [exceptionDate, setExceptionDate] = useState('');
+  const [exceptionBarber, setExceptionBarber] = useState('');
+  const [exceptionsApplied, setExceptionsApplied] = useState<{
+    [date: string]: string[]; // date -> array of barber emails that are open
+  }>({});
+
   // Mapping barbieri
   const barberMapping = {
     'fabio.cassano97@icloud.com': 'Fabio Cassano',
@@ -311,6 +318,8 @@ export default function PannelloPrenotazioni() {
       fetchAllBarberBookings();
       // Carica le chiusure esistenti dei barbieri
       loadBarberClosures();
+      // Carica le aperture eccezionali
+      loadExceptionalOpenings();
     }
   }, [permissionsChecked, isAuthorized]);
 
@@ -942,6 +951,105 @@ export default function PannelloPrenotazioni() {
     }
   };
 
+  // ✅ NUOVE FUNZIONI: Gestione Aperture Eccezionali
+  const addExceptionalOpening = async () => {
+    if (!exceptionDate || !exceptionBarber) {
+      alert('Seleziona una data e un barbiere');
+      return;
+    }
+
+    try {
+      // Verifica che sia effettivamente un giorno chiuso per chiusura ricorrente
+      const date = new Date(exceptionDate + 'T00:00:00');
+      const dayOfWeek = date.getDay();
+      
+      if (!closedDays.has(dayOfWeek)) {
+        alert('Questo giorno non è chiuso per chiusura ricorrente. Non serve un\'eccezione.');
+        return;
+      }
+
+      // Crea schedule aperto per quel giorno
+      const response = await fetch('/api/barber-schedules', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          barberEmail: exceptionBarber,
+          date: exceptionDate,
+          dayOff: false, // Aperto
+          allDay: true, // Tutto il giorno
+        })
+      });
+
+      if (response.ok) {
+        console.log(`✅ Exception added: ${exceptionBarber} open on ${exceptionDate}`);
+        
+        // Aggiorna stato locale
+        setExceptionsApplied(prev => ({
+          ...prev,
+          [exceptionDate]: [...(prev[exceptionDate] || []), exceptionBarber]
+        }));
+
+        const barberName = barberMapping[exceptionBarber as keyof typeof barberMapping];
+        const dayName = dayNames[dayOfWeek];
+        alert(`✅ ${barberName} sarà aperto tutto il giorno il ${format(date, 'dd/MM/yyyy', { locale: it })} (${dayName})`);
+        
+        // Reset form
+        setExceptionDate('');
+        setExceptionBarber('');
+      } else {
+        const error = await response.json();
+        console.error('❌ Failed to add exception:', error);
+        alert('Errore nell\'aggiungere l\'apertura eccezionale. Riprova.');
+      }
+    } catch (error) {
+      console.error('❌ Error adding exceptional opening:', error);
+      alert('Errore di rete nell\'aggiungere l\'apertura eccezionale.');
+    }
+  };
+
+  const removeExceptionalOpening = async (dateStr: string, barberEmail: string) => {
+    try {
+      // Rimuove l'eccezione ripristinando day_off=true
+      const response = await fetch('/api/barber-schedules', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          barberEmail,
+          date: dateStr,
+        })
+      });
+
+      if (response.ok) {
+        console.log(`✅ Exception removed: ${barberEmail} closed again on ${dateStr}`);
+        
+        // Aggiorna stato locale
+        setExceptionsApplied(prev => {
+          const newExceptions = { ...prev };
+          if (newExceptions[dateStr]) {
+            newExceptions[dateStr] = newExceptions[dateStr].filter(email => email !== barberEmail);
+            if (newExceptions[dateStr].length === 0) {
+              delete newExceptions[dateStr];
+            }
+          }
+          return newExceptions;
+        });
+
+        const barberName = barberMapping[barberEmail as keyof typeof barberMapping];
+        alert(`✅ Apertura eccezionale rimossa per ${barberName} in data ${format(parseISO(dateStr + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}`);
+      } else {
+        alert('Errore nel rimuovere l\'apertura eccezionale. Riprova.');
+      }
+    } catch (error) {
+      console.error('❌ Error removing exceptional opening:', error);
+      alert('Errore di rete nel rimuovere l\'apertura eccezionale.');
+    }
+  };
+
+
   // Funzione per caricare le chiusure esistenti dei barbieri
   const loadBarberClosures = async () => {
     try {
@@ -989,6 +1097,36 @@ export default function PannelloPrenotazioni() {
       }
     } catch (error) {
       console.error('❌ Error loading barber closures:', error);
+    }
+  };
+
+  // ✅ NUOVA FUNZIONE: Carica aperture eccezionali esistenti
+  const loadExceptionalOpenings = async () => {
+    try {
+      // Carica tutti gli schedule futuri per verificare aperture eccezionali
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const response = await fetch(`/api/barber-schedules/exceptions?from=${today}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.exceptions) {
+          // Trasforma array in mappa { date: [barberEmails] }
+          const exceptionsMap: { [date: string]: string[] } = {};
+          
+          data.exceptions.forEach((exception: any) => {
+            const { date, barberEmail } = exception;
+            if (!exceptionsMap[date]) {
+              exceptionsMap[date] = [];
+            }
+            exceptionsMap[date].push(barberEmail);
+          });
+          
+          setExceptionsApplied(exceptionsMap);
+          console.log('✅ Exceptional openings loaded:', exceptionsMap);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error loading exceptional openings:', error);
     }
   };
 
@@ -1593,6 +1731,101 @@ Grazie! 😊`;
               </div>
             )}
 
+            {/* ✅ NUOVA SEZIONE: Aperture Eccezionali */}
+            <div className="border-t border-gray-700 pt-4 md:pt-6 mt-6">
+              <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4 flex items-center gap-2">
+                🔓 Aperture Eccezionali
+              </h3>
+              <p className="text-xs md:text-sm text-gray-300 mb-4 md:mb-6">
+                Apri eccezionalmente in giorni normalmente chiusi per chiusura ricorrente (es. giovedì o domenica).
+              </p>
+
+              <div className="bg-gray-800 border border-gray-700 p-4 md:p-6 rounded-xl mb-4 md:mb-6">
+                <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-3 md:gap-4 md:items-end">
+                  <div className="space-y-2">
+                    <label htmlFor="exceptionDate" className="block text-xs md:text-sm font-medium text-gray-300">
+                      Data *
+                    </label>
+                    <input
+                      type="date"
+                      id="exceptionDate"
+                      value={exceptionDate}
+                      onChange={(e) => setExceptionDate(e.target.value)}
+                      min={format(new Date(), 'yyyy-MM-dd')}
+                      className="w-full px-3 py-3 md:py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base md:text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="exceptionBarber" className="block text-xs md:text-sm font-medium text-gray-300">
+                      Barbiere *
+                    </label>
+                    <select
+                      id="exceptionBarber"
+                      value={exceptionBarber}
+                      onChange={(e) => setExceptionBarber(e.target.value)}
+                      className="w-full px-3 py-3 md:py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base md:text-sm"
+                    >
+                      <option value="">Seleziona barbiere</option>
+                      <option value="fabio.cassano97@icloud.com">🧔 Fabio Cassano</option>
+                      <option value="michelebiancofiore0230@gmail.com">🧔 Michele Biancofiore</option>
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={addExceptionalOpening}
+                    className="w-full px-4 py-3 md:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors touch-manipulation text-base md:text-sm"
+                  >
+                    ➕ Aggiungi Apertura
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista Aperture Eccezionali Applicate */}
+              {Object.keys(exceptionsApplied).length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-300">Aperture Eccezionali Attive:</h4>
+                  {Object.entries(exceptionsApplied)
+                    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                    .map(([date, barbers]) => {
+                      const dateObj = parseISO(date + 'T00:00:00');
+                      const dayName = dayNames[dateObj.getDay()];
+                      
+                      return (
+                        <div key={date} className="bg-green-900/30 border border-green-700 rounded-lg p-3">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                            <div className="flex-1">
+                              <div className="font-medium text-white">
+                                📅 {format(dateObj, 'EEEE d MMMM yyyy', { locale: it })}
+                              </div>
+                              <div className="text-xs text-green-400 mt-1">
+                                ✅ Aperto eccezionalmente ({dayName} - normalmente chiuso)
+                              </div>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {barbers.map(barberEmail => (
+                                  <div key={barberEmail} className="flex items-center gap-2 bg-green-800/50 px-2 py-1 rounded">
+                                    <span className="text-xs text-green-300">
+                                      🧔 {barberMapping[barberEmail as keyof typeof barberMapping]}
+                                    </span>
+                                    <button
+                                      onClick={() => removeExceptionalOpening(date, barberEmail)}
+                                      className="text-red-400 hover:text-red-300 text-xs"
+                                      title="Rimuovi apertura"
+                                    >
+                                      ❌
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
               <div className="bg-blue-900/50 border border-blue-500 rounded-lg p-4 mt-6">
               <div className="flex items-start gap-3">
                 <div className="text-blue-400 text-xl">💡</div>
@@ -1601,6 +1834,7 @@ Grazie! 😊`;
                     <li>• <strong>Chiusure Ricorrenti:</strong> Si applicano ogni settimana (es. sempre chiuso la domenica)</li>
                     <li>• <strong>Chiusure Specifiche:</strong> Per date particolari (es. 2 Giugno, vacanze estive)</li>
                     <li>• <strong>Chiusure per Barbiere:</strong> Solo per singoli barbieri in date specifiche, anche solo mattina (9:00-14:00) o pomeriggio (14:00-19:00)</li>
+                    <li>• <strong>Aperture Eccezionali:</strong> Override delle chiusure ricorrenti per giorni specifici (es. aperto giovedì 30 ottobre)</li>
                     <li>• I giorni chiusi non accetteranno nuove prenotazioni</li>
                     <li>• Le prenotazioni esistenti in quei giorni rimarranno valide</li>
                     <li>• Le impostazioni vengono salvate automaticamente</li>
