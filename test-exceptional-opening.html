@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Apertura Eccezionale Michele</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        pre {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 3px solid #6c757d;
+            background: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test Apertura Eccezionale Michele - 30 Ottobre 2025</h1>
+        
+        <div class="step">
+            <h3>Passo 1: Pulisci localStorage</h3>
+            <button onclick="clearStorage()">🗑️ Pulisci localStorage</button>
+            <div id="storageResult"></div>
+        </div>
+
+        <div class="step">
+            <h3>Passo 2: Test API Batch Availability</h3>
+            <button onclick="testAPI()">🌐 Test API</button>
+            <div id="apiResult"></div>
+        </div>
+
+        <div class="step">
+            <h3>Passo 3: Simula Logica Frontend</h3>
+            <button onclick="simulateFrontend()">🖥️ Simula Frontend</button>
+            <div id="frontendResult"></div>
+        </div>
+
+        <div class="step">
+            <h3>Passo 4: Apri Pagina Prenotazioni</h3>
+            <button onclick="openBookingPage()">📅 Apri /prenota</button>
+            <div class="result warning">
+                <strong>⚠️ Istruzioni:</strong><br>
+                1. Apri DevTools (F12)<br>
+                2. Vai alla tab Console<br>
+                3. Seleziona "Michele" come barbiere<br>
+                4. Cerca nel log: <code>🔓 2025-10-30: EXCEPTIONAL OPENING</code><br>
+                5. Verifica che il bottone 30 ottobre sia cliccabile
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MICHELE_ID = 'michele';
+        const TEST_DATE = '2025-10-30';
+        const API_URL = 'http://localhost:3000/api/bookings/batch-availability';
+
+        function clearStorage() {
+            const result = document.getElementById('storageResult');
+            
+            try {
+                // Lista tutte le chiavi da rimuovere
+                const keysToRemove = [
+                    'maskio-closed-days',
+                    'maskio-closed-dates',
+                    'maskio-barber-closures',
+                    'maskio-exceptional-openings'
+                ];
+                
+                let removed = [];
+                keysToRemove.forEach(key => {
+                    if (localStorage.getItem(key)) {
+                        localStorage.removeItem(key);
+                        removed.push(key);
+                    }
+                });
+                
+                result.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ localStorage pulito!</strong><br>
+                        Chiavi rimosse: ${removed.length > 0 ? removed.join(', ') : 'Nessuna'}
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Errore:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testAPI() {
+            const result = document.getElementById('apiResult');
+            result.innerHTML = '<div class="result">⏳ Chiamata API in corso...</div>';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        barberId: MICHELE_ID,
+                        dates: [TEST_DATE, '2025-10-31', '2025-11-01']
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const oct30 = data.availability[TEST_DATE];
+                
+                const isWorking = oct30 && oct30.hasSlots === true;
+                
+                result.innerHTML = `
+                    <div class="result ${isWorking ? 'success' : 'error'}">
+                        <strong>${isWorking ? '✅' : '❌'} Risposta API:</strong><br>
+                        <strong>hasSlots:</strong> ${oct30.hasSlots}<br>
+                        <strong>availableCount:</strong> ${oct30.availableCount}<br>
+                        <strong>totalSlots:</strong> ${oct30.totalSlots}<br><br>
+                        ${isWorking ? 
+                            '✅ <strong>API FUNZIONA CORRETTAMENTE</strong>' : 
+                            '❌ <strong>PROBLEMA API</strong>'}
+                    </div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Errore API:</strong> ${error.message}<br><br>
+                        ${error.message.includes('Failed to fetch') ? 
+                            '⚠️ Server probabilmente non in esecuzione.<br>Esegui: <code>npm run dev</code>' : 
+                            ''}
+                    </div>
+                `;
+            }
+        }
+
+        async function simulateFrontend() {
+            const result = document.getElementById('frontendResult');
+            result.innerHTML = '<div class="result">⏳ Simulazione in corso...</div>';
+            
+            try {
+                // Step 1: Get API data
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        barberId: MICHELE_ID,
+                        dates: [TEST_DATE]
+                    })
+                });
+                
+                if (!response.ok) throw new Error('API not available');
+                
+                const data = await response.json();
+                const availability = data.availability[TEST_DATE];
+                
+                // Step 2: Simulate isBarberClosedRecurring
+                const testDate = new Date(TEST_DATE);
+                const dayOfWeek = testDate.getDay(); // 4 = Thursday
+                const closedDays = [0, 4]; // Sunday, Thursday
+                const isRecurringClosed = closedDays.includes(dayOfWeek);
+                
+                // Step 3: Check if should be added to exceptionalOpenings
+                const hasSlots = availability.hasSlots;
+                const shouldBeExceptional = hasSlots && isRecurringClosed;
+                
+                // Step 4: Simulate button state
+                const isExceptionalOpening = shouldBeExceptional;
+                const isBarberClosedForDate = isRecurringClosed;
+                const disabled = isExceptionalOpening ? false : isBarberClosedForDate;
+                
+                result.innerHTML = `
+                    <div class="result ${!disabled ? 'success' : 'error'}">
+                        <strong>🖥️ Simulazione Logica Frontend:</strong><br><br>
+                        <strong>Step 1: API Response</strong><br>
+                        - hasSlots: ${hasSlots} ${hasSlots ? '✅' : '❌'}<br>
+                        - availableCount: ${availability.availableCount}<br><br>
+                        
+                        <strong>Step 2: Check Recurring Closure</strong><br>
+                        - Day of week: ${dayOfWeek} (Giovedì)<br>
+                        - Closed days: [${closedDays.join(', ')}]<br>
+                        - Is recurring closed: ${isRecurringClosed} ${isRecurringClosed ? '✅' : '❌'}<br><br>
+                        
+                        <strong>Step 3: Exceptional Opening Check</strong><br>
+                        - hasSlots && isRecurringClosed: ${shouldBeExceptional} ${shouldBeExceptional ? '✅' : '❌'}<br>
+                        - Should add to exceptionalOpenings: ${shouldBeExceptional ? '✅ YES' : '❌ NO'}<br><br>
+                        
+                        <strong>Step 4: Button State</strong><br>
+                        - isExceptionalOpening: ${isExceptionalOpening}<br>
+                        - disabled: ${disabled ? '❌ TRUE (GRIGIO)' : '✅ FALSE (CLICCABILE)'}<br><br>
+                        
+                        <strong style="font-size: 18px;">
+                            ${!disabled ? 
+                                '🎉 BOTTONE SARÀ ABILITATO!' : 
+                                '❌ BOTTONE SARÀ DISABILITATO!'}
+                        </strong>
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Errore simulazione:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function openBookingPage() {
+            window.open('http://localhost:3000/prenota', '_blank');
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            console.log('🔧 Test Page Loaded');
+            console.log('Puoi usare i bottoni per testare ogni step');
+        });
+    </script>
+</body>
+</html>

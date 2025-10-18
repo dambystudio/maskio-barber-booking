@@ -527,9 +527,23 @@ export default function BookingForm({ userSession }: BookingFormProps) {
         const newUnavailableDates = new Set<string>();
         const newExceptionalOpenings = new Set<string>();
         
+        console.log(`🔍 Processing batch availability for ${Object.keys(batchAvailability).length} dates`);
+        
         for (const [dateString, availability] of Object.entries(batchAvailability)) {
           // Check if day is normally closed by recurring closures
           const isRecurringClosed = isBarberClosedRecurring(dateString);
+          
+          // Debug for October 30
+          if (dateString === '2025-10-30') {
+            console.log(`🔍 DEBUG Oct 30:`, {
+              dateString,
+              hasSlots: availability.hasSlots,
+              availableCount: availability.availableCount,
+              totalSlots: availability.totalSlots,
+              isRecurringClosed,
+              willBeExceptional: availability.hasSlots && isRecurringClosed
+            });
+          }
           
           // If day has slots AND is normally closed → it's an exceptional opening
           if (availability.hasSlots && isRecurringClosed) {
@@ -543,6 +557,8 @@ export default function BookingForm({ userSession }: BookingFormProps) {
             console.log(`📅 ${dateString}: hasSlots=${availability.hasSlots}, availableCount=${availability.availableCount} → ADDED to unavailable`);
           }
         }
+        
+        console.log(`📊 Exceptional openings found: ${newExceptionalOpenings.size}`, Array.from(newExceptionalOpenings).sort());
         
         setUnavailableDates(newUnavailableDates);
         setExceptionalOpenings(newExceptionalOpenings);
