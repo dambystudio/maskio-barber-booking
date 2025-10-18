@@ -73,7 +73,47 @@ export async function POST(request: NextRequest) {
 
     for (const date of dates) {
       try {
-        // Check if date is generally closed (with cache)
+        // ✅ PRIMA: Controlla se esiste schedule specifico per questo barbiere/data
+        const schedule = await DatabaseService.getBarberSchedule(barberId, date);
+        
+        // Se c'è uno schedule con day_off=false, il barbiere è APERTO (apertura eccezionale)
+        if (schedule && !schedule.dayOff && schedule.availableSlots) {
+          try {
+            const availableFromSchedule = JSON.parse(schedule.availableSlots);
+            const unavailableFromSchedule = schedule.unavailableSlots ? JSON.parse(schedule.unavailableSlots) : [];
+            const allTimeSlots = [...new Set([...availableFromSchedule, ...unavailableFromSchedule])];
+            
+            if (allTimeSlots.length > 0) {
+              // Get available slots
+              const availableSlotTimes = await DatabaseService.getAvailableSlots(barberId, date);
+              
+              // Filter by barber-specific closures
+              let finalAvailableSlots = availableSlotTimes;
+              if (barberEmail) {
+                finalAvailableSlots = [];
+                for (const time of availableSlotTimes) {
+                  const barberIsClosed = await isBarberClosedCached(barberEmail, date, time, requestCache);
+                  if (!barberIsClosed) {
+                    finalAvailableSlots.push(time);
+                  }
+                }
+              }
+              
+              availability[date] = {
+                hasSlots: finalAvailableSlots.length > 0,
+                availableCount: finalAvailableSlots.length,
+                totalSlots: allTimeSlots.length
+              };
+              
+              console.log(`✅ ${date}: Apertura eccezionale - ${finalAvailableSlots.length}/${allTimeSlots.length} slot disponibili`);
+              continue;
+            }
+          } catch (error) {
+            console.error(`Error parsing exceptional schedule for ${date}:`, error);
+          }
+        }
+        
+        // Se schedule ha day_off=true o non esiste, controlla chiusure generali
         const dateIsClosed = await isDateClosedCached(date, requestCache);
         if (dateIsClosed) {
           availability[date] = {
@@ -86,7 +126,6 @@ export async function POST(request: NextRequest) {
 
         // Generate all possible time slots for the day
         // IMPORTANT: Use schedule from database if available, as it may have custom hours
-        const schedule = await DatabaseService.getBarberSchedule(barberId, date);
         let allTimeSlots: string[] = [];
         
         if (schedule && !schedule.dayOff && schedule.availableSlots) {
