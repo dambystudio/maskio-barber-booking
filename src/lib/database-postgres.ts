@@ -129,26 +129,24 @@ export class DatabaseService {
     const { neon } = await import('@neondatabase/serverless');
     const sql = neon(process.env.DATABASE_URL!);
     
-    // Use raw SQL for case-insensitive LIKE search with JOINs
+    // Simple query - bookings table already has all needed fields
     const result = await sql`
       SELECT 
-        b.id,
-        b.date as booking_date,
-        b.time as booking_time,
-        b.customer_name,
-        b.customer_phone,
-        b.customer_email,
-        b.status,
-        b.notes,
-        b.created_at,
-        s.name as service_name,
-        barbers.name as barber_name,
-        barbers.phone as barber_phone
-      FROM bookings b
-      LEFT JOIN services s ON b.service_id = s.id
-      LEFT JOIN barbers ON b.barber_id = barbers.id
-      WHERE LOWER(b.customer_name) LIKE LOWER(${'%' + customerName + '%'})
-      ORDER BY b.date DESC, b.time DESC
+        id,
+        date as booking_date,
+        time as booking_time,
+        customer_name,
+        customer_phone,
+        customer_email,
+        status,
+        notes,
+        created_at,
+        service as service_name,
+        barber_name,
+        barber_id
+      FROM bookings
+      WHERE LOWER(customer_name) LIKE LOWER(${'%' + customerName + '%'})
+      ORDER BY date DESC, time DESC
       LIMIT 100
     `;
     
