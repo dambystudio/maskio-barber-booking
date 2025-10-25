@@ -125,19 +125,34 @@ export class DatabaseService {
   }
 
   // Search bookings by customer name (case-insensitive, partial match)
-  static async searchBookingsByCustomer(customerName: string): Promise<schema.Booking[]> {
+  static async searchBookingsByCustomer(customerName: string): Promise<any[]> {
     const { neon } = await import('@neondatabase/serverless');
     const sql = neon(process.env.DATABASE_URL!);
     
-    // Use raw SQL for case-insensitive LIKE search
+    // Use raw SQL for case-insensitive LIKE search with JOINs
     const result = await sql`
-      SELECT * FROM bookings 
-      WHERE LOWER(customer_name) LIKE LOWER(${'%' + customerName + '%'})
-      ORDER BY date DESC, time DESC
+      SELECT 
+        b.id,
+        b.date as booking_date,
+        b.time as booking_time,
+        b.customer_name,
+        b.customer_phone,
+        b.customer_email,
+        b.status,
+        b.notes,
+        b.created_at,
+        s.name as service_name,
+        barbers.name as barber_name,
+        barbers.phone as barber_phone
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      LEFT JOIN barbers ON b.barber_id = barbers.id
+      WHERE LOWER(b.customer_name) LIKE LOWER(${'%' + customerName + '%'})
+      ORDER BY b.date DESC, b.time DESC
       LIMIT 100
     `;
     
-    return result as schema.Booking[];
+    return result;
   }
 
   static async updateBooking(bookingId: string, updates: Partial<schema.NewBooking>): Promise<schema.Booking | null> {

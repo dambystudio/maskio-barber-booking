@@ -497,14 +497,34 @@ export default function PannelloPrenotazioni() {
 
     setIsSearching(true);
     try {
+      console.log('🔍 Searching for customer:', searchQuery);
       const response = await fetch(`/api/bookings/search?customer=${encodeURIComponent(searchQuery.trim())}`);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Search response:', data);
         const bookingsArray = data.bookings || [];
         
+        // Map database fields to UI fields if needed
+        const mappedBookings = bookingsArray.map((booking: any) => ({
+          id: booking.id,
+          service_name: booking.service_name || booking.service || 'N/A',
+          barber_name: booking.barber_name || booking.barber || 'N/A',
+          barber_phone: booking.barber_phone,
+          booking_date: booking.booking_date || booking.date,
+          booking_time: booking.booking_time || booking.time,
+          customer_name: booking.customer_name,
+          customer_phone: booking.customer_phone || booking.phone,
+          customer_email: booking.customer_email || booking.email,
+          status: booking.status,
+          created_at: booking.created_at,
+          notes: booking.notes
+        }));
+        
+        console.log('✅ Mapped bookings:', mappedBookings);
+        
         // Ordina per data più recente
-        const sortedBookings = [...bookingsArray].sort((a, b) => {
+        const sortedBookings = [...mappedBookings].sort((a, b) => {
           const dateTimeA = new Date(`${a.booking_date}T${a.booking_time}`).getTime();
           const dateTimeB = new Date(`${b.booking_date}T${b.booking_time}`).getTime();
           return dateTimeB - dateTimeA; // Più recente prima
