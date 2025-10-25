@@ -1500,7 +1500,7 @@ Grazie! 😊`;
                             <td className="px-4 py-3 whitespace-nowrap">{booking.booking_time}</td>
                             <td className="px-4 py-3 whitespace-nowrap">{booking.barber_name}</td>
                             <td className="px-4 py-3 whitespace-nowrap">{booking.service_name}</td>
-                            <td className="px-4 py-3 whitespace-nowrap">{renderBookingStatus(booking.status)}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">{getStatusBadge(booking.status)}</td>
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="flex gap-2">
                                 <button
