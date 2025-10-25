@@ -1667,6 +1667,11 @@ Grazie! 😊`;
                 {showBarberClosuresList && (
                   <div className="space-y-4">
                   {Object.entries(barberClosures)
+                    .filter(([date]) => {
+                      // ✅ Mostra solo chiusure da oggi in poi
+                      const today = format(new Date(), 'yyyy-MM-dd');
+                      return date >= today;
+                    })
                     .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
                     .map(([date, barbersClosures]) => (
                       <div key={date} className="bg-orange-900/30 border border-orange-500 rounded-lg p-4">
