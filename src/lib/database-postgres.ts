@@ -126,8 +126,8 @@ export class DatabaseService {
 
   // Search bookings by customer name (case-insensitive, partial match)
   static async searchBookingsByCustomer(customerName: string): Promise<schema.Booking[]> {
-    const { sql: rawSql } = await import('@neondatabase/serverless');
-    const sql = rawSql(process.env.DATABASE_URL!);
+    const { neon } = await import('@neondatabase/serverless');
+    const sql = neon(process.env.DATABASE_URL!);
     
     // Use raw SQL for case-insensitive LIKE search
     const result = await sql`
