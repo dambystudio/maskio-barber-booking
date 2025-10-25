@@ -71,12 +71,21 @@ export async function POST(request: NextRequest) {
           // Get all active barbers with their email
         const barbers = await sql`SELECT id, email FROM barbers WHERE is_active = true`;
         
+        // ✅ PROTECTED DATES: These dates should NEVER be modified by daily-update
+        // They are manually configured exceptional openings
+        const PROTECTED_DATES = [
+            '2025-10-30', // Michele exceptional opening on Thursday
+            '2025-12-22', // Christmas Monday - both barbers full day
+            '2025-12-29'  // Christmas Monday - both barbers full day
+        ];
+        
         // Calculate date range: today + next 60 days
         const today = new Date();
         let addedCount = 0;
         let updatedCount = 0;
         let skippedSundaysCount = 0;
         let skippedExceptionalCount = 0;
+        let skippedProtectedCount = 0;
         
         for (let i = 0; i < 60; i++) {
             const date = new Date(today);
@@ -87,6 +96,13 @@ export async function POST(request: NextRequest) {
             // Skip Sundays (barbershop closed)
             if (dayOfWeek === 0) {
                 skippedSundaysCount++;
+                continue;
+            }
+            
+            // ✅ Skip protected dates (manually configured exceptional openings)
+            if (PROTECTED_DATES.includes(dateString)) {
+                skippedProtectedCount++;
+                console.log(`⚠️ Skipping protected date: ${dateString}`);
                 continue;
             }
             
@@ -157,6 +173,7 @@ export async function POST(request: NextRequest) {
                 existingSchedulesUpdated: updatedCount,
                 sundaysSkipped: skippedSundaysCount,
                 exceptionalOpeningsPreserved: skippedExceptionalCount,
+                protectedDatesSkipped: skippedProtectedCount,
                 oldSchedulesCleaned: Array.isArray(deletedResult) ? deletedResult.length : 0,
                 activeBarbersCount: barbers.length
             },
