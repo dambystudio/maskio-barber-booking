@@ -213,6 +213,12 @@ export default function PannelloPrenotazioni() {
   const [showBarberClosuresList, setShowBarberClosuresList] = useState(true);
   const [showExceptionalOpeningsList, setShowExceptionalOpeningsList] = useState(true);
 
+  // ✅ NUOVO: Stati per ricerca cliente
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [customerSearchResults, setCustomerSearchResults] = useState<Booking[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
   // Mapping barbieri
   const barberMapping = {
     'fabio.cassano97@icloud.com': 'Fabio Cassano',
@@ -479,6 +485,41 @@ export default function PannelloPrenotazioni() {
       // Fallback
       setClosedDays(new Set([0]));
       setClosedDates(new Set());
+    }
+  };
+
+  // ✅ NUOVA FUNZIONE: Ricerca cliente per nome
+  const searchCustomerBookings = async (searchQuery: string) => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setCustomerSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/bookings/search?customer=${encodeURIComponent(searchQuery.trim())}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const bookingsArray = data.bookings || [];
+        
+        // Ordina per data più recente
+        const sortedBookings = [...bookingsArray].sort((a, b) => {
+          const dateTimeA = new Date(`${a.booking_date}T${a.booking_time}`).getTime();
+          const dateTimeB = new Date(`${b.booking_date}T${b.booking_time}`).getTime();
+          return dateTimeB - dateTimeA; // Più recente prima
+        });
+        
+        setCustomerSearchResults(sortedBookings);
+      } else {
+        console.error('Search failed:', response.status);
+        setCustomerSearchResults([]);
+      }
+    } catch (error) {
+      console.error('❌ Error searching customer bookings:', error);
+      setCustomerSearchResults([]);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -1362,6 +1403,139 @@ Grazie! 😊`;
 
   return (
     <div className="space-y-4 md:space-y-6 pb-20 md:pb-6">
+      {/* Barra Azioni Principali */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <button
+          type="button"
+          onClick={() => setShowCustomerSearch(!showCustomerSearch)}
+          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm flex items-center gap-2 ${
+            showCustomerSearch
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+          }`}
+        >
+          🔍 Ricerca Cliente
+        </button>
+      </div>
+
+      {/* Modal Ricerca Cliente */}
+      {showCustomerSearch && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gray-900 border border-gray-800 p-6 rounded-lg shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              🔍 Ricerca Prenotazioni Cliente
+            </h2>
+            <button
+              type="button"
+              onClick={() => {
+                setShowCustomerSearch(false);
+                setCustomerSearchQuery('');
+                setCustomerSearchResults([]);
+              }}
+              className="text-gray-400 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Nome Cliente
+              </label>
+              <input
+                type="text"
+                value={customerSearchQuery}
+                onChange={(e) => {
+                  setCustomerSearchQuery(e.target.value);
+                  searchCustomerBookings(e.target.value);
+                }}
+                placeholder="Inserisci il nome del cliente..."
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Inserisci almeno 2 caratteri per cercare
+              </p>
+            </div>
+
+            {isSearching && (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            )}
+
+            {!isSearching && customerSearchQuery.length >= 2 && (
+              <div>
+                <h3 className="text-sm font-semibold text-white mb-3">
+                  Risultati ({customerSearchResults.length})
+                </h3>
+                
+                {customerSearchResults.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-800/50 rounded-lg">
+                    <p className="text-gray-400">Nessuna prenotazione trovata per "{customerSearchQuery}"</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-white">
+                      <thead className="bg-gray-800">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Data</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Ora</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Barbiere</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Servizio</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Stato</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Telefono</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-gray-800/50 divide-y divide-gray-700">
+                        {customerSearchResults.map(booking => (
+                          <tr key={booking.id} className="hover:bg-gray-700/50">
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {format(parseISO(booking.booking_date), 'dd/MM/yyyy')}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">{booking.booking_time}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">{booking.barber_name}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">{booking.service_name}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">{renderBookingStatus(booking.status)}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const message = encodeURIComponent(`Ciao ${booking.customer_name}, ti contattiamo per la tua prenotazione del ${format(parseISO(booking.booking_date), 'dd/MM/yyyy')} alle ${booking.booking_time}.`);
+                                    window.open(`https://wa.me/${booking.customer_phone.replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
+                                  }}
+                                  className="text-green-400 hover:text-green-300 text-xs"
+                                  title="WhatsApp"
+                                >
+                                  💬
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => window.open(`tel:${booking.customer_phone}`, '_self')}
+                                  className="text-blue-400 hover:text-blue-300 text-xs"
+                                  title="Chiama"
+                                >
+                                  📞
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* Statistiche - Ottimizzate per Mobile */}
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
