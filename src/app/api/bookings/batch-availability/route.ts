@@ -19,7 +19,7 @@ interface BatchAvailabilityResponse {
   exceptionalOpenings?: string[]; // Aperture eccezionali che sovrascrivono chiusure ricorrenti
 }
 
-// Cache per una singola richiesta batch per evitare query ripetitive
+// Cache per una singola richiesta batch per evitare query ripetitivee
 interface RequestCache {
   closureSettings?: any;
   barberRecurringClosures?: any[];
