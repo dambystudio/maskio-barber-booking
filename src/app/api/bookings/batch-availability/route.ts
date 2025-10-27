@@ -78,12 +78,30 @@ export async function POST(request: NextRequest) {
         // ✅ PRIMA: Controlla se esiste schedule specifico per questo barbiere/data
         const schedule = await DatabaseService.getBarberSchedule(barberId, date);
         
+        // Debug log for Oct 30
+        if (date === '2025-10-30') {
+          console.log(`🔍 [Oct 30] Schedule found:`, {
+            hasSchedule: !!schedule,
+            dayOff: schedule?.dayOff,
+            hasAvailableSlots: !!schedule?.availableSlots
+          });
+        }
+        
         // Se c'è uno schedule con day_off=false, il barbiere è APERTO (apertura eccezionale)
         if (schedule && !schedule.dayOff && schedule.availableSlots) {
           try {
             const availableFromSchedule = JSON.parse(schedule.availableSlots);
             const unavailableFromSchedule = schedule.unavailableSlots ? JSON.parse(schedule.unavailableSlots) : [];
             const allTimeSlots = [...new Set([...availableFromSchedule, ...unavailableFromSchedule])];
+            
+            if (date === '2025-10-30') {
+              console.log(`🔍 [Oct 30] Parsed slots:`, {
+                availableFromSchedule: availableFromSchedule.length,
+                unavailableFromSchedule: unavailableFromSchedule.length,
+                allTimeSlots: allTimeSlots.length,
+                willEnterBlock: allTimeSlots.length > 0
+              });
+            }
             
             if (allTimeSlots.length > 0) {
               // Get available slots
@@ -136,6 +154,11 @@ export async function POST(request: NextRequest) {
               
               // ✅ Mark this date as exceptional opening (overrides recurring closures)
               exceptionalOpenings.push(date);
+              
+              if (date === '2025-10-30') {
+                console.log(`🎯 [Oct 30] MARKED AS EXCEPTIONAL OPENING!`);
+                console.log(`   exceptionalOpenings array now:`, exceptionalOpenings);
+              }
               
               console.log(`✅ ${date}: Apertura eccezionale - ${finalAvailableSlots.length}/${allTimeSlots.length} slot disponibili`);
               continue;
