@@ -16,6 +16,7 @@ interface DayAvailability {
 
 interface BatchAvailabilityResponse {
   availability: Record<string, DayAvailability>;
+  exceptionalOpenings?: string[]; // Aperture eccezionali che sovrascrivono chiusure ricorrenti
 }
 
 // Cache per una singola richiesta batch per evitare query ripetitive
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const availability: Record<string, DayAvailability> = {};
+    const exceptionalOpenings: string[] = []; // Track exceptional openings
 
     for (const date of dates) {
       try {
@@ -131,6 +133,9 @@ export async function POST(request: NextRequest) {
                 availableCount: finalAvailableSlots.length,
                 totalSlots: allTimeSlots.length
               };
+              
+              // ✅ Mark this date as exceptional opening (overrides recurring closures)
+              exceptionalOpenings.push(date);
               
               console.log(`✅ ${date}: Apertura eccezionale - ${finalAvailableSlots.length}/${allTimeSlots.length} slot disponibili`);
               continue;
@@ -216,8 +221,12 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`✅ Batch availability completed - processed ${dates.length} dates`);
+    console.log(`📊 Exceptional openings found: ${exceptionalOpenings.length}`, exceptionalOpenings);
     
-    return NextResponse.json({ availability } as BatchAvailabilityResponse);
+    return NextResponse.json({ 
+      availability,
+      exceptionalOpenings 
+    } as BatchAvailabilityResponse);
   } catch (error) {
     console.error('Error in batch availability check:', error);
     return NextResponse.json(
