@@ -655,7 +655,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       // ✅ PRIORITY: If it's an exceptional opening, it's ALWAYS available (overrides closures)
       const isExceptionalOpening = formData.selectedBarber && exceptionalOpenings.has(dateString);
       
-      const hasNoAvailableSlots = formData.selectedBarber && unavailableDates.has(dateString) && !isGenerallyClosed && !isBarberClosedForDate;
+      // ✅ FIX: For exceptional openings, check only unavailableDates (ignore recurring closures)
+      // For normal days, check both unavailable dates AND that it's not a closure day
+      const hasNoAvailableSlots = formData.selectedBarber && unavailableDates.has(dateString) && 
+        (isExceptionalOpening ? true : (!isGenerallyClosed && !isBarberClosedForDate));
       
       // Debug per 5 dicembre
       if (dateString === '2025-12-05' && formData.selectedBarber) {
@@ -675,7 +678,9 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           isGenerallyClosed,
           isBarberClosedForDate,
           isExceptionalOpening,
+          hasNoAvailableSlots,
           inExceptionalOpenings: exceptionalOpenings.has(dateString),
+          inUnavailableDates: unavailableDates.has(dateString),
           barber: formData.selectedBarber.name
         });
       }
