@@ -148,6 +148,21 @@ export async function POST(request: NextRequest) {
 
     console.log('🔵 [WAITLIST] Calculating position...');
     
+    // ✅ FIX: Se customerPhone non è fornito e l'utente è loggato, prova a recuperarlo dal profilo
+    let phoneToUse = customerPhone;
+    if ((!phoneToUse || phoneToUse.trim() === '') && userId) {
+      console.log('📞 [WAITLIST] customerPhone vuoto, recupero dal profilo utente...');
+      const userProfile = await sql`
+        SELECT phone FROM users WHERE id = ${userId}
+      `;
+      if (userProfile.length > 0 && userProfile[0].phone) {
+        phoneToUse = userProfile[0].phone;
+        console.log('✅ [WAITLIST] Telefono recuperato dal profilo:', phoneToUse);
+      } else {
+        console.log('⚠️ [WAITLIST] Nessun telefono trovato nel profilo');
+      }
+    }
+    
     // Calcola la posizione nella lista
     const positionResult = await sql`
       SELECT COUNT(*) as count FROM waitlist
@@ -182,7 +197,7 @@ export async function POST(request: NextRequest) {
         ${date},
         ${customerName},
         ${customerEmail},
-        ${customerPhone || null},
+        ${phoneToUse || null},
         ${position},
         'waiting',
         NOW(),

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 interface WaitlistModalProps {
   isOpen: boolean;
@@ -25,17 +26,53 @@ export default function WaitlistModal({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [loadingProfile, setLoadingProfile] = useState(false);
   
   // Customer info per la waitlist
   const [customerName, setCustomerName] = useState(session?.user?.name || '');
   const [customerEmail, setCustomerEmail] = useState(session?.user?.email || '');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [phoneFromProfile, setPhoneFromProfile] = useState(false);
+
+  // ✅ Carica il telefono dal profilo utente quando il modal si apre
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!session?.user?.email || !isOpen) return;
+      
+      setLoadingProfile(true);
+      try {
+        const response = await fetch(`/api/user/profile?email=${encodeURIComponent(session.user.email)}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user?.phone) {
+            setCustomerPhone(data.user.phone);
+            setPhoneFromProfile(true);
+            console.log('📞 Telefono caricato dal profilo:', data.user.phone);
+          } else {
+            console.log('⚠️ Nessun telefono nel profilo utente');
+          }
+        }
+      } catch (error) {
+        console.error('Errore nel caricamento del profilo:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    loadUserProfile();
+  }, [session?.user?.email, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!barberId || !date) {
       setError('Dati mancanti');
+      return;
+    }
+
+    // ✅ Validazione telefono obbligatorio
+    if (!customerPhone || customerPhone.trim() === '') {
+      setError('Il numero di telefono è obbligatorio per ricevere notifiche');
       return;
     }
 
@@ -182,12 +219,40 @@ export default function WaitlistModal({
                     )}
 
                     {!isBarber && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <p className="text-sm text-blue-800">
-                          Riceverai una <strong>notifica push</strong> quando si libera un posto.
-                          Hai 24 ore per confermare la prenotazione.
-                        </p>
-                      </div>
+                      <>
+                        {/* ✅ Campo telefono obbligatorio con messaggio se manca nel profilo */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Telefono <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="tel"
+                            required
+                            value={customerPhone}
+                            onChange={(e) => setCustomerPhone(e.target.value)}
+                            disabled={loadingProfile}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100"
+                            placeholder="+39 333 1234567"
+                          />
+                          {session?.user && !phoneFromProfile && !loadingProfile && (
+                            <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                              💡 <Link href="/area-personale/profilo" className="underline font-medium">
+                                Aggiungi il telefono al tuo profilo
+                              </Link> per non doverlo reinserire ogni volta
+                            </div>
+                          )}
+                          {loadingProfile && (
+                            <p className="mt-1 text-xs text-gray-500">Caricamento dati profilo...</p>
+                          )}
+                        </div>
+                        
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <p className="text-sm text-blue-800">
+                            Riceverai una <strong>notifica push</strong> quando si libera un posto.
+                            Hai 24 ore per confermare la prenotazione.
+                          </p>
+                        </div>
+                      </>
                     )}
 
                     {error && (

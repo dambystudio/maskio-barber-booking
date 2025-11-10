@@ -1439,6 +1439,14 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                     <p className="text-xs text-gray-500 mt-1">
                       Il numero di telefono è necessario per confermare la prenotazione
                     </p>
+                    {/* ✅ Messaggio se il telefono non è nel profilo */}
+                    {userSession?.user && (!formData.customerInfo.phone || formData.customerInfo.phone.trim() === '') && (
+                      <div className="mt-2 p-2 bg-yellow-900/30 border border-yellow-600/50 rounded text-xs text-yellow-300">
+                        💡 <a href="/area-personale/profilo" className="underline font-medium hover:text-yellow-200">
+                          Aggiungi il telefono al tuo profilo
+                        </a> per non doverlo reinserire ogni volta
+                      </div>
+                    )}
                   </div>
                 </div>
               )}              {canMakeBookingsForOthers ? (
