@@ -128,6 +128,40 @@ export async function POST(request: NextRequest) {
                             VALUES (${barber.id}, ${dateString}, ${JSON.stringify(slotsForDay)}, ${JSON.stringify([])}, ${isDayOff || isRecurringClosed})
                         `;
                         addedCount++;
+                        
+                        // ✅ AUTO-CREATE morning closure for Nicolò on all new dates
+                        if (barber.email === 'giorgiodesa00@gmail.com' && !isDayOff && !isRecurringClosed) {
+                            // Check if morning closure already exists
+                            const existingClosure = await sql`
+                                SELECT id FROM barber_closures
+                                WHERE barber_email = ${barber.email}
+                                AND closure_date = ${dateString}
+                                AND closure_type = 'morning'
+                            `;
+                            
+                            if (existingClosure.length === 0) {
+                                await sql`
+                                    INSERT INTO barber_closures (
+                                        barber_email,
+                                        closure_date,
+                                        closure_type,
+                                        reason,
+                                        created_by,
+                                        created_at,
+                                        updated_at
+                                    ) VALUES (
+                                        ${barber.email},
+                                        ${dateString},
+                                        'morning',
+                                        'Solo appuntamenti pomeridiani',
+                                        'system',
+                                        NOW(),
+                                        NOW()
+                                    )
+                                `;
+                                console.log(`✅ Auto-created morning closure for Nicolò on ${dateString}`);
+                            }
+                        }
                     } else {
                         // ✅ FIX: NON sovrascrivere schedule eccezionali (day_off=false su giorni normalmente chiusi)
                         // Se lo schedule esistente ha day_off=false su un giorno con chiusura ricorrente,
