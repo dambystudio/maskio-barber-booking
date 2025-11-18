@@ -139,6 +139,19 @@ export const barberClosures = pgTable('barber_closures', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Barber Removed Auto Closures Table (Traccia chiusure automatiche rimosse dai barbieri)
+// Quando un barbiere rimuove una chiusura automatica, viene registrata qui
+// Il daily-update NON ricrea chiusure presenti in questa tabella (rispetta scelta barbiere)
+export const barberRemovedAutoClosures = pgTable('barber_removed_auto_closures', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  barberEmail: varchar('barber_email', { length: 255 }).notNull(), // Email del barbiere
+  closureDate: varchar('closure_date', { length: 10 }).notNull(), // Data in formato YYYY-MM-DD
+  closureType: varchar('closure_type', { length: 20 }).notNull(), // 'full', 'morning', 'afternoon'
+  removedBy: varchar('removed_by', { length: 255 }), // Chi ha rimosso la chiusura
+  reason: text('reason'), // Motivo della rimozione (opzionale)
+  removedAt: timestamp('removed_at').defaultNow().notNull(),
+});
+
 // Barber Recurring Closures Table (Chiusure ricorrenti per barbiere - giorni della settimana)
 export const barberRecurringClosures = pgTable('barber_recurring_closures', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -213,6 +226,8 @@ export type ClosureSettings = typeof closureSettings.$inferSelect;
 export type NewClosureSettings = typeof closureSettings.$inferInsert;
 export type BarberClosure = typeof barberClosures.$inferSelect;
 export type NewBarberClosure = typeof barberClosures.$inferInsert;
+export type BarberRemovedAutoClosure = typeof barberRemovedAutoClosures.$inferSelect;
+export type NewBarberRemovedAutoClosure = typeof barberRemovedAutoClosures.$inferInsert;
 export type BarberRecurringClosure = typeof barberRecurringClosures.$inferSelect;
 export type NewBarberRecurringClosure = typeof barberRecurringClosures.$inferInsert;
 export type AuthorizedRole = typeof authorizedRoles.$inferSelect;

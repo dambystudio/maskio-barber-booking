@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 import { db } from '@/lib/database-postgres';
 import { eq, and } from 'drizzle-orm';
-import { barberClosures } from '@/lib/schema';
+import { barberClosures, barberRemovedAutoClosures } from '@/lib/schema';
 import { getBarberClosures } from '@/lib/barber-closures';
 
 // Funzione per salvare una nuova chiusura
@@ -32,8 +32,32 @@ async function saveBarberClosure(closure: {
 }
 
 // Funzione per rimuovere una chiusura
-async function removeBarberClosure(barberEmail: string, closureDate: string, closureType: string) {
+async function removeBarberClosure(
+  barberEmail: string, 
+  closureDate: string, 
+  closureType: string,
+  removedBy: string
+) {
   try {
+    // 1. Prima ottieni i dati della chiusura (per sapere se è automatica)
+    const closureToDelete = await db.select()
+      .from(barberClosures)
+      .where(and(
+        eq(barberClosures.barberEmail, barberEmail),
+        eq(barberClosures.closureDate, closureDate),
+        eq(barberClosures.closureType, closureType)
+      ))
+      .limit(1);
+    
+    if (closureToDelete.length === 0) {
+      console.log('⚠️ Closure not found for deletion');
+      return false;
+    }
+
+    const closure = closureToDelete[0];
+    const isAutomaticClosure = closure.createdBy === 'system-auto' || closure.createdBy === 'system';
+    
+    // 2. Elimina la chiusura
     const result = await db.delete(barberClosures)
       .where(and(
         eq(barberClosures.barberEmail, barberEmail),
@@ -43,6 +67,31 @@ async function removeBarberClosure(barberEmail: string, closureDate: string, clo
       .returning();
     
     console.log('🗑️ Removed barber closure:', result);
+    
+    // 3. ✨ NUOVO: Se era una chiusura automatica, registra la rimozione
+    // In questo modo il daily-update NON la ricreerà
+    if (isAutomaticClosure && result.length > 0) {
+      try {
+        await db.insert(barberRemovedAutoClosures).values({
+          barberEmail: barberEmail,
+          closureDate: closureDate,
+          closureType: closureType as 'full' | 'morning' | 'afternoon',
+          removedBy: removedBy,
+          reason: 'Rimossa dal barbiere per apertura eccezionale',
+        });
+        
+        console.log('✅ Registered automatic closure removal (will not be recreated by daily-update)');
+      } catch (insertError: any) {
+        // Se già esiste un record (ON CONFLICT), ignora l'errore
+        if (insertError?.message?.includes('duplicate key') || insertError?.message?.includes('unique')) {
+          console.log('ℹ️ Removal already registered');
+        } else {
+          console.error('⚠️ Error registering removal:', insertError);
+          // Non bloccare l'operazione anche se la registrazione fallisce
+        }
+      }
+    }
+    
     return result.length > 0;
   } catch (error) {
     console.error('Error removing barber closure:', error);
@@ -132,7 +181,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const removed = await removeBarberClosure(barberEmail, closureDate, closureType);
+    const removed = await removeBarberClosure(
+      barberEmail, 
+      closureDate, 
+      closureType,
+      session.user.email // ✨ Pass removedBy parameter
+    );
     
     if (!removed) {
       return NextResponse.json({ error: 'Closure not found' }, { status: 404 });

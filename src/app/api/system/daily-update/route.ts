@@ -1,26 +1,14 @@
 // API endpoint for daily system updates - Maskio Barber
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
+import { 
+  getUniversalSlots, 
+  getAutoClosureType, 
+  getAutoClosureReason,
+  type DayOfWeek 
+} from '@/lib/universal-slots';
 
 const sql = neon(process.env.DATABASE_URL!);
-
-// Standard time slots for all barbers (Tuesday-Friday)
-const STANDARD_TIME_SLOTS = [
-    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-    "12:00", "12:30",  // Lunch time slots
-    "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
-];
-
-// Michele's Monday afternoon slots (15:00-18:00)
-const MICHELE_MONDAY_SLOTS = [
-    "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"
-];
-
-// Saturday slots (9:00-12:30, 14:30, 15:00-17:00)
-const SATURDAY_SLOTS = [
-    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
-    "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"
-];
 
 // Helper function to check if a barber is closed on a specific day of week
 async function isBarberClosedOnDay(barberEmail: string, dayOfWeek: number): Promise<boolean> {
@@ -42,27 +30,77 @@ async function isBarberClosedOnDay(barberEmail: string, dayOfWeek: number): Prom
     }
 }
 
-// Helper function to get correct slots for a barber on a specific day
-function getSlotsForBarberAndDay(barberEmail: string, dayOfWeek: number): string[] {
-    // Monday (1) special handling
-    if (dayOfWeek === 1) {
-        if (barberEmail === 'michelebiancofiore0230@gmail.com') {
-            // Michele: afternoon only 15:00-18:00
-            return MICHELE_MONDAY_SLOTS;
-        } else if (barberEmail === 'fabio.cassano97@icloud.com') {
-            // Fabio: closed on Monday
-            return [];
-        }
+/**
+ * Create automatic closure for a barber if it doesn't already exist
+ * Returns true if closure was created, false if it already existed or wasn't needed
+ */
+/**
+ * Crea una chiusura automatica se necessaria per il barbiere e il giorno specificato.
+ * ✅ NON ricrea la chiusura se è stata rimossa manualmente dal barbiere.
+ * Ritorna true se ha creato una nuova chiusura, false altrimenti.
+ */
+async function createAutoClosureIfNeeded(
+    barberEmail: string,
+    dateString: string,
+    dayOfWeek: DayOfWeek
+): Promise<boolean> {
+    const closureType = getAutoClosureType(barberEmail, dayOfWeek);
+    
+    if (!closureType) {
+        return false; // No automatic closure needed
     }
     
-    // Saturday (6) special handling
-    if (dayOfWeek === 6) {
-        // Both barbers: 9:00-12:30, 14:30, 15:00-17:00 (NO 17:30)
-        return SATURDAY_SLOTS;
+    // Check if closure already exists
+    const existing = await sql`
+        SELECT id FROM barber_closures
+        WHERE barber_email = ${barberEmail}
+        AND closure_date = ${dateString}
+        AND closure_type = ${closureType}
+    `;
+    
+    if (existing.length > 0) {
+        return false; // Closure already exists
     }
     
-    // Other days (Tuesday-Friday): standard slots
-    return STANDARD_TIME_SLOTS;
+    // ✅ NUOVO: Verifica se il barbiere ha rimosso intenzionalmente questa chiusura
+    // Se sì, rispetta la scelta del barbiere e NON ricreare la chiusura
+    const wasManuallyRemoved = await sql`
+        SELECT id FROM barber_removed_auto_closures
+        WHERE barber_email = ${barberEmail}
+        AND closure_date = ${dateString}
+        AND closure_type = ${closureType}
+    `;
+    
+    if (wasManuallyRemoved.length > 0) {
+        console.log(`ℹ️ Skipping auto-closure (was manually removed): ${barberEmail} on ${dateString}`);
+        return false; // Rispetta la rimozione manuale, NON ricreare
+    }
+    
+    // Create the automatic closure
+    const reason = getAutoClosureReason(barberEmail, closureType);
+    
+    await sql`
+        INSERT INTO barber_closures (
+            barber_email,
+            closure_date,
+            closure_type,
+            reason,
+            created_by,
+            created_at,
+            updated_at
+        ) VALUES (
+            ${barberEmail},
+            ${dateString},
+            ${closureType},
+            ${reason},
+            'system-auto',
+            NOW(),
+            NOW()
+        )
+    `;
+    
+    console.log(`✅ Created automatic ${closureType} closure for ${barberEmail} on ${dateString}`);
+    return true;
 }
 
 export async function POST(request: NextRequest) {
@@ -86,12 +124,13 @@ export async function POST(request: NextRequest) {
         let skippedSundaysCount = 0;
         let skippedExceptionalCount = 0;
         let skippedProtectedCount = 0;
+        let autoClosuresCreated = 0;
         
         for (let i = 0; i < 60; i++) {
             const date = new Date(today);
             date.setDate(today.getDate() + i);
             const dateString = date.toISOString().split('T')[0];
-            const dayOfWeek = date.getDay();
+            const dayOfWeek = date.getDay() as DayOfWeek;
             
             // Skip Sundays (barbershop closed)
             if (dayOfWeek === 0) {
@@ -108,8 +147,8 @@ export async function POST(request: NextRequest) {
             
             for (const barber of barbers) {
                 try {
-                    // Get correct slots for this barber and day
-                    const slotsForDay = getSlotsForBarberAndDay(barber.email, dayOfWeek);
+                    // ✅ NEW: Get universal slots for this day (same for all barbers)
+                    const slotsForDay = getUniversalSlots(dayOfWeek);
                     const isDayOff = slotsForDay.length === 0;
                     
                     // Check if barber has recurring closure for this day
@@ -122,45 +161,17 @@ export async function POST(request: NextRequest) {
                     `;
                     
                     if (existingSchedule.length === 0) {
-                        // Create new schedule for this date
+                        // Create new schedule for this date with UNIVERSAL slots
                         await sql`
                             INSERT INTO barber_schedules (barber_id, date, available_slots, unavailable_slots, day_off)
                             VALUES (${barber.id}, ${dateString}, ${JSON.stringify(slotsForDay)}, ${JSON.stringify([])}, ${isDayOff || isRecurringClosed})
                         `;
                         addedCount++;
                         
-                        // ✅ AUTO-CREATE morning closure for Nicolò on all new dates
-                        if (barber.email === 'giorgiodesa00@gmail.com' && !isDayOff && !isRecurringClosed) {
-                            // Check if morning closure already exists
-                            const existingClosure = await sql`
-                                SELECT id FROM barber_closures
-                                WHERE barber_email = ${barber.email}
-                                AND closure_date = ${dateString}
-                                AND closure_type = 'morning'
-                            `;
-                            
-                            if (existingClosure.length === 0) {
-                                await sql`
-                                    INSERT INTO barber_closures (
-                                        barber_email,
-                                        closure_date,
-                                        closure_type,
-                                        reason,
-                                        created_by,
-                                        created_at,
-                                        updated_at
-                                    ) VALUES (
-                                        ${barber.email},
-                                        ${dateString},
-                                        'morning',
-                                        'Solo appuntamenti pomeridiani',
-                                        'system',
-                                        NOW(),
-                                        NOW()
-                                    )
-                                `;
-                                console.log(`✅ Auto-created morning closure for Nicolò on ${dateString}`);
-                            }
+                        // ✅ NEW: Create automatic closure if needed (Michele Monday morning, Fabio Monday full, Nicolò morning)
+                        const closureCreated = await createAutoClosureIfNeeded(barber.email, dateString, dayOfWeek);
+                        if (closureCreated) {
+                            autoClosuresCreated++;
                         }
                     } else {
                         // ✅ FIX: NON sovrascrivere schedule eccezionali (day_off=false su giorni normalmente chiusi)
@@ -205,6 +216,7 @@ export async function POST(request: NextRequest) {
             statistics: {
                 newSchedulesAdded: addedCount,
                 existingSchedulesUpdated: updatedCount,
+                autoClosuresCreated: autoClosuresCreated,
                 sundaysSkipped: skippedSundaysCount,
                 exceptionalOpeningsPreserved: skippedExceptionalCount,
                 protectedDatesSkipped: skippedProtectedCount,
@@ -248,11 +260,21 @@ export async function GET(request: NextRequest) {
         `;
         
         return NextResponse.json({
-            system: 'Daily Update System',
+            system: 'Daily Update System - Universal Slots',
             status: 'active',
             currentSchedules: parseInt(scheduleCount[0].total),
             activeBarbers: parseInt(barberCount[0].total),
-            standardTimeSlots: STANDARD_TIME_SLOTS,
+            slotConfiguration: {
+                monday: '09:00-12:30 + 15:00-18:00 (15 slots)',
+                tuesdayToFriday: '09:00-12:30 + 15:00-17:30 (14 slots)',
+                saturday: '09:00-12:30 + 14:30-17:00 (14 slots)',
+                sunday: 'CLOSED'
+            },
+            automaticClosures: {
+                michele: 'Monday morning',
+                fabio: 'Monday full day',
+                nicolo: 'Every day morning'
+            },
             lastCheck: new Date().toISOString()
         });
         
