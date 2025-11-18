@@ -131,7 +131,7 @@ export function getAutoClosureType(
   }
   
   // Nicolò: morning closure every day (Mon-Sat)
-  if (barberEmail === 'giorgiodesa00@gmail.com' && dayOfWeek >= 1 && dayOfWeek <= 6) {
+  if (barberEmail === 'nicolodesantis069@gmail.com' && dayOfWeek >= 1 && dayOfWeek <= 6) {
     return 'morning';
   }
   
@@ -167,7 +167,7 @@ export function getAutoClosureReason(
     return 'Chiusura automatica - Riposo settimanale';
   }
   
-  if (barberEmail === 'giorgiodesa00@gmail.com') {
+  if (barberEmail === 'nicolodesantis069@gmail.com') {
     return 'Chiusura automatica - Solo appuntamenti pomeridiani';
   }
   

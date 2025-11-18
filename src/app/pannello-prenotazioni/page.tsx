@@ -224,7 +224,7 @@ export default function PannelloPrenotazioni() {
   const barberMapping = {
     'fabio.cassano97@icloud.com': 'Fabio Cassano',
     'michelebiancofiore0230@gmail.com': 'Michele Biancofiore',
-    'giorgiodesa00@gmail.com': 'Nicolò De Santis'
+    'nicolodesantis069@gmail.com': 'Nicolò De Santis'
   };
 
   // Funzione helper per ottenere email dal nome del barbiere
@@ -235,7 +235,7 @@ export default function PannelloPrenotazioni() {
     } else if (nameLower.includes('michele')) {
       return 'michelebiancofiore0230@gmail.com';
     } else if (nameLower.includes('nicolò') || nameLower.includes('nicolo')) {
-      return 'giorgiodesa00@gmail.com';
+      return 'nicolodesantis069@gmail.com';
     }
     // Default: ritorna il primo barbiere disponibile
     return Object.keys(barberMapping)[0];
@@ -777,7 +777,7 @@ export default function PannelloPrenotazioni() {
         targetBarbers.push('michelebiancofiore0230@gmail.com');
       }
       if (closureNicoloChecked) {
-        targetBarbers.push('giorgiodesa00@gmail.com');
+        targetBarbers.push('nicolodesantis069@gmail.com');
       }
     } else if (currentBarber) {
       // I barbieri possono impostare chiusure per:
@@ -787,13 +787,13 @@ export default function PannelloPrenotazioni() {
         // Fabio può impostare per sé stesso e per Michele e Nicolò
         if (closureFabioChecked) targetBarbers.push('fabio.cassano97@icloud.com');
         if (closureMicheleChecked) targetBarbers.push('michelebiancofiore0230@gmail.com');
-        if (closureNicoloChecked) targetBarbers.push('giorgiodesa00@gmail.com');
+        if (closureNicoloChecked) targetBarbers.push('nicolodesantis069@gmail.com');
       } else if (currentBarber === 'michelebiancofiore0230@gmail.com') {
         // Michele può impostare per sé stesso e per Fabio e Nicolò
         if (closureMicheleChecked) targetBarbers.push('michelebiancofiore0230@gmail.com');
         if (closureFabioChecked) targetBarbers.push('fabio.cassano97@icloud.com');
-        if (closureNicoloChecked) targetBarbers.push('giorgiodesa00@gmail.com');
-      } else if (currentBarber === 'giorgiodesa00@gmail.com') {
+        if (closureNicoloChecked) targetBarbers.push('nicolodesantis069@gmail.com');
+      } else if (currentBarber === 'nicolodesantis069@gmail.com') {
         // Nicolò può impostare per sé stesso e per Fabio e Michele
         if (closureNicoloChecked) targetBarbers.push('giorgiodesa00@gmail.com');
         if (closureFabioChecked) targetBarbers.push('fabio.cassano97@icloud.com');
@@ -1681,7 +1681,7 @@ Grazie! 😊`;
                         <option value="all">Tutti i barbieri</option>
                         <option value="fabio.cassano97@icloud.com">Fabio Cassano</option>
                         <option value="michelebiancofiore0230@gmail.com">Michele Biancofiore</option>
-                        <option value="giorgiodesa00@gmail.com">Nicolò De Santis</option>
+                        <option value="nicolodesantis069@gmail.com">Nicolò De Santis</option>
                       </select>
                     </div>
                   )}
@@ -2013,7 +2013,7 @@ Grazie! 😊`;
                       <option value="">Seleziona barbiere</option>
                       <option value="fabio.cassano97@icloud.com">🧔 Fabio Cassano</option>
                       <option value="michelebiancofiore0230@gmail.com">🧔 Michele Biancofiore</option>
-                      <option value="giorgiodesa00@gmail.com">🧔 Nicolò De Santis</option>
+                      <option value="nicolodesantis069@gmail.com">🧔 Nicolò De Santis</option>
                     </select>
                   </div>
 

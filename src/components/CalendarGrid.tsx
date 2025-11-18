@@ -60,7 +60,7 @@ const CalendarGrid = ({
   const BARBERS = [
     { name: 'Fabio', email: 'fabio.cassano97@icloud.com' },
     { name: 'Michele', email: 'michelebiancofiore0230@gmail.com' },
-    { name: 'Nicolò', email: 'giorgiodesa00@gmail.com' }
+    { name: 'Nicolò', email: 'nicolodesantis069@gmail.com' }
   ];
 
   // Fetch liste d'attesa per la data selezionata
