@@ -59,7 +59,8 @@ const CalendarGrid = ({
   // Definisco i barbieri fissi
   const BARBERS = [
     { name: 'Fabio', email: 'fabio.cassano97@icloud.com' },
-    { name: 'Michele', email: 'michelebiancofiore0230@gmail.com' }
+    { name: 'Michele', email: 'michelebiancofiore0230@gmail.com' },
+    { name: 'Nicolò', email: 'giorgiodesa00@gmail.com' }
   ];
 
   // Fetch liste d'attesa per la data selezionata

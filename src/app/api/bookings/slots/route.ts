@@ -65,7 +65,49 @@ export async function GET(request: NextRequest) {
     // Se lo schedule esiste e ha day_off=false, NON controllare le chiusure ricorrenti
     const isExceptionalOpening = schedule && !schedule.dayOff;
     
-    for (const time of allPossibleSlots) {
+    // ✅ NEW: Ottieni le chiusure specifiche del barbiere per questa data
+    const { getBarberClosures } = await import('@/lib/barber-closures');
+    const barberClosures = barberEmail ? await getBarberClosures(barberEmail, date) : [];
+    
+    // ✅ NEW: Determina il tipo di chiusura per questa data
+    let closureType: 'full' | 'morning' | 'afternoon' | null = null;
+    if (barberClosures.length > 0) {
+      // Se c'è una chiusura FULL, quella prevale
+      const fullClosure = barberClosures.find(c => c.closureType === 'full');
+      if (fullClosure) {
+        closureType = 'full';
+      } else {
+        // Altrimenti prendi il primo tipo di chiusura
+        const firstClosureType = barberClosures[0].closureType;
+        if (firstClosureType === 'morning' || firstClosureType === 'afternoon' || firstClosureType === 'full') {
+          closureType = firstClosureType;
+        }
+      }
+    }
+    
+    // ✅ NEW: Filtra gli slot in base al tipo di chiusura
+    let filteredSlots = allPossibleSlots;
+    
+    if (closureType === 'full') {
+      // Se c'è una chiusura completa, nessun slot disponibile
+      filteredSlots = [];
+    } else if (closureType === 'morning') {
+      // Se c'è una chiusura mattutina, mostra solo slot pomeridiani (>= 14:00)
+      filteredSlots = allPossibleSlots.filter(time => {
+        const hour = parseInt(time.split(':')[0]);
+        return hour >= 14;
+      });
+      console.log(`Barber ${barberEmail} has morning closure on ${date}, showing only afternoon slots`);
+    } else if (closureType === 'afternoon') {
+      // Se c'è una chiusura pomeridiana, mostra solo slot mattutini (< 14:00)
+      filteredSlots = allPossibleSlots.filter(time => {
+        const hour = parseInt(time.split(':')[0]);
+        return hour < 14;
+      });
+      console.log(`Barber ${barberEmail} has afternoon closure on ${date}, showing only morning slots`);
+    }
+    
+    for (const time of filteredSlots) {
       let available = availableSlotTimes.includes(time);
       
       // Controlla se il barbiere è chiuso per questo orario specifico
@@ -75,14 +117,11 @@ export async function GET(request: NextRequest) {
         if (isExceptionalOpening) {
           // Per aperture eccezionali: controlla SOLO chiusure specifiche per orario
           // (ignora le chiusure ricorrenti)
-          const { getBarberClosures } = await import('@/lib/barber-closures');
-          const specificClosures = await getBarberClosures(barberEmail, date);
-          
-          if (specificClosures.length > 0) {
+          if (barberClosures.length > 0) {
             const hour = parseInt(time.split(':')[0]);
             const isMorning = hour < 14;
             
-            const isClosedSpecific = specificClosures.some(closure => {
+            const isClosedSpecific = barberClosures.some(closure => {
               if (closure.closureType === 'full') return true;
               if (closure.closureType === 'morning' && isMorning) return true;
               if (closure.closureType === 'afternoon' && !isMorning) return true;

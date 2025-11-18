@@ -160,6 +160,13 @@ export async function POST(request: NextRequest) {
                         WHERE barber_id = ${barber.id} AND date = ${dateString}
                     `;
                     
+                    // ✅ CRITICAL: Always check for automatic closures (not just on new schedules)
+                    // This ensures closures are created even when updating existing schedules
+                    const closureCreated = await createAutoClosureIfNeeded(barber.email, dateString, dayOfWeek);
+                    if (closureCreated) {
+                        autoClosuresCreated++;
+                    }
+                    
                     if (existingSchedule.length === 0) {
                         // Create new schedule for this date with UNIVERSAL slots
                         await sql`
@@ -167,12 +174,6 @@ export async function POST(request: NextRequest) {
                             VALUES (${barber.id}, ${dateString}, ${JSON.stringify(slotsForDay)}, ${JSON.stringify([])}, ${isDayOff || isRecurringClosed})
                         `;
                         addedCount++;
-                        
-                        // ✅ NEW: Create automatic closure if needed (Michele Monday morning, Fabio Monday full, Nicolò morning)
-                        const closureCreated = await createAutoClosureIfNeeded(barber.email, dateString, dayOfWeek);
-                        if (closureCreated) {
-                            autoClosuresCreated++;
-                        }
                     } else {
                         // ✅ FIX: NON sovrascrivere schedule eccezionali (day_off=false su giorni normalmente chiusi)
                         // Se lo schedule esistente ha day_off=false su un giorno con chiusura ricorrente,

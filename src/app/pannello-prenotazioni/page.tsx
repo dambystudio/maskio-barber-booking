@@ -201,6 +201,7 @@ export default function PannelloPrenotazioni() {
   // ✅ NUOVO: Checkbox per selezionare barbieri per chiusure specifiche (date)
   const [closureFabioChecked, setClosureFabioChecked] = useState(true);
   const [closureMicheleChecked, setClosureMicheleChecked] = useState(true);
+  const [closureNicoloChecked, setClosureNicoloChecked] = useState(true);
 
   // ✅ NUOVO: Stati per Aperture Eccezionali (override chiusure ricorrenti)
   const [exceptionDate, setExceptionDate] = useState('');
@@ -222,7 +223,8 @@ export default function PannelloPrenotazioni() {
   // Mapping barbieri
   const barberMapping = {
     'fabio.cassano97@icloud.com': 'Fabio Cassano',
-    'michelebiancofiore0230@gmail.com': 'Michele Biancofiore'
+    'michelebiancofiore0230@gmail.com': 'Michele Biancofiore',
+    'giorgiodesa00@gmail.com': 'Nicolò De Santis'
   };
 
   // Funzione helper per ottenere email dal nome del barbiere
@@ -232,6 +234,8 @@ export default function PannelloPrenotazioni() {
       return 'fabio.cassano97@icloud.com';
     } else if (nameLower.includes('michele')) {
       return 'michelebiancofiore0230@gmail.com';
+    } else if (nameLower.includes('nicolò') || nameLower.includes('nicolo')) {
+      return 'giorgiodesa00@gmail.com';
     }
     // Default: ritorna il primo barbiere disponibile
     return Object.keys(barberMapping)[0];
@@ -756,7 +760,7 @@ export default function PannelloPrenotazioni() {
     }
     
     // ✅ NUOVO: Verifica che almeno un barbiere sia selezionato
-    if (!closureFabioChecked && !closureMicheleChecked) {
+    if (!closureFabioChecked && !closureMicheleChecked && !closureNicoloChecked) {
       alert('Seleziona almeno un barbiere per la chiusura');
       return;
     }
@@ -765,25 +769,35 @@ export default function PannelloPrenotazioni() {
     const targetBarbers = [];
     
     if (isAdmin) {
-      // Admin può selezionare entrambi i barbieri tramite checkbox
+      // Admin può selezionare tutti i barbieri tramite checkbox
       if (closureFabioChecked) {
         targetBarbers.push('fabio.cassano97@icloud.com');
       }
       if (closureMicheleChecked) {
         targetBarbers.push('michelebiancofiore0230@gmail.com');
       }
+      if (closureNicoloChecked) {
+        targetBarbers.push('giorgiodesa00@gmail.com');
+      }
     } else if (currentBarber) {
       // I barbieri possono impostare chiusure per:
       // - Se stessi (sempre)
-      // - L'altro barbiere (gestione reciproca)
+      // - Gli altri barbieri (gestione reciproca)
       if (currentBarber === 'fabio.cassano97@icloud.com') {
-        // Fabio può impostare per sé stesso e per Michele
+        // Fabio può impostare per sé stesso e per Michele e Nicolò
         if (closureFabioChecked) targetBarbers.push('fabio.cassano97@icloud.com');
         if (closureMicheleChecked) targetBarbers.push('michelebiancofiore0230@gmail.com');
+        if (closureNicoloChecked) targetBarbers.push('giorgiodesa00@gmail.com');
       } else if (currentBarber === 'michelebiancofiore0230@gmail.com') {
-        // Michele può impostare per sé stesso e per Fabio
+        // Michele può impostare per sé stesso e per Fabio e Nicolò
         if (closureMicheleChecked) targetBarbers.push('michelebiancofiore0230@gmail.com');
         if (closureFabioChecked) targetBarbers.push('fabio.cassano97@icloud.com');
+        if (closureNicoloChecked) targetBarbers.push('giorgiodesa00@gmail.com');
+      } else if (currentBarber === 'giorgiodesa00@gmail.com') {
+        // Nicolò può impostare per sé stesso e per Fabio e Michele
+        if (closureNicoloChecked) targetBarbers.push('giorgiodesa00@gmail.com');
+        if (closureFabioChecked) targetBarbers.push('fabio.cassano97@icloud.com');
+        if (closureMicheleChecked) targetBarbers.push('michelebiancofiore0230@gmail.com');
       }
     }
     
@@ -807,7 +821,9 @@ export default function PannelloPrenotazioni() {
       
       // Mostra messaggio di successo
       const barberNames = targetBarbers.map(email => 
-        email === 'fabio.cassano97@icloud.com' ? 'Fabio' : 'Michele'
+        email === 'fabio.cassano97@icloud.com' ? 'Fabio' : 
+        email === 'michelebiancofiore0230@gmail.com' ? 'Michele' : 
+        'Nicolò'
       ).join(' e ');
       
       const daysCount = newClosureEndDate 
@@ -1665,6 +1681,7 @@ Grazie! 😊`;
                         <option value="all">Tutti i barbieri</option>
                         <option value="fabio.cassano97@icloud.com">Fabio Cassano</option>
                         <option value="michelebiancofiore0230@gmail.com">Michele Biancofiore</option>
+                        <option value="giorgiodesa00@gmail.com">Nicolò De Santis</option>
                       </select>
                     </div>
                   )}
@@ -1740,8 +1757,21 @@ Grazie! 😊`;
                         🧔 Michele
                       </span>
                     </label>
+
+                    {/* ✅ Nicolò checkbox - Visibile per admin e TUTTI i barbieri (gestione reciproca) */}
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={closureNicoloChecked}
+                        onChange={(e) => setClosureNicoloChecked(e.target.checked)}
+                        className="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-800 cursor-pointer"
+                      />
+                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                        🧔 Nicolò
+                      </span>
+                    </label>
                   </div>
-                  {!closureFabioChecked && !closureMicheleChecked && (
+                  {!closureFabioChecked && !closureMicheleChecked && !closureNicoloChecked && (
                     <p className="text-xs text-red-400 mt-2">⚠️ Seleziona almeno un barbiere</p>
                   )}
                 </div>
@@ -1983,6 +2013,7 @@ Grazie! 😊`;
                       <option value="">Seleziona barbiere</option>
                       <option value="fabio.cassano97@icloud.com">🧔 Fabio Cassano</option>
                       <option value="michelebiancofiore0230@gmail.com">🧔 Michele Biancofiore</option>
+                      <option value="giorgiodesa00@gmail.com">🧔 Nicolò De Santis</option>
                     </select>
                   </div>
 
