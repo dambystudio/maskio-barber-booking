@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Service, Barber, BookingFormData } from '../types/booking';
 import { BookingService, validateBookingData } from '../services/bookingService';
-import { fabioSpecificServices, micheleSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
+import { fabioSpecificServices, micheleSpecificServices, nicoloSpecificServices, barbersFromData } from '../data/booking'; // Import specific services and local barbers data
 import { Session } from 'next-auth';
 import { trackEvent, trackConversion } from './GoogleAnalytics';
 import WaitlistModal from './WaitlistModal';
@@ -255,7 +255,9 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               ? fabioSpecificServices 
               : barber.name === 'Michele' 
                 ? micheleSpecificServices 
-                : servicesData
+                : barber.name === 'Nicolò'
+                  ? nicoloSpecificServices
+                  : servicesData
           };
         });
         setBarbers(updatedBarbers);

@@ -15,22 +15,38 @@ export const micheleSpecificServices: Service[] = [
   { id: 'altri-servizi', name: 'Altri servizi', description: 'colore o altri servizi', duration: 30, price: 0 }
 ];
 
+export const nicoloSpecificServices: Service[] = [
+  { id: 'taglio', name: 'Taglio', description: 'Taglio di capelli personalizzato', duration: 30, price: 12 },
+  { id: 'barba', name: 'Barba', description: 'Modellatura e contorno barba', duration: 15, price: 10 },
+  { id: 'taglio-e-barba', name: 'Taglio e Barba', description: 'Taglio capelli e sistemazione barba', duration: 40, price: 15 },
+  { id: 'completo', name: 'Completo', description: 'Taglio, barba e shampoo', duration: 45, price: 17 },
+  { id: 'altri-servizi', name: 'Altri servizi', description: 'colore o altri servizi', duration: 30, price: 0 }
+];
+
 export const barbersFromData: Barber[] = [
   {
-    id: 'fabio', // Questo ID deve corrispondere a quello nel database se si fa matching
+    id: 'fabio',
     name: 'Fabio',
     image: '/barbers/fabio.jpg',
     specialties: ['Tagli moderni', 'Tagli classici', 'Barba'],
     experience: 'Titolare',
-    availableServices: fabioSpecificServices // Assegnazione per la pagina /servizi
+    availableServices: fabioSpecificServices
   },
   {
-    id: 'michele', // Questo ID deve corrispondere a quello nel database se si fa matching
+    id: 'michele',
     name: 'Michele',
     image: '/barbers/michele.jpg',
     specialties: ['Tagli moderni', 'Tagli classici', 'Barba'],
     experience: 'Collaboratore',
-    availableServices: micheleSpecificServices // Assegnazione per la pagina /servizi
+    availableServices: micheleSpecificServices
+  },
+  {
+    id: 'nicolo',
+    name: 'Nicolò',
+    image: '/barbers/nicolo.jpg',
+    specialties: ['Tagli moderni', 'Tagli classici', 'Barba'],
+    experience: 'Collaboratore',
+    availableServices: nicoloSpecificServices
   }
 ];
 
