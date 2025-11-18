@@ -157,7 +157,22 @@ const CalendarGrid = ({
       // Non mostrare le prenotazioni cancellate nel calendario
       // Questo libera gli slot per nuove prenotazioni
       if (booking.status !== 'cancelled') {
-        const key = `${booking.barber_name}-${booking.booking_time}`;
+        // Normalizziamo il nome del barbiere per la chiave
+        // La chiave deve corrispondere esattamente al nome in BARBERS
+        let barberKey = booking.barber_name;
+        
+        // Gestione dei vari formati di nome che potrebbero arrivare dal database
+        if (booking.barber_name.toLowerCase().includes('fabio')) {
+          barberKey = 'Fabio';
+        } else if (booking.barber_name.toLowerCase().includes('michele')) {
+          barberKey = 'Michele';
+        } else if (booking.barber_name.toLowerCase().includes('nicolò') || 
+                   booking.barber_name.toLowerCase().includes('nicolo') ||
+                   booking.barber_name.toLowerCase().includes('de santis')) {
+          barberKey = 'Nicolò';
+        }
+        
+        const key = `${barberKey}-${booking.booking_time}`;
         grid[key] = booking;
       }
     });
@@ -247,9 +262,9 @@ const CalendarGrid = ({
 
       {/* Griglia del calendario */}
       <div className="overflow-x-auto">
-        <div className="min-w-[280px] sm:min-w-[400px] lg:min-w-[600px]">
+        <div className="min-w-[280px] sm:min-w-[500px] lg:min-w-[700px]">
           {/* Header con i barbieri */}
-          <div className="grid grid-cols-3 gap-1 mb-1">
+          <div className="grid grid-cols-4 gap-1 mb-1">
             <div className="p-1 sm:p-2 text-center font-semibold text-gray-300 bg-gray-700 rounded text-xs">
               🕐 Orario
             </div>
@@ -267,7 +282,7 @@ const CalendarGrid = ({
           {timeSlots.map(timeSlot => (
             <motion.div 
               key={timeSlot}
-              className="grid grid-cols-3 gap-1 mb-1"
+              className="grid grid-cols-4 gap-1 mb-1"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
