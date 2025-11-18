@@ -240,12 +240,19 @@ export async function POST(request: NextRequest) {  try {    // Check authentica
     const barber = await DatabaseService.getBarberById(requestData.barberId);
     const barberName = barber ? barber.name : 'Barbiere';
     
+    // Verifica se chi sta prenotando è un barbiere
+    const isBarber = session.user.role === 'barber' || session.user.role === 'admin';
+    
+    // Normalizza email e telefono: converti stringhe vuote in valori appropriati
+    const customerEmail = requestData.customerInfo?.email || requestData.customerEmail || '';
+    const customerPhone = requestData.customerInfo?.phone || requestData.customerPhone || '';
+    
     // Convert old format to new format if needed
     const bookingData: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'> = {
       userId: requestData.userId || null, // null for guest bookings
       customerName: requestData.customerInfo?.name || requestData.customerName,
-      customerEmail: requestData.customerInfo?.email || requestData.customerEmail,
-      customerPhone: requestData.customerInfo?.phone || requestData.customerPhone,
+      customerEmail: customerEmail.trim() || (isBarber ? 'noemail@barbershop.local' : ''),
+      customerPhone: customerPhone.trim() || (isBarber ? 'N/A' : ''),
       barberId: requestData.barberId,
       barberName: requestData.barberName || barberName,
       service: servicesData.length > 0 
@@ -257,8 +264,6 @@ export async function POST(request: NextRequest) {  try {    // Check authentica
       duration: requestData.totalDuration || requestData.duration || totalDuration,
       status: 'confirmed',      notes: requestData.customerInfo?.notes || requestData.notes || '',
     };
-      // Verifica se chi sta prenotando è un barbiere
-    const isBarber = session.user.role === 'barber' || session.user.role === 'admin';
     
     // Validazione completa
     const validationErrors = validateBookingData(bookingData, isBarber);
@@ -638,14 +643,21 @@ function validateBookingData(data: any, isBarber: boolean = false): string[] {
       errors.push('Telefono cliente è obbligatorio');
     }
   } else {
-    // Per i barbieri, valida email solo se fornita
-    if (data.customerEmail && data.customerEmail.trim() !== '') {
+    // Per i barbieri, valida email solo se fornita e non vuota
+    if (data.customerEmail && typeof data.customerEmail === 'string' && data.customerEmail.trim() !== '') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(data.customerEmail)) {
         errors.push('Formato email non valido');
       }
     }
-    // Telefono opzionale per barbieri - nessuna validazione se vuoto
+    // Telefono opzionale per barbieri - valida solo se fornito
+    if (data.customerPhone && typeof data.customerPhone === 'string' && data.customerPhone.trim() !== '') {
+      // Validazione base del formato telefono (opzionale)
+      const phoneRegex = /^[\d\s\+\-\(\)]+$/;
+      if (!phoneRegex.test(data.customerPhone)) {
+        errors.push('Formato telefono non valido');
+      }
+    }
   }
 
   if (!data.barberId) {
