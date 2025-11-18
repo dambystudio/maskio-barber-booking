@@ -958,7 +958,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
           animate="visible"
           className="space-y-6"
         >          <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-center mb-6 text-white">
-            Scegli il tuo barbiere
+            Scegli il tuo collaboratore
           </motion.h2>
           
           <div className="grid md:grid-cols-2 gap-6">
