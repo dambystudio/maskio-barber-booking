@@ -976,6 +976,77 @@ export default function PannelloPrenotazioni() {
   // Funzione per rimuovere una chiusura di un barbiere
   const removeBarberClosure = async (barberEmail: string, closureDate: string, closureType: 'full' | 'morning' | 'afternoon') => {
     try {
+      // ✅ FIX: Se closureType è 'full', elimina ENTRAMBE le chiusure (morning + afternoon)
+      // perché nel database possono essere 2 record separati
+      if (closureType === 'full') {
+        // Elimina morning
+        const morningResponse = await fetch('/api/barber-closures', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ barberEmail, closureDate, closureType: 'morning' })
+        });
+        
+        // Elimina afternoon
+        const afternoonResponse = await fetch('/api/barber-closures', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ barberEmail, closureDate, closureType: 'afternoon' })
+        });
+        
+        // Se almeno una delle due ha avuto successo, consideriamo l'operazione riuscita
+        if (morningResponse.ok || afternoonResponse.ok) {
+          console.log(`✅ Barber closures removed for ${barberEmail} on ${closureDate} (both morning and afternoon)`);
+          
+          // Aggiorna lo stato locale rimuovendo entrambe le chiusure
+          setBarberClosures(prev => {
+            const newClosures = { ...prev };
+            if (newClosures[closureDate] && newClosures[closureDate][barberEmail]) {
+              delete newClosures[closureDate][barberEmail];
+              
+              // Se non ci sono più chiusure per quella data, rimuovi l'intera data
+              if (Object.keys(newClosures[closureDate]).length === 0) {
+                delete newClosures[closureDate];
+              }
+            }
+            return newClosures;
+          });
+          
+          const barberName = barberMapping[barberEmail as keyof typeof barberMapping];
+          alert(`Chiusura giornaliera rimossa per ${barberName} in data ${format(parseISO(closureDate + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}`);
+          return;
+        } else {
+          // Prova anche a eliminare una chiusura 'full' (caso in cui esiste davvero nel DB)
+          const fullResponse = await fetch('/api/barber-closures', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ barberEmail, closureDate, closureType: 'full' })
+          });
+          
+          if (fullResponse.ok) {
+            console.log(`✅ Full day closure removed for ${barberEmail} on ${closureDate}`);
+            
+            setBarberClosures(prev => {
+              const newClosures = { ...prev };
+              if (newClosures[closureDate] && newClosures[closureDate][barberEmail]) {
+                delete newClosures[closureDate][barberEmail];
+                if (Object.keys(newClosures[closureDate]).length === 0) {
+                  delete newClosures[closureDate];
+                }
+              }
+              return newClosures;
+            });
+            
+            const barberName = barberMapping[barberEmail as keyof typeof barberMapping];
+            alert(`Chiusura giornaliera rimossa per ${barberName} in data ${format(parseISO(closureDate + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}`);
+            return;
+          }
+          
+          alert('Chiusura non trovata.');
+          return;
+        }
+      }
+      
+      // Per morning o afternoon, comportamento normale
       const response = await fetch('/api/barber-closures', {
         method: 'DELETE',
         headers: {
@@ -995,13 +1066,15 @@ export default function PannelloPrenotazioni() {
         setBarberClosures(prev => {
           const newClosures = { ...prev };
           if (newClosures[closureDate] && newClosures[closureDate][barberEmail]) {
-            if (closureType === 'full') {
-              // Rimuovi completamente la chiusura per quel barbiere in quella data
-              delete newClosures[closureDate][barberEmail];
-            } else if (closureType === 'morning') {
+            if (closureType === 'morning') {
               newClosures[closureDate][barberEmail].morning = false;
             } else if (closureType === 'afternoon') {
               newClosures[closureDate][barberEmail].afternoon = false;
+            }
+            
+            // Se non ci sono più chiusure per quel barbiere, rimuovilo
+            if (!newClosures[closureDate][barberEmail].morning && !newClosures[closureDate][barberEmail].afternoon) {
+              delete newClosures[closureDate][barberEmail];
             }
             
             // Se non ci sono più chiusure per quella data, rimuovi l'intera data
@@ -1013,8 +1086,7 @@ export default function PannelloPrenotazioni() {
         });
         
         const barberName = barberMapping[barberEmail as keyof typeof barberMapping];
-        const closureTypeText = closureType === 'full' ? 'giornaliera' : 
-                               closureType === 'morning' ? 'mattutina' : 'pomeridiana';
+        const closureTypeText = closureType === 'morning' ? 'mattutina' : 'pomeridiana';
         alert(`Chiusura ${closureTypeText} rimossa per ${barberName} in data ${format(parseISO(closureDate + 'T00:00:00'), 'dd/MM/yyyy', { locale: it })}`);
       } else {
         const errorData = await response.json();
