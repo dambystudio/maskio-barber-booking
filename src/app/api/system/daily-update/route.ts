@@ -31,12 +31,16 @@ async function isBarberClosedOnDay(barberEmail: string, dayOfWeek: number): Prom
 }
 
 /**
- * Create automatic closure for a barber if it doesn't already exist
- * Returns true if closure was created, false if it already existed or wasn't needed
- */
-/**
  * Crea una chiusura automatica se necessaria per il barbiere e il giorno specificato.
  * ✅ NON ricrea la chiusura se è stata rimossa manualmente dal barbiere.
+ * ✅ Rispetta le chiusure manuali aggiunte dal barbiere (full day, ecc.).
+ * 
+ * FLUSSO:
+ * 1. Sistema crea schedule con tutti gli slot (mattina + pomeriggio)
+ * 2. Sistema crea chiusure automatiche (Nicolò mattina, Fabio lunedì full, ecc.)
+ * 3. Se barbiere elimina chiusura → sistema NON la ricrea (rispetta scelta)
+ * 4. Se barbiere aggiunge chiusura manuale → sistema la rispetta
+ * 
  * Ritorna true se ha creato una nuova chiusura, false altrimenti.
  */
 async function createAutoClosureIfNeeded(
@@ -106,16 +110,8 @@ async function createAutoClosureIfNeeded(
 export async function POST(request: NextRequest) {
     try {
         console.log('🌅 Starting daily update via API...');
-          // Get all active barbers with their email
+        // Get all active barbers with their email
         const barbers = await sql`SELECT id, email FROM barbers WHERE is_active = true`;
-        
-        // ✅ PROTECTED DATES: These dates should NEVER be modified by daily-update
-        // They are manually configured exceptional openings
-        const PROTECTED_DATES = [
-            '2025-10-30', // Michele exceptional opening on Thursday
-            '2025-12-22', // Christmas Monday - both barbers full day
-            '2025-12-29'  // Christmas Monday - both barbers full day
-        ];
         
         // Calculate date range: today + next 60 days
         const today = new Date();
@@ -123,7 +119,6 @@ export async function POST(request: NextRequest) {
         let updatedCount = 0;
         let skippedSundaysCount = 0;
         let skippedExceptionalCount = 0;
-        let skippedProtectedCount = 0;
         let autoClosuresCreated = 0;
         
         for (let i = 0; i < 60; i++) {
@@ -135,13 +130,6 @@ export async function POST(request: NextRequest) {
             // Skip Sundays (barbershop closed)
             if (dayOfWeek === 0) {
                 skippedSundaysCount++;
-                continue;
-            }
-            
-            // ✅ Skip protected dates (manually configured exceptional openings)
-            if (PROTECTED_DATES.includes(dateString)) {
-                skippedProtectedCount++;
-                console.log(`⚠️ Skipping protected date: ${dateString}`);
                 continue;
             }
             
@@ -220,7 +208,6 @@ export async function POST(request: NextRequest) {
                 autoClosuresCreated: autoClosuresCreated,
                 sundaysSkipped: skippedSundaysCount,
                 exceptionalOpeningsPreserved: skippedExceptionalCount,
-                protectedDatesSkipped: skippedProtectedCount,
                 oldSchedulesCleaned: Array.isArray(deletedResult) ? deletedResult.length : 0,
                 activeBarbersCount: barbers.length
             },
