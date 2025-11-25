@@ -441,11 +441,26 @@ export default function BookingSwapModal({
       try {
         setLoadingBookings(true);
         
+        console.log('🔄 Fetching all bookings...');
+        
         // Fetch prenotazioni di tutti i barbieri
         const response = await fetch('/api/bookings');
         if (response.ok) {
           const data = await response.json();
           const bookingsArray = data.bookings || [];
+          
+          console.log('✅ Bookings fetched:', bookingsArray.length);
+          console.log('📊 Sample booking:', bookingsArray[0]);
+          console.log('📊 Keys:', bookingsArray[0] ? Object.keys(bookingsArray[0]) : []);
+          
+          // Raggruppa per barbiere per debug
+          const byBarber = {};
+          bookingsArray.forEach(b => {
+            if (!byBarber[b.barber_name]) byBarber[b.barber_name] = 0;
+            byBarber[b.barber_name]++;
+          });
+          console.log('📊 Bookings per barber:', byBarber);
+          
           setAllBarberBookings(bookingsArray);
         } else {
           console.error('❌ Failed to fetch all bookings:', response.status);
