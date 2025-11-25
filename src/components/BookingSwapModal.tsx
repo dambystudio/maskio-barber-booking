@@ -268,10 +268,8 @@ export default function BookingSwapModal({
   onClose,
   onSwapComplete
 }: BookingSwapModalProps) {
-  const [swapMode, setSwapMode] = useState<'move' | 'swap'>('move');
   const [selectedDate, setSelectedDate] = useState(booking.booking_date);
   const [selectedTime, setSelectedTime] = useState('');
-  const [selectedBookingForSwap, setSelectedBookingForSwap] = useState<Booking | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [slotAvailability, setSlotAvailability] = useState<{ available: boolean; occupiedBy?: any } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -393,25 +391,36 @@ export default function BookingSwapModal({
   const handleSwap = async () => {
     setIsProcessing(true);
     try {
+      // Check if we're swapping with an occupied slot or moving to a free slot
+      const isSwapping = slotAvailability && !slotAvailability.available;
+      
       let payload;
       
-      if (swapMode === 'move') {
+      if (isSwapping && slotAvailability?.occupiedBy) {
+        // Find the booking that occupies the slot
+        const occupiedBooking = allBookings.find(b => 
+          b.booking_date === selectedDate && 
+          b.booking_time === selectedTime &&
+          b.id !== booking.id
+        );
+        
+        if (!occupiedBooking) {
+          alert('Errore: impossibile trovare l\'appuntamento da scambiare');
+          setIsProcessing(false);
+          return;
+        }
+        
+        payload = {
+          booking1Id: booking.id,
+          booking2Id: occupiedBooking.id,
+          swapType: 'swap'
+        };
+      } else {
         payload = {
           booking1Id: booking.id,
           swapType: 'move',
           newDate: selectedDate,
           newTime: selectedTime
-        };
-      } else {
-        if (!selectedBookingForSwap) {
-          alert('Seleziona un appuntamento con cui scambiare');
-          setIsProcessing(false);
-          return;
-        }
-        payload = {
-          booking1Id: booking.id,
-          booking2Id: selectedBookingForSwap.id,
-          swapType: 'swap'
         };
       }
 
@@ -445,12 +454,6 @@ export default function BookingSwapModal({
       setIsProcessing(false);
     }
   };
-
-  // Filtra le prenotazioni per lo scambio (escludi quella corrente)
-  const availableBookingsForSwap = barberBookings.filter(b => 
-    b.id !== booking.id && 
-    b.status !== 'cancelled'
-  );
 
   // Genera le date future (prossimi 30 giorni)
   const generateDates = () => {
@@ -525,35 +528,8 @@ export default function BookingSwapModal({
           </div>
         </div>
 
-        {/* Mode Selection */}
-        <div className="mb-6">
-          <div className="flex gap-4 mb-4">
-            <button
-              onClick={() => setSwapMode('move')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                swapMode === 'move' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              📅 Sposta in slot libero
-            </button>
-            <button
-              onClick={() => setSwapMode('swap')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                swapMode === 'swap' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              🔄 Scambia con altro appuntamento
-            </button>
-          </div>
-        </div>
-
-        {swapMode === 'move' ? (
-          /* Modalità Sposta */
-          <div className="space-y-6">
+        {/* Modalità Sposta in slot libero */}
+        <div className="space-y-6">
             {/* Selezione Data - Scorrimento orizzontale con 3 date visibili */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-3">Seleziona nuova data:</label>
@@ -653,145 +629,25 @@ export default function BookingSwapModal({
                 ) : (
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="text-red-400 text-2xl">❌</div>
+                      <div className="text-amber-400 text-2xl">⚠️</div>
                       <div>
-                        <div className="text-red-400 font-semibold">Slot occupato</div>
+                        <div className="text-amber-400 font-semibold">Slot occupato</div>
                         <div className="text-gray-300 text-sm">Cliente: {slotAvailability.occupiedBy?.customerName}</div>
                       </div>
                     </div>
                     <div className="bg-amber-900/30 border border-amber-500 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2">
                         <span className="text-amber-400">💡</span>
-                        <span className="text-amber-300 font-medium">Vuoi scambiare i due appuntamenti?</span>
+                        <span className="text-amber-300 text-sm">
+                          Clicca il pulsante "Scambia" in basso per scambiare i due appuntamenti
+                        </span>
                       </div>
-                      <button
-                        onClick={() => {
-                          // Trova l'appuntamento che occupa lo slot
-                          const occupiedBooking = allBookings.find(b => 
-                            b.booking_date === selectedDate && 
-                            b.booking_time === selectedTime &&
-                            b.id !== booking.id
-                          );
-                          if (occupiedBooking) {
-                            setSelectedBookingForSwap(occupiedBooking);
-                            setSwapMode('swap');
-                          }
-                        }}
-                        className="w-full bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                      >
-                        🔄 Scambia con {slotAvailability.occupiedBy?.customerName}
-                      </button>
                     </div>
                   </div>
                 )}
               </div>
             )}
           </div>
-        ) : (
-          /* Modalità Scambio */
-          <div className="space-y-6">
-            {selectedBookingForSwap ? (
-              /* Conferma scambio specifico */
-              <div className="bg-blue-900/30 border border-blue-500 rounded-lg p-6">
-                <h3 className="text-lg font-medium text-blue-300 mb-4 flex items-center gap-2">
-                  🔄 Conferma scambio appuntamenti
-                </h3>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Appuntamento corrente */}
-                  <div className="bg-gray-800 rounded-lg p-4">
-                    <div className="text-amber-400 font-medium mb-3 flex items-center gap-2">
-                      📤 {booking.customer_name} andrà a:
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Data:</span>
-                        <span className="text-white">{format(parseISO(selectedBookingForSwap.booking_date), 'dd/MM/yyyy')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Ora:</span>
-                        <span className="text-white">{selectedBookingForSwap.booking_time}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Appuntamento da scambiare */}
-                  <div className="bg-gray-800 rounded-lg p-4">
-                    <div className="text-green-400 font-medium mb-3 flex items-center gap-2">
-                      📥 {selectedBookingForSwap.customer_name} andrà a:
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Data:</span>
-                        <span className="text-white">{format(parseISO(booking.booking_date), 'dd/MM/yyyy')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Ora:</span>
-                        <span className="text-white">{booking.booking_time}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex gap-3">
-                  <button
-                    onClick={() => {
-                      setSelectedBookingForSwap(null);
-                      setSwapMode('move');
-                    }}
-                    className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    ← Torna indietro
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Selezione appuntamento da scambiare */
-              <div>
-                <h3 className="text-lg font-medium text-white mb-4">Seleziona l'appuntamento con cui scambiare:</h3>
-                {availableBookingsForSwap.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400 bg-gray-800 rounded-lg">
-                    <div className="text-4xl mb-2">📅</div>
-                    <div>Nessun altro appuntamento disponibile per lo scambio</div>
-                    <button
-                      onClick={() => setSwapMode('move')}
-                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Torna a spostamento semplice
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-80 overflow-y-auto">
-                    {availableBookingsForSwap.map(b => (
-                      <motion.button
-                        key={b.id}
-                        onClick={() => setSelectedBookingForSwap(b)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full p-4 rounded-lg border-2 border-gray-600 bg-gray-800 hover:border-blue-500 hover:bg-gray-700 transition-all text-left"
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="font-medium text-white text-lg">{b.customer_name}</div>
-                          <div className="text-blue-400 text-sm">{b.service_name}</div>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm">
-                          <div className="flex items-center gap-1">
-                            <span className="text-gray-400">📅</span>
-                            <span className="text-white">{format(parseISO(b.booking_date), 'dd/MM/yyyy')}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-gray-400">🕐</span>
-                            <span className="text-white">{b.booking_time}</span>
-                          </div>
-                        </div>
-                      </motion.button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
         </div>
 
         {/* Actions - Fixed at bottom with safe area */}
@@ -809,48 +665,30 @@ export default function BookingSwapModal({
             Annulla
           </button>
           
-          {swapMode === 'move' && selectedTime && slotAvailability ? (
-            slotAvailability.available ? (
-              <button
-                onClick={handleSwap}
-                disabled={isProcessing}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-              >
-                {isProcessing ? '⏳ Spostamento...' : '📅 Sposta in slot libero'}
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  // Trova l'appuntamento che occupa lo slot e passa alla modalità scambio
-                  const occupiedBooking = allBookings.find(b => 
-                    b.booking_date === selectedDate && 
-                    b.booking_time === selectedTime &&
-                    b.id !== booking.id
-                  );
-                  if (occupiedBooking) {
-                    setSelectedBookingForSwap(occupiedBooking);
-                    setSwapMode('swap');
-                  }
-                }}
-                className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
-              >
-                🔄 Scambia con {slotAvailability.occupiedBy?.customerName}
-              </button>
-            )
-          ) : swapMode === 'swap' && selectedBookingForSwap ? (
+          {selectedTime && slotAvailability ? (
             <button
               onClick={handleSwap}
               disabled={isProcessing}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className={`px-6 py-3 text-white rounded-lg disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-2 ${
+                slotAvailability.available 
+                  ? 'bg-green-600 hover:bg-green-700' 
+                  : 'bg-amber-600 hover:bg-amber-700'
+              }`}
             >
-              {isProcessing ? '⏳ Scambio...' : `🔄 Scambia con ${selectedBookingForSwap.customer_name}`}
+              {isProcessing ? (
+                '⏳ Elaborazione...'
+              ) : slotAvailability.available ? (
+                '📅 Sposta in slot libero'
+              ) : (
+                `🔄 Scambia con ${slotAvailability.occupiedBy?.customerName}`
+              )}
             </button>
           ) : (
             <button
               disabled
               className="px-6 py-3 bg-gray-600 text-gray-400 rounded-lg cursor-not-allowed"
             >
-              {swapMode === 'move' ? 'Seleziona data e ora' : 'Seleziona appuntamento da scambiare'}
+              Seleziona data e ora
             </button>
           )}
         </div>
