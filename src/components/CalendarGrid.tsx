@@ -196,16 +196,33 @@ const CalendarGrid = ({
 
   // Funzioni per ottenere gli stili dei blocchi prenotazione
   const getBookingStyles = (status: string, serviceName?: string) => {
-    // Se il servizio è "Barba" e lo status è "confirmed", usa il blu
-    if (status === 'confirmed' && serviceName && serviceName.toLowerCase().includes('barba')) {
-      return 'bg-blue-600 border-blue-400 text-white';
+    // Solo per prenotazioni confermate, usa colori per servizio
+    if (status === 'confirmed' && serviceName) {
+      const service = serviceName.toLowerCase();
+      
+      // Taglio e Barba (controlla per primo perché contiene "barba")
+      if (service.includes('taglio') && service.includes('barba')) {
+        return 'bg-blue-600 border-blue-400 text-white';
+      }
+      
+      // Solo Barba
+      if (service.includes('barba') && !service.includes('taglio')) {
+        return 'bg-yellow-600 border-yellow-400 text-white';
+      }
+      
+      // Solo Taglio
+      if (service.includes('taglio') && !service.includes('barba')) {
+        return 'bg-green-600 border-green-400 text-white';
+      }
+      
+      // Default per servizi confermati non riconosciuti
+      return 'bg-green-600 border-green-400 text-white';
     }
     
+    // Stati diversi da confirmed
     switch (status) {
-      case 'confirmed':
-        return 'bg-green-600 border-green-400 text-white';
       case 'pending':
-        return 'bg-yellow-600 border-yellow-400 text-white';
+        return 'bg-orange-600 border-orange-400 text-white';
       case 'cancelled':
         return 'bg-red-600 border-red-400 text-white';
       default:
@@ -358,6 +375,38 @@ const CalendarGrid = ({
             {dayBookings.filter(b => b.status === 'pending').length}
           </div>
           <div className="text-xs sm:text-sm text-gray-300">In Attesa</div>
+        </div>
+      </div>
+
+      {/* Legenda Colori Servizi */}
+      <div className="mt-4 bg-gray-700 rounded-lg p-4">
+        <h3 className="text-sm font-semibold text-white mb-3">📋 Legenda Servizi</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-green-600 border-2 border-green-400 rounded"></div>
+            <span className="text-sm text-gray-300">Taglio</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-yellow-600 border-2 border-yellow-400 rounded"></div>
+            <span className="text-sm text-gray-300">Barba</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-blue-600 border-2 border-blue-400 rounded"></div>
+            <span className="text-sm text-gray-300">Taglio e Barba</span>
+          </div>
+        </div>
+        <div className="mt-2 pt-2 border-t border-gray-600">
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span>Altri stati:</span>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-orange-600 border border-orange-400 rounded"></div>
+              <span>In attesa</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-red-600 border border-red-400 rounded"></div>
+              <span>Annullata</span>
+            </div>
+          </div>
         </div>
       </div>
 
