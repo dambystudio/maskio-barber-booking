@@ -454,8 +454,8 @@ export default function BookingSwapModal({
           console.log('📊 Keys:', bookingsArray[0] ? Object.keys(bookingsArray[0]) : []);
           
           // Raggruppa per barbiere per debug
-          const byBarber = {};
-          bookingsArray.forEach(b => {
+          const byBarber: Record<string, number> = {};
+          bookingsArray.forEach((b: Booking) => {
             if (!byBarber[b.barber_name]) byBarber[b.barber_name] = 0;
             byBarber[b.barber_name]++;
           });
