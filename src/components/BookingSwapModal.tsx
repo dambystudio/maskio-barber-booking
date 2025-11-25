@@ -148,6 +148,16 @@ function TimeSlotGrid({
             booking.barber_name === barberName
           );
 
+          // Debug logging
+          if (time === '10:00' && selectedDate === new Date().toISOString().split('T')[0]) {
+            console.log(`🔍 Check ${barberName} at ${time}:`, {
+              existingBooking: existingBooking ? `Found: ${existingBooking.customer_name}` : 'Not found',
+              totalBookings: allBookings.length,
+              bookingsForThisBarber: allBookings.filter(b => b.barber_name === barberName).length,
+              bookingsForThisDate: allBookings.filter(b => b.booking_date === selectedDate).length
+            });
+          }
+
           if (existingBooking) {
             // Slot occupato
             slotsMap[key] = {
