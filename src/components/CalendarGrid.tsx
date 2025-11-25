@@ -195,7 +195,12 @@ const CalendarGrid = ({
   };
 
   // Funzioni per ottenere gli stili dei blocchi prenotazione
-  const getBookingStyles = (status: string) => {
+  const getBookingStyles = (status: string, serviceName?: string) => {
+    // Se il servizio è "Barba" e lo status è "confirmed", usa il blu
+    if (status === 'confirmed' && serviceName && serviceName.toLowerCase().includes('barba')) {
+      return 'bg-blue-600 border-blue-400 text-white';
+    }
+    
     switch (status) {
       case 'confirmed':
         return 'bg-green-600 border-green-400 text-white';
@@ -304,7 +309,7 @@ const CalendarGrid = ({
                   >
                     {booking ? (
                       <motion.div
-                        className={`absolute inset-0 p-1 rounded border-2 cursor-pointer hover:shadow-lg transition-all duration-200 ${getBookingStyles(booking.status)}`}
+                        className={`absolute inset-0 p-1 rounded border-2 cursor-pointer hover:shadow-lg transition-all duration-200 ${getBookingStyles(booking.status, booking.service_name)}`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => openBookingModal(booking)}
@@ -489,7 +494,7 @@ const CalendarGrid = ({
             <div className="p-4 space-y-3">
               {/* Status Badge */}
               <div className="flex justify-center">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getBookingStyles(selectedBooking.status)}`}>
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getBookingStyles(selectedBooking.status, selectedBooking.service_name)}`}>
                   {getStatusIcon(selectedBooking.status)} {selectedBooking.status.toUpperCase()}
                 </span>
               </div>
