@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
-    const { booking1Id, booking2Id, swapType, newDate, newTime } = await request.json();
+    const { booking1Id, booking2Id, swapType, newDate, newTime, newBarberName, crossBarber } = await request.json();
 
-    console.log('📋 Richiesta swap:', { booking1Id, booking2Id, swapType, newDate, newTime });
+    console.log('📋 Richiesta swap:', { booking1Id, booking2Id, swapType, newDate, newTime, newBarberName, crossBarber });
 
     if (!booking1Id) {
       return NextResponse.json({ error: 'ID prenotazione 1 richiesto' }, { status: 400 });
@@ -75,12 +75,34 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Nuova data e ora richieste' }, { status: 400 });
       }
 
-      console.log('🔍 Controllo disponibilità slot:', { barber: booking1.barber_id, newDate, newTime });
+      // ✅ NUOVO: Supporto per cambio barbiere
+      let targetBarberId = booking1.barber_id;
+      let targetBarberName = booking1.barber_name;
+      
+      if (crossBarber && newBarberName) {
+        console.log('🔄 Cambio barbiere richiesto:', { from: booking1.barber_name, to: newBarberName });
+        
+        // Trova il nuovo barbiere
+        const targetBarber = await sql`
+          SELECT id, name FROM barbers WHERE name = ${newBarberName}
+        `;
+        
+        if (targetBarber.length === 0) {
+          console.error('❌ Barbiere target non trovato:', newBarberName);
+          return NextResponse.json({ error: 'Barbiere di destinazione non trovato' }, { status: 404 });
+        }
+        
+        targetBarberId = targetBarber[0].id;
+        targetBarberName = targetBarber[0].name;
+        console.log('✅ Barbiere target trovato:', { id: targetBarberId, name: targetBarberName });
+      }
 
-      // Verifica che il nuovo slot sia libero
+      console.log('🔍 Controllo disponibilità slot:', { barber: targetBarberId, newDate, newTime });
+
+      // Verifica che il nuovo slot sia libero (con il barbiere target)
       const existingBooking = await sql`
         SELECT id FROM bookings 
-        WHERE barber_id = ${booking1.barber_id} 
+        WHERE barber_id = ${targetBarberId} 
         AND date = ${newDate} 
         AND time = ${newTime}
         AND status != 'cancelled'
@@ -96,23 +118,30 @@ export async function POST(request: NextRequest) {
 
       console.log('✅ Slot libero, procedo con lo spostamento');
 
-      // Sposta l'appuntamento
+      // Sposta l'appuntamento (aggiorna anche barbiere se necessario)
       await sql`
         UPDATE bookings 
-        SET date = ${newDate}, time = ${newTime}
+        SET date = ${newDate}, 
+            time = ${newTime},
+            barber_id = ${targetBarberId},
+            barber_name = ${targetBarberName}
         WHERE id = ${booking1Id}
       `;
 
-      console.log('✅ Appuntamento spostato con successo');
+      console.log('✅ Appuntamento spostato con successo', crossBarber ? '(con cambio barbiere)' : '');
 
       return NextResponse.json({ 
         success: true, 
-        message: 'Appuntamento spostato con successo',
+        message: crossBarber 
+          ? `Appuntamento spostato con successo da ${booking1.barber_name} a ${targetBarberName}`
+          : 'Appuntamento spostato con successo',
         type: 'move',
+        crossBarber,
         booking: {
           id: booking1Id,
           newDate,
-          newTime
+          newTime,
+          newBarber: targetBarberName
         }
       });
 
@@ -128,41 +157,72 @@ export async function POST(request: NextRequest) {
       }
 
       // ✅ MODIFICA: Gestione reciproca - barbieri possono scambiare appuntamenti tra loro
-      // Controllo autorizzazioni rimosso per permettere gestione reciproca
-      console.log('✅ Gestione reciproca abilitata per swap');
+      console.log('✅ Gestione reciproca abilitata per swap', crossBarber ? '(tra barbieri diversi)' : '(stesso barbiere)');
 
-      // Scambia le date e orari
+      // Scambia date, orari e barbieri
       await sql`BEGIN`;
       
       try {
-        await sql`
-          UPDATE bookings 
-          SET date = ${booking2.date}, time = ${booking2.time}
-          WHERE id = ${booking1Id}
-        `;
-        
-        await sql`
-          UPDATE bookings 
-          SET date = ${booking1.date}, time = ${booking1.time}
-          WHERE id = ${booking2Id}
-        `;
+        if (crossBarber) {
+          // Scambio tra barbieri: scambia anche barber_id e barber_name
+          console.log('🔄 Scambio tra barbieri:', { 
+            booking1: `${booking1.barber_name} → ${booking2.barber_name}`,
+            booking2: `${booking2.barber_name} → ${booking1.barber_name}`
+          });
+          
+          await sql`
+            UPDATE bookings 
+            SET date = ${booking2.date}, 
+                time = ${booking2.time},
+                barber_id = ${booking2.barber_id},
+                barber_name = ${booking2.barber_name}
+            WHERE id = ${booking1Id}
+          `;
+          
+          await sql`
+            UPDATE bookings 
+            SET date = ${booking1.date}, 
+                time = ${booking1.time},
+                barber_id = ${booking1.barber_id},
+                barber_name = ${booking1.barber_name}
+            WHERE id = ${booking2Id}
+          `;
+        } else {
+          // Scambio normale (stesso barbiere)
+          await sql`
+            UPDATE bookings 
+            SET date = ${booking2.date}, time = ${booking2.time}
+            WHERE id = ${booking1Id}
+          `;
+          
+          await sql`
+            UPDATE bookings 
+            SET date = ${booking1.date}, time = ${booking1.time}
+            WHERE id = ${booking2Id}
+          `;
+        }
         
         await sql`COMMIT`;
 
         return NextResponse.json({ 
           success: true, 
-          message: 'Appuntamenti scambiati con successo',
+          message: crossBarber 
+            ? `Appuntamenti scambiati con successo tra ${booking1.barber_name} e ${booking2.barber_name}`
+            : 'Appuntamenti scambiati con successo',
           type: 'swap',
+          crossBarber,
           bookings: {
             booking1: {
               id: booking1Id,
               newDate: booking2.date,
-              newTime: booking2.time
+              newTime: booking2.time,
+              newBarber: crossBarber ? booking2.barber_name : booking1.barber_name
             },
             booking2: {
               id: booking2Id,
               newDate: booking1.date,
-              newTime: booking1.time
+              newTime: booking1.time,
+              newBarber: crossBarber ? booking1.barber_name : booking2.barber_name
             }
           }
         });
