@@ -443,8 +443,8 @@ export default function BookingSwapModal({
         
         console.log('🔄 Fetching all bookings...');
         
-        // Fetch prenotazioni di tutti i barbieri
-        const response = await fetch('/api/bookings');
+        // Fetch prenotazioni di TUTTI i barbieri usando il parametro allBarbers
+        const response = await fetch('/api/bookings?fetchAll=true&allBarbers=true');
         if (response.ok) {
           const data = await response.json();
           const bookingsArray = data.bookings || [];
@@ -786,23 +786,23 @@ export default function BookingSwapModal({
                   Seleziona orario per {format(parseISO(selectedDate), 'dd/MM/yyyy', { locale: it })}:
                 </label>
                 
-                {/* ✅ NUOVO: Messaggio se nessuno slot disponibile (es. Fabio il lunedì) */}
-                {generateTimeSlots().length === 0 ? (
+                {/* Messaggio solo se selectedBarber NON è 'all' e il barbiere è chiuso */}
+                {selectedBarber !== 'all' && generateTimeSlots().length === 0 ? (
                   <div className="bg-red-900/30 border border-red-500 rounded-lg p-6 text-center">
                     <div className="text-red-400 text-4xl mb-3">🔒</div>
                     <div className="text-red-300 font-semibold text-lg mb-2">Giorno chiuso</div>
                     <div className="text-gray-300 text-sm">
-                      {booking.barber_name} è chiuso il{' '}
+                      {selectedBarber} è chiuso il{' '}
                       {format(parseISO(selectedDate), 'EEEE', { locale: it })}
                     </div>
                     <div className="mt-4 text-xs text-gray-400">
-                      Seleziona un'altra data per spostare l'appuntamento
+                      Seleziona un altro barbiere o un'altra data
                     </div>
                   </div>
                 ) : (
                   <>
                     {/* Legenda colori */}
-                    <div className="flex gap-4 mb-4 text-xs">
+                    <div className="flex flex-wrap gap-4 mb-4 text-xs">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-green-500 rounded"></div>
                         <span className="text-gray-400">Libero</span>
@@ -814,6 +814,10 @@ export default function BookingSwapModal({
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-blue-500 rounded"></div>
                         <span className="text-gray-400">Selezionato</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-gray-700 rounded"></div>
+                        <span className="text-gray-400">Chiuso</span>
                       </div>
                     </div>
 
