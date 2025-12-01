@@ -9,19 +9,19 @@ export default function Page() {
       name: 'Pomata Modellante Premium',
       description: 'Pomata professionale a tenuta forte per uno styling perfetto che dura tutto il giorno. Texture cremosa e facile da applicare.',
       price: '€32.00',
-      image: '/prodotti.jpg'
+      image: '/prodotti.webp'
     },
     {
       name: 'Olio da Barba Artigianale',
       description: 'Olio naturale nutriente per barba con oli essenziali. Ammorbidisce, idrata e profuma delicatamente.',
       price: '€28.00',
-      image: '/prodotti.jpg'
+      image: '/prodotti.webp'
     },
     {
       name: 'Kit Barba Completo',
       description: 'Set completo per la cura della barba: olio nutriente, balsamo modellante e pettine in legno di faggio.',
       price: '€65.00',
-      image: '/prodotti.jpg'
+      image: '/prodotti.webp'
     }
   ];  return (
     <main className="min-h-screen bg-black py-24">
@@ -68,7 +68,7 @@ export default function Page() {
                 className="relative h-64 lg:h-auto"
               >
                 <Image
-                  src="/prodotti.jpg"
+                  src="/prodotti.webp"
                   alt="Prodotti professionali Maskio Barber"
                   fill
                   className="object-cover"

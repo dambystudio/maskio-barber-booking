@@ -1,57 +1,75 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { LazyMotion, domAnimation, m } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BookingButton from '../components/BookingButton';
 
-export default function Home() {
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
+// Lazy load video component for better LCP
+function HeroVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
-  // Professional Animation Variants
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <video
+      ref={videoRef}
+      src={isVisible ? "/videoLoopCompresso.mp4" : undefined}
+      autoPlay={isVisible}
+      muted
+      loop
+      playsInline
+      className="absolute inset-0 w-full h-full object-cover brightness-[0.55] filter contrast-110 saturate-[1.02]"
+      poster="/sediaOro.webp"
+      preload="none"
+    />
+  );
+}
+
+export default function Home() {
+  // Simplified Animation Variants for better INP
   const fadeInUp = {
-    hidden: { opacity: 0, y: 60 },
+    hidden: { opacity: 0, y: 40 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { 
-        duration: 0.8, 
-        ease: [0.25, 0.46, 0.45, 0.94],
-        type: "spring",
-        stiffness: 100
-      }
+      transition: { duration: 0.6, ease: "easeOut" }
     }
   };
 
   const fadeInLeft = {
-    hidden: { opacity: 0, x: -50, scale: 0.95 },
+    hidden: { opacity: 0, x: -30 },
     visible: { 
       opacity: 1, 
       x: 0,
-      scale: 1,
-      transition: { 
-        duration: 0.7,
-        ease: [0.25, 0.46, 0.45, 0.94],
-        type: "spring",
-        stiffness: 120
-      }
+      transition: { duration: 0.5, ease: "easeOut" }
     }
   };
 
   const fadeInRight = {
-    hidden: { opacity: 0, x: 50, scale: 0.95 },
+    hidden: { opacity: 0, x: 30 },
     visible: { 
       opacity: 1, 
       x: 0,
-      scale: 1,
-      transition: { 
-        duration: 0.7,
-        ease: [0.25, 0.46, 0.45, 0.94],
-        type: "spring",
-        stiffness: 120
-      }
+      transition: { duration: 0.5, ease: "easeOut" }
     }
   };
 
@@ -61,1553 +79,503 @@ export default function Home() {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.1,
-        duration: 0.6
+        delayChildren: 0.1
       }
     }
   };
 
   const scaleIn = {
-    hidden: { scale: 0.8, opacity: 0 },
+    hidden: { scale: 0.9, opacity: 0 },
     visible: { 
       scale: 1, 
       opacity: 1,
-      transition: { 
-        duration: 0.6, 
-        ease: [0.25, 0.46, 0.45, 0.94],
-        type: "spring",
-        stiffness: 150
-      }
+      transition: { duration: 0.4, ease: "easeOut" }
     }
   };
 
-  const parallaxFloat = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.8,
-        ease: [0.25, 0.46, 0.45, 0.94]
-      }
-    }
-  };
-
-  const magneticHover = {
-    rest: { scale: 1, rotateZ: 0 },
-    hover: { 
-      scale: 1.05, 
-      rotateZ: 1,
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut"
-      }
-    },
-    tap: { 
-      scale: 0.98,
-      transition: {
-        duration: 0.1
-      }
-    }
-  };
-
-  const gradientShift = {
-    hidden: { 
-      background: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)"
-    },
-    visible: {
-      background: [
-        "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
-        "linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%)",
-        "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)"
-      ],
-      transition: {
-        duration: 4,
-        ease: "easeInOut",
-        repeat: Infinity,
-        repeatType: "reverse"
-      }
-    }
-  };  return (
-    <div className="min-h-screen bg-black">
-      {/* Enhanced Luxury Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        {/* Static background elements for better performance */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-yellow-300/3 to-yellow-600/2 rounded-full blur-3xl opacity-60" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-yellow-400/2 to-yellow-500/2 rounded-full blur-3xl opacity-40" />
-        <div className="absolute top-1/2 left-1/4 w-60 h-60 bg-gradient-to-br from-gray-500/2 to-gray-700/2 rounded-full blur-3xl opacity-30" />
-          {/* Soft vignette effect for depth */}
-        <div className="absolute inset-0 bg-radial-gradient pointer-events-none opacity-40"          style={{
-            background: "radial-gradient(circle at center, transparent 30%, black 140%)"
-          }}
-        />
-      </div>
-
-      {/* Hero Section - Design più lussuoso */}
-      <div className="relative h-screen">
-        {/* Hero Image con overlay più raffinato */}        <motion.div 
-          className="absolute inset-0 z-0"
-          initial={{ scale: 1.05 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}        >          <video
-            src="/videoLoopCompresso.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover brightness-[0.55] filter contrast-110 saturate-[1.02]"
-            poster="/sediaOro.webp"
-            preload="metadata"
+  return (
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-black">
+        {/* Simplified Background Elements - Static for performance */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-yellow-300/3 to-yellow-600/2 rounded-full blur-3xl opacity-60" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-yellow-400/2 to-yellow-500/2 rounded-full blur-3xl opacity-40" />
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-40"
+            style={{ background: "radial-gradient(circle at center, transparent 30%, black 140%)" }}
           />
-          {/* Overlay con gradiente più sofisticato e lussuoso */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-black/70 via-gray-900/50 to-yellow-950/20"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 2.2, ease: "easeOut" }}
-          />
-            {/* Additional luxury grain texture */}
-          <motion.div
-            className="absolute inset-0 mix-blend-soft-light opacity-10"
-            style={{
-              backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")'
-            }}
-            animate={{
-              opacity: [0.10, 0.12, 0.10]
-            }}
-            transition={{
-              duration: 8,
-              ease: "easeInOut",
-              repeat: Infinity
-            }}
-          />
-          
-          {/* Elementi decorativi più eleganti */}          <div className="absolute inset-0">              {/* Static decorative elements for better performance */}
-            <div className="absolute top-[25%] right-[7%] h-40 w-3 rounded-full overflow-hidden hidden md:block opacity-50"
-              style={{
-                background: "repeating-linear-gradient(45deg, #ffffff33, #ffffff33 10px, #fb923c33 10px, #fb923c33 20px, #ffffff33 20px, #ffffff33 30px)"
-              }}
-            />
-            
-            {/* Static decorative lines */}
-            <div className="absolute top-[10%] left-[5%] w-[2px] h-32 bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent opacity-50" />
-            <div className="absolute bottom-[15%] right-[8%] w-[2px] h-40 bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent opacity-50" />
-            
-            {/* Static decorative circles */}
-            <div className="absolute top-28 right-28 w-3 h-3 border-2 border-yellow-400/40 rounded-full opacity-50" />
-            <div className="absolute bottom-36 left-24 w-2 h-2 border border-yellow-300/50 rounded-full opacity-60" />
-              {/* SVG Decorative scissors icon */}
-            <motion.div
-              className="absolute top-[30%] right-[15%] text-yellow-500/30 w-12 h-12"
-              animate={{
-                rotate: [0, 45, 0],
-                opacity: [0.3, 0.5, 0.3],
-                scale: [1, 1.1, 1]
-              }}
-              transition={{
-                duration: 15,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="6" cy="6" r="3" />
-                <circle cx="6" cy="18" r="3" />
-                <line x1="20" y1="4" x2="8.12" y2="15.88" />
-                <line x1="14.47" y1="14.48" x2="20" y2="20" />
-                <line x1="8.12" y1="8.12" x2="12" y2="12" />
-              </svg>
-            </motion.div>
-            
-            {/* SVG Decorative straight razor icon */}
-            <motion.div
-              className="absolute bottom-[25%] left-[12%] text-yellow-500/30 w-10 h-10"
-              animate={{
-                rotate: [0, -30, 0],
-                opacity: [0.3, 0.6, 0.3],
-                scale: [1, 1.05, 1]
-              }}
-              transition={{
-                duration: 18,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 4l16 16" />
-                <path d="M18 12l2.5 2.5a2.828 2.828 0 1 1-4 4L14 16" />
-                <path d="M14 16l-8.5-8.5a2.828 2.828 0 0 1 4-4L12 6" />
-              </svg>
-            </motion.div>
-            
-            {/* SVG Decorative comb icon */}
-            <motion.div
-              className="absolute top-[60%] left-[20%] text-yellow-500/20 w-8 h-8"
-              animate={{
-                rotate: [0, 15, 0],
-                opacity: [0.2, 0.4, 0.2],
-                scale: [1, 1.08, 1]
-              }}
-              transition={{
-                duration: 20,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6v14c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V6M3 6V4c0-1.1.9-2 2-2h0a2 2 0 0 1 2 2v2M7 6h12M7 18h12M19 6v14c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V6M19 6V4c0-1.1.9-2 2-2h0a2 2 0 0 1 2 2v2" />
-                <path d="M11 6v3M15 6v3M11 12v3M15 12v3M11 18v3M15 18v3" />
-              </svg>
-            </motion.div>
-          </div>
-        </motion.div>
-        
-        {/* Hero Content - Layout più elegante */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="space-y-4" /* Further reduced from space-y-6 to position elements even closer */
+        </div>
+
+        {/* Hero Section */}
+        <div className="relative h-screen">
+          {/* Hero Video with lazy loading */}
+          <m.div 
+            className="absolute inset-0 z-0"
+            initial={{ scale: 1.02 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
           >
-            {/* Logo con decorazione sofisticata */}
-            <motion.div
-              variants={fadeInUp}
-              className="flex flex-col items-center"
-            >              <div className="relative">
-                {/* Static glow effect for better performance */}
-                <div className="absolute -inset-16 opacity-10 blur-[80px] bg-gradient-radial from-yellow-400/20 via-yellow-400/5 to-transparent" />
-                <div className="absolute -inset-12 opacity-15 blur-[60px] bg-gradient-radial from-yellow-400/15 via-yellow-400/3 to-transparent" />                {/* Logo */}
-                <Image
-                  src="/LogoSimboloNome_Bianco(1).png"
-                  alt="Maskio Barber Concept"
-                  width={320}
-                  height={32}
-                  className="mb-1 relative z-10 drop-shadow-lg w-64 h-auto sm:w-72 md:w-80 lg:w-96"
-                  priority
-                />
-              </div>
-              
-              {/* Decorative line under logo */}
-              <div className="relative mt-8 flex flex-col items-center">
-                {/* Decorative ornament */}
-                <motion.div className="mb-2 opacity-80"
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 0.8, scale: 1 }}
-                  transition={{ delay: 0.7, duration: 0.8, type: "spring" }}
-                >
-                  <svg width="24" height="12" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 0L14.5 5H20.5L15.5 8L17.5 12L12 9.5L6.5 12L8.5 8L3.5 5H9.5L12 0Z" fill="rgba(251,191,36,0.6)" />
-                  </svg>
-                </motion.div>
-                
-                <motion.div 
-                  className="h-[1px] w-48 bg-gradient-to-r from-transparent via-yellow-400/80 to-transparent"
-                  variants={scaleIn}
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.5, duration: 1.2 }}
-                />
-                
-                {/* Animated golden dot */}
-                <motion.div 
-                  className="absolute -top-[2px] left-1/2 transform -translate-x-1/2 h-[3px] w-3 rounded-full bg-yellow-400"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 1, 0] }}
-                  transition={{ delay: 1.7, duration: 2, repeat: Infinity, repeatDelay: 4 }}
-                />
-                
-                <div className="flex items-center justify-center space-x-2 mt-1">
-                  <motion.div 
-                    className="h-[1px] w-8 bg-gradient-to-r from-transparent to-yellow-400/50"
-                    initial={{ scaleX: 0, originX: 1 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.8, duration: 0.6 }}
-                  />
-                  
-                  <motion.div
-                    className="h-1 w-1 rounded-full bg-yellow-400/70"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: [0, 1, 0.8, 1] }}
-                    transition={{ delay: 1, duration: 0.8 }}
-                  />
-                  
-                  <motion.div 
-                    className="h-[1px] w-8 bg-gradient-to-r from-yellow-400/50 to-transparent"
-                    initial={{ scaleX: 0, originX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.8, duration: 0.6 }}
+            <HeroVideo />
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-gray-900/50 to-yellow-950/20" />
+            
+            {/* Decorative elements - static, no animations for performance */}
+            <div className="absolute inset-0">
+              <div 
+                className="absolute top-[25%] right-[7%] h-40 w-3 rounded-full overflow-hidden hidden md:block opacity-50"
+                style={{ background: "repeating-linear-gradient(45deg, #ffffff33, #ffffff33 10px, #fb923c33 10px, #fb923c33 20px)" }}
+              />
+              <div className="absolute top-[10%] left-[5%] w-[2px] h-32 bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent opacity-50" />
+              <div className="absolute bottom-[15%] right-[8%] w-[2px] h-40 bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent opacity-50" />
+              <div className="absolute top-28 right-28 w-3 h-3 border-2 border-yellow-400/40 rounded-full opacity-50" />
+              <div className="absolute bottom-36 left-24 w-2 h-2 border border-yellow-300/50 rounded-full opacity-60" />
+            </div>
+          </m.div>
+          
+          {/* Hero Content */}
+          <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
+            <m.div
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainer}
+              className="space-y-4"
+            >
+              {/* Logo */}
+              <m.div variants={fadeInUp} className="flex flex-col items-center">
+                <div className="relative">
+                  <div className="absolute -inset-16 opacity-10 blur-[80px] bg-gradient-radial from-yellow-400/20 via-yellow-400/5 to-transparent" />
+                  <Image
+                    src="/LogoSimboloNome_Bianco(1).png"
+                    alt="Maskio Barber Concept"
+                    width={320}
+                    height={32}
+                    className="mb-1 relative z-10 drop-shadow-lg w-64 h-auto sm:w-72 md:w-80 lg:w-96"
+                    priority
                   />
                 </div>
-              </div>
-            </motion.div>              <motion.p 
-              variants={fadeInUp}
-              className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed text-gray-100/95 font-light tracking-wider"
-            >
-              <span className="relative inline-block">
-                <motion.span
-                  className="absolute -left-3 top-0 text-3xl text-yellow-400/40 font-serif"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1, delay: 1.5 }}
-                >
-                  "
-                </motion.span>
-              </span>
-              Una nuova concezione del barbiere, dove{" "}
-              <motion.span 
-                className="font-medium relative"
-                whileHover={{ color: "#fbbf24" }}
-                transition={{ duration: 0.3 }}
-              >
-                tradizione
-                <motion.span
-                  className="absolute -bottom-1 left-0 h-[1px] w-full bg-yellow-500/30"
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  transition={{ duration: 0.8, delay: 1.8 }}
-                />
-              </motion.span>{" "}
-              e{" "}
-              <motion.span 
-                className="font-medium relative"
-                whileHover={{ color: "#fbbf24" }}
-                transition={{ duration: 0.3 }}
-              >
-                innovazione
-                <motion.span
-                  className="absolute -bottom-1 left-0 h-[1px] w-full bg-yellow-500/30"
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  transition={{ duration: 0.8, delay: 2 }}
-                />
-              </motion.span>{" "}
-              si incontrano per creare il tuo{" "}
-              <motion.span 
-                className="text-yellow-200 font-normal italic relative"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.2 }}
-              >
-                stile perfetto
-                <motion.span 
-                  className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-yellow-400/10 via-yellow-400/70 to-yellow-400/10"
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  transition={{ duration: 1, delay: 1.2 }}
-                />
-              </motion.span>
-              <span className="relative inline-block">
-                <motion.span
-                  className="absolute -right-3 bottom-0 text-3xl text-yellow-400/40 font-serif"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1, delay: 1.8 }}
-                >
-                  "
-                </motion.span>
-              </span>
-            </motion.p>            {/* Pulsanti con design più raffinato */}            <motion.div
-              variants={fadeInUp}
-              className="flex flex-col sm:flex-row gap-8 justify-center items-center pt-2" /* Further reduced from pt-4 to pt-2 */
-            >
-              <motion.div
-                whileHover={{
-                  scale: 1.05,
-                  y: -5
-                }}
-                whileTap={{ scale: 0.97 }}
-                className="relative"
-              >
-                {/* Glow effect behind primary button */}
-                <motion.div 
-                  className="absolute -inset-1 rounded-xl bg-yellow-500/30 blur-md -z-10"
-                  animate={{
-                    opacity: [0.3, 0.5, 0.3],
-                    scale: [1, 1.05, 1]
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    ease: "easeInOut",
-                    repeat: Infinity
-                  }}
-                />
-                <BookingButton size="lg" className="text-base bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 border-0 shadow-xl px-10 py-5 uppercase tracking-wider font-medium text-white rounded-lg">
-                  <span className="relative flex items-center gap-2 z-10">
-                    {/* Small decorative element before text */}
-                    <motion.span
-                      className="absolute -left-5 top-1/2 transform -translate-y-1/2 w-3 h-[1px] bg-white/70"
-                      initial={{ scaleX: 0, opacity: 0 }}
-                      animate={{ scaleX: 1, opacity: 1 }}
-                      transition={{ delay: 1.5, duration: 0.5 }}
-                    />
-                    
-                    <span>Prenota Ora</span>
-                    
-                    {/* Animated arrow with enhanced styling */}
-                    <motion.svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="18" 
-                      height="18" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                      className="ml-1"
-                      animate={{ x: [0, 3, 0], opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <path d="M5 12h14"></path>
-                      <path d="m12 5 7 7-7 7"></path>
-                    </motion.svg>
-                    
-                    {/* Small decorative element after text */}
-                    <motion.span
-                      className="absolute -right-5 top-1/2 transform -translate-y-1/2 w-3 h-[1px] bg-white/70"
-                      initial={{ scaleX: 0, opacity: 0 }}
-                      animate={{ scaleX: 1, opacity: 1 }}
-                      transition={{ delay: 1.5, duration: 0.5 }}
-                    />
-                    
-                    {/* Underline animation on hover */}
-                    <motion.span
-                      className="absolute bottom-0 left-0 w-full h-[1px] bg-white/30"
-                      initial={{ scaleX: 0 }}
-                      whileHover={{ scaleX: 1 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </span>
-                </BookingButton>
-              </motion.div>
-                <Link href="/servizi">                <motion.button 
-                  className="relative border border-yellow-400/30 text-white px-10 py-5 rounded-lg font-medium text-base transition-all duration-300 hover:border-yellow-300/70 hover:text-yellow-100 uppercase tracking-wider bg-black/50 backdrop-blur-sm overflow-hidden group"
-                  whileHover={{
-                    boxShadow: "0 10px 30px rgba(251, 191, 36, 0.15)",
-                    borderColor: "rgba(251, 191, 36, 0.5)",
-                    y: -5
-                  }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  {/* Enhanced background shine effect */}
-                  <motion.span 
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-400/10 to-transparent -z-10" 
-                    initial={{ x: '-100%', opacity: 0 }}
-                    whileHover={{ x: '100%', opacity: 1 }}
-                    transition={{ duration: 0.9, ease: "easeInOut" }}
-                  />
-                  
-                  {/* Corner accent decorations */}
-                  <motion.span 
-                    className="absolute top-[3px] left-[3px] w-3 h-3 border-l border-t border-yellow-400/40"
-                    initial={{ opacity: 0.4 }}
-                    whileHover={{ opacity: 0.8 }}
-                  />
-                  <motion.span 
-                    className="absolute bottom-[3px] right-[3px] w-3 h-3 border-r border-b border-yellow-400/40"
-                    initial={{ opacity: 0.4 }}
-                    whileHover={{ opacity: 0.8 }}
-                  />
-                  
-                  <span className="relative flex items-center gap-2">
-                    {/* Small decorative dot before text */}
-                    <motion.span 
-                      className="w-[3px] h-[3px] rounded-full bg-yellow-400/70 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    />
-                    
-                    <span>Scopri i Servizi</span>
-                    
-                    {/* Enhanced animated icon */}
-                    <motion.svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="18" 
-                      height="18" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                      className="opacity-70 group-hover:opacity-100"
-                      animate={{ rotate: [0, 0] }}
-                      whileHover={{ rotate: [0, 360], transition: { duration: 0.8 } }}
-                    >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <path d="m12 8 4 4-4 4"></path>
-                      <path d="M8 12h8"></path>
-                    </motion.svg>
-                    
-                    {/* Small decorative dot after text */}
-                    <motion.span 
-                      className="w-[3px] h-[3px] rounded-full bg-yellow-400/70 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    />
-                    
-                    {/* Enhanced underline effect */}
-                    <motion.span
-                      className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-yellow-400/70 to-transparent"
-                      initial={{ scaleX: 0 }}
-                      whileHover={{ scaleX: 1 }}
-                      transition={{ duration: 0.4 }}
-                    />
-                  </span>
-                </motion.button>
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </div>      {/* About Section with Enhanced Animations */}
-      <motion.section 
-        className="py-20 bg-gradient-to-br from-black to-gray-900 relative overflow-hidden"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-        variants={staggerContainer}
-      >
-        {/* Animated Background Patterns */}
-        <motion.div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage: `radial-gradient(circle at 25% 25%, #f59e0b 0%, transparent 50%),
-                             radial-gradient(circle at 75% 75%, #fbbf24 0%, transparent 50%)`
-          }}
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"]
-          }}
-          transition={{
-            duration: 20,
-            ease: "linear",
-            repeat: Infinity
-          }}
-        />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div 
-            className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
-            variants={staggerContainer}
-          >
-            <motion.div variants={fadeInLeft} className="space-y-8">
-              <motion.div className="space-y-6">                <motion.h1 
-                  variants={fadeInUp}
-                  className="text-4xl md:text-5xl font-bold text-white"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  L'Arte del{" "}
-                  <motion.span 
-                    className="text-yellow-600 inline-block"
-                    animate={{ 
-                      textShadow: [
-                        "0 0 0px rgba(234, 179, 8, 0)",
-                        "0 0 20px rgba(234, 179, 8, 0.4)",
-                        "0 0 0px rgba(234, 179, 8, 0)"
-                      ]
-                    }}
-                    transition={{
-                      duration: 4,
-                      ease: "easeInOut",
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
-                  >
-                    Barbiere Moderno
-                  </motion.span>
-                </motion.h1>
-                  <motion.p 
-                  variants={fadeInUp}
-                  className="text-lg text-gray-300 leading-relaxed"
-                >
-                  Maskio Barber Concept rappresenta l'eccellenza nella cura dell'uomo. 
-                  Il nostro team di professionisti esperti combina tecniche tradizionali con le ultime 
-                  tendenze per offrirti un'esperienza unica e personalizzata.
-                </motion.p>
                 
-                <motion.p 
-                  variants={fadeInUp}
-                  className="text-lg text-gray-300 leading-relaxed"
-                >
-                  Ogni taglio, ogni rasatura, ogni trattamento è pensato per esaltare la tua personalità 
-                  e farti sentire al meglio. Perché per noi, ogni cliente è unico.
-                </motion.p>
-              </motion.div>
+                {/* Decorative line under logo */}
+                <div className="relative mt-8 flex flex-col items-center">
+                  <div className="mb-2 opacity-80">
+                    <svg width="24" height="12" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 0L14.5 5H20.5L15.5 8L17.5 12L12 9.5L6.5 12L8.5 8L3.5 5H9.5L12 0Z" fill="rgba(251,191,36,0.6)" />
+                    </svg>
+                  </div>
+                  <m.div 
+                    className="h-[1px] w-48 bg-gradient-to-r from-transparent via-yellow-400/80 to-transparent"
+                    variants={scaleIn}
+                  />
+                  <div className="flex items-center justify-center space-x-2 mt-1">
+                    <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-yellow-400/50" />
+                    <div className="h-1 w-1 rounded-full bg-yellow-400/70" />
+                    <div className="h-[1px] w-8 bg-gradient-to-r from-yellow-400/50 to-transparent" />
+                  </div>
+                </div>
+              </m.div>
 
-              <motion.div variants={fadeInUp}>
-                <Link href="/chi-siamo">                  <motion.button 
-                    className="bg-gradient-to-r from-black to-gray-800 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300"
-                    whileHover={{
-                      boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)",
-                      y: -3,
-                      background: "linear-gradient(135deg, #000000 0%, #1f2937 100%)",
-                      scale: 1.05
-                    }}
-                    whileTap={{ scale: 0.98 }}
+              <m.p 
+                variants={fadeInUp}
+                className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed text-gray-100/95 font-light tracking-wider"
+              >
+                <span className="text-yellow-400/40 font-serif">&quot;</span>
+                Una nuova concezione del barbiere, dove{" "}
+                <span className="font-medium">tradizione</span>{" "}e{" "}
+                <span className="font-medium">innovazione</span>{" "}
+                si incontrano per creare il tuo{" "}
+                <span className="text-yellow-200 font-normal italic">stile perfetto</span>
+                <span className="text-yellow-400/40 font-serif">&quot;</span>
+              </m.p>
+
+              {/* Buttons */}
+              <m.div
+                variants={fadeInUp}
+                className="flex flex-col sm:flex-row gap-8 justify-center items-center pt-2"
+              >
+                <div className="relative group">
+                  <div className="absolute -inset-1 rounded-xl bg-yellow-500/30 blur-md -z-10 group-hover:bg-yellow-500/50 transition-colors" />
+                  <BookingButton 
+                    size="lg" 
+                    className="text-base bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 border-0 shadow-xl px-10 py-5 uppercase tracking-wider font-medium text-white rounded-lg transform hover:scale-105 hover:-translate-y-1 transition-transform duration-300"
                   >
-                    La Nostra Storia
-                  </motion.button>
+                    <span className="relative flex items-center gap-2 z-10">
+                      <span>Prenota Ora</span>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="18" 
+                        height="18" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        className="ml-1"
+                      >
+                        <path d="M5 12h14"></path>
+                        <path d="m12 5 7 7-7 7"></path>
+                      </svg>
+                    </span>
+                  </BookingButton>
+                </div>
+
+                <Link href="/servizi">
+                  <button 
+                    className="relative border border-yellow-400/30 text-white px-10 py-5 rounded-lg font-medium text-base transition-all duration-300 hover:border-yellow-300/70 hover:text-yellow-100 hover:shadow-[0_10px_30px_rgba(251,191,36,0.15)] hover:-translate-y-1 uppercase tracking-wider bg-black/50 backdrop-blur-sm overflow-hidden group"
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-400/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                    <span className="absolute top-[3px] left-[3px] w-3 h-3 border-l border-t border-yellow-400/40 group-hover:border-yellow-400/80 transition-colors" />
+                    <span className="absolute bottom-[3px] right-[3px] w-3 h-3 border-r border-b border-yellow-400/40 group-hover:border-yellow-400/80 transition-colors" />
+                    <span className="relative flex items-center gap-2">
+                      <span>Scopri i Servizi</span>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="18" 
+                        height="18" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        className="opacity-70 group-hover:opacity-100 transition-opacity"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="m12 8 4 4-4 4"></path>
+                        <path d="M8 12h8"></path>
+                      </svg>
+                    </span>
+                  </button>
                 </Link>
-              </motion.div>
-            </motion.div>
-
-            <motion.div 
-              variants={fadeInRight}
-              className="relative"
-              onMouseEnter={() => setHoveredCard('about-image')}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
-              <motion.div
-                className="relative h-96 rounded-2xl overflow-hidden shadow-2xl"
-                whileHover={{ 
-                  scale: 1.02,
-                  rotateY: 5,
-                  rotateX: 2,
-                }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                style={{
-                  transformStyle: "preserve-3d",
-                  perspective: "1000px"
-                }}
-              >
-                <Image
-                  src="/taglio1.jpg"
-                  alt="Il nostro barbiere al lavoro"
-                  fill
-                  className="object-cover"
-                />
-                
-                {/* Overlay with gradient */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-yellow-500/20"
-                  animate={hoveredCard === 'about-image' ? {
-                    background: [
-                      "linear-gradient(45deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(245,158,11,0.2) 100%)",
-                      "linear-gradient(90deg, rgba(0,0,0,0.1) 0%, transparent 50%, rgba(245,158,11,0.3) 100%)",
-                      "linear-gradient(45deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(245,158,11,0.2) 100%)"
-                    ]
-                  } : {}}
-                  transition={{ duration: 2, ease: "easeInOut" }}
-                />
-
-                {/* Floating decorative elements */}
-                <motion.div
-                  className="absolute top-4 right-4 w-3 h-3 bg-yellow-400 rounded-full"
-                  animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.7, 1, 0.7]
-                  }}
-                  transition={{
-                    duration: 2,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                    repeatType: "reverse"
-                  }}
-                />
-                <motion.div
-                  className="absolute bottom-6 left-6 w-2 h-2 bg-yellow-300 rounded-full"
-                  animate={{
-                    scale: [1.2, 1, 1.2],
-                    opacity: [1, 0.5, 1]
-                  }}
-                  transition={{
-                    duration: 3,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                    repeatType: "reverse",
-                    delay: 1
-                  }}
-                />
-              </motion.div>
-
-              {/* 3D Shadow Effect */}
-              <motion.div
-                className="absolute inset-0 bg-black/10 rounded-2xl -z-10"
-                animate={hoveredCard === 'about-image' ? {
-                  x: 8,
-                  y: 8,
-                  scale: 0.98
-                } : {
-                  x: 4,
-                  y: 4,
-                  scale: 1
-                }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-              />
-            </motion.div>
-          </motion.div>
-        </div>
-      </motion.section>      {/* Services Preview with Advanced Animations */}
-      <motion.section 
-        className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-yellow-900/20 relative overflow-hidden"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        variants={staggerContainer}
-      >
-        {/* Animated Background Particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            className="absolute top-20 left-10 w-2 h-2 bg-yellow-400/30 rounded-full"
-            animate={{
-              y: [-20, 20, -20],
-              x: [-10, 10, -10],
-              scale: [1, 2, 1],
-              opacity: [0.3, 0.8, 0.3]
-            }}
-            transition={{
-              duration: 8,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-          />
-          <motion.div
-            className="absolute bottom-32 right-16 w-3 h-3 bg-yellow-300/20 rounded-full"
-            animate={{
-              y: [15, -15, 15],
-              x: [8, -8, 8],
-              scale: [1.5, 1, 1.5],
-              opacity: [0.2, 0.6, 0.2]
-            }}
-            transition={{
-              duration: 10,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: 3
-            }}
-          />
-          <motion.div
-            className="absolute top-1/2 right-1/4 w-1 h-1 bg-yellow-500/40 rounded-full"
-            animate={{
-              scale: [1, 3, 1],
-              opacity: [0.4, 1, 0.4],
-              rotate: [0, 180, 360]
-            }}
-            transition={{
-              duration: 6,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: 1
-            }}
-          />
+              </m.div>
+            </m.div>
+          </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">          <motion.div 
-            className="text-center mb-16"
-            variants={fadeInUp}
-          >
-            <motion.h2 
-              className="text-4xl md:text-5xl font-bold text-white mb-4"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
+        {/* About Section */}
+        <m.section 
+          className="py-20 bg-gradient-to-br from-black to-gray-900 relative overflow-hidden"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={staggerContainer}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <m.div 
+              className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+              variants={staggerContainer}
             >
-              I Nostri{" "}
-              <motion.span 
-                className="text-yellow-600 inline-block"
-                animate={{ 
-                  textShadow: [
-                    "0 0 0px rgba(234, 179, 8, 0)",
-                    "0 0 25px rgba(234, 179, 8, 0.6)",
-                    "0 0 0px rgba(234, 179, 8, 0)"
-                  ]
-                }}
-                transition={{
-                  duration: 4,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              >
-                Servizi
-              </motion.span>
-            </motion.h2>            <motion.p 
-              className="text-lg text-gray-200 max-w-3xl mx-auto font-medium"
-              variants={fadeInUp}
-            >
-              Dalla consulenza personalizzata ai trattamenti più avanzati, 
-              offriamo una gamma completa di servizi per la cura dell'uomo moderno
-            </motion.p>
-          </motion.div>
+              <m.div variants={fadeInLeft} className="space-y-8">
+                <div className="space-y-6">
+                  <h1 className="text-4xl md:text-5xl font-bold text-white">
+                    L&apos;Arte del{" "}
+                    <span className="text-yellow-600">Barbiere Moderno</span>
+                  </h1>
+                  <p className="text-lg text-gray-300 leading-relaxed">
+                    Maskio Barber Concept rappresenta l&apos;eccellenza nella cura dell&apos;uomo. 
+                    Il nostro team di professionisti esperti combina tecniche tradizionali con le ultime 
+                    tendenze per offrirti un&apos;esperienza unica e personalizzata.
+                  </p>
+                  <p className="text-lg text-gray-300 leading-relaxed">
+                    Ogni taglio, ogni rasatura, ogni trattamento è pensato per esaltare la tua personalità 
+                    e farti sentire al meglio. Perché per noi, ogni cliente è unico.
+                  </p>
+                </div>
 
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-            variants={staggerContainer}
-          >            {[              {
-                title: 'Taglio & Styling',
-                description: 'Tagli personalizzati per esaltare la tua personalità e stile',
-                icon: '✂️',
-                image: '/servizi-taglio.jpg', // Immagine per taglio e styling
-                price: 'da 18€',
-                gradient: 'from-rose-200/20 to-slate-100/25'
-              },
-              {
-                title: 'Taglio Barba',
-                description: 'Taglio barba con rifinitura professionale',
-                icon: '🪒',
-                image: '/servizi-barba.jpg', // Immagine per taglio barba
-                price: 'da 10€',
-                gradient: 'from-yellow-100/20 to-gray-100/25'
-              },
-              {
-                title: 'Altri Servizi',
-                description: 'Colore capelli o servizi su richiesta',
-                icon: '💇‍♂️',
-                image: '/servizi-altri.jpg', // Immagine per altri servizi
-                price: 'Contattare Maskio Barber Concept',
-                gradient: 'from-blue-100/20 to-gray-100/25'
-              }
-            ].map((service, index) => (
-              <motion.div
-                key={index}
-                variants={scaleIn}
-                className={`relative bg-gradient-to-br ${service.gradient} backdrop-blur-sm p-7 pt-6 pb-9 rounded-2xl text-center group cursor-pointer overflow-hidden`}
-                onMouseEnter={() => setHoveredCard(`service-${index}`)}
-                onMouseLeave={() => setHoveredCard(null)}
-                whileHover={{ 
-                  y: -8,
-                  scale: 1.02,
-                  rotateY: 5,
-                  rotateX: 2,
-                }}
-                transition={{ 
-                  duration: 0.4, 
-                  ease: "easeOut",
-                  type: "spring",
-                  stiffness: 150
-                }}
-                style={{
-                  transformStyle: "preserve-3d",
-                  perspective: "1000px"
-                }}
-              >
-                {/* Gradient Background Effect */}                <motion.div
-                  className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/30 to-yellow-100/30 rounded-2xl"
-                  animate={hoveredCard === `service-${index}` ? {
-                    background: [
-                      "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(234,179,8,0.3) 100%)",
-                      "linear-gradient(225deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 50%, rgba(234,179,8,0.5) 100%)",
-                      "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 50%, rgba(234,179,8,0.3) 100%)"
-                    ]
-                  } : {}}
-                  transition={{ duration: 2, ease: "easeInOut" }}
-                />
+                <Link href="/chi-siamo">
+                  <button className="bg-gradient-to-r from-black to-gray-800 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:-translate-y-1 hover:scale-105">
+                    La Nostra Storia
+                  </button>
+                </Link>
+              </m.div>
 
-                {/* Floating Icon */}                {/* Sostituito icona emoji con immagine */}                <motion.div 
-                  className="h-56 w-full mb-8 relative z-10 overflow-hidden rounded-lg"
-                  animate={hoveredCard === `service-${index}` ? {
-                    scale: [1, 1.05, 1],
-                  } : {
-                    scale: 1,
-                  }}
-                  transition={{ 
-                    duration: 2, 
-                    ease: "easeInOut",
-                    repeat: hoveredCard === `service-${index}` ? Infinity : 0
-                  }}
-                >                  <Image 
-                    src={service.image || '/placeholder-service.jpg'}
-                    alt={service.title}
-                    fill
-                    className="object-cover transition-transform duration-700 hover:scale-110"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    loading="lazy"
-                    quality={75}
-                    placeholder="blur"
-                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R7Ss5tMb7JNPnzHqp4rhhyS2Vw6BX2YZnaxnqpnpB"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/10 opacity-75"></div>
-                </motion.div>                <h3 className="text-xl font-bold text-black mb-4 relative z-10 drop-shadow-sm">{service.title}</h3>
-                <p className="text-gray-900 mb-5 relative z-10 font-medium drop-shadow-sm">{service.description}</p>
-                
-                <motion.div 
-                  className="text-lg font-semibold text-yellow-900 mb-4 relative z-10"
-                  animate={hoveredCard === `service-${index}` ? {
-                    scale: [1, 1.05, 1],
-                    color: ["#713f12", "#854d0e", "#713f12"]
-                  } : {}}
-                  transition={{ duration: 1.5, ease: "easeInOut" }}
-                >
-                  {service.price}
-                </motion.div>
-
-                {/* 3D Shadow Effect */}
-                <motion.div
-                  className="absolute inset-0 bg-black/5 rounded-2xl -z-10"
-                  animate={hoveredCard === `service-${index}` ? {
-                    x: 6,
-                    y: 6,
-                    scale: 0.98
-                  } : {
-                    x: 2,
-                    y: 2,
-                    scale: 1
-                  }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                />
-
-                {/* Animated Border */}                <motion.div
-                  className="absolute inset-0 rounded-2xl border-2 border-transparent"
-                  animate={hoveredCard === `service-${index}` ? {
-                    borderColor: ["rgba(180, 83, 9, 0)", "rgba(180, 83, 9, 0.5)", "rgba(180, 83, 9, 0)"]
-                  } : {}}
-                  transition={{ duration: 2, ease: "easeInOut", repeat: Infinity }}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.div 
-            className="text-center mt-12"
-            variants={fadeInUp}
-          >
-            <Link href="/servizi">              <motion.button 
-                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 relative overflow-hidden group"
-                variants={magneticHover}
-                initial="rest"
-                whileTap="tap"
-                whileHover={{
-                  boxShadow: "0 20px 40px rgba(234, 179, 8, 0.3)",
-                  y: -3,
-                  background: "linear-gradient(135deg, #eab308 0%, #ca8a04 100%)"
-                }}
-              >
-                <motion.span
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                  initial={{ x: "-100%" }}
-                  whileHover={{ x: "100%" }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                />
-                <span className="relative z-10">Vedi Tutti i Servizi</span>
-              </motion.button>
-            </Link>
-          </motion.div>
-        </div>
-      </motion.section>      {/* Why Choose Us with Advanced Animations */}
-      <motion.section 
-        className="py-20 bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white relative overflow-hidden"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        variants={staggerContainer}
-      >
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Floating Particles */}
-          <motion.div
-            className="absolute top-16 left-16 w-2 h-2 bg-yellow-400/40 rounded-full"
-            animate={{
-              y: [-30, 30, -30],
-              x: [-15, 15, -15],
-              scale: [1, 2.5, 1],
-              opacity: [0.4, 1, 0.4]
-            }}
-            transition={{
-              duration: 12,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-          />
-          <motion.div
-            className="absolute bottom-24 right-20 w-3 h-3 bg-yellow-300/30 rounded-full"
-            animate={{
-              y: [20, -20, 20],
-              x: [10, -10, 10],
-              scale: [1.5, 1, 1.5],
-              opacity: [0.3, 0.8, 0.3]
-            }}
-            transition={{
-              duration: 10,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: 2
-            }}
-          />
-          <motion.div
-            className="absolute top-1/3 right-1/3 w-1 h-1 bg-yellow-500/50 rounded-full"
-            animate={{
-              scale: [1, 4, 1],
-              opacity: [0.5, 1, 0.5],
-              rotate: [0, 360, 720]
-            }}
-            transition={{
-              duration: 8,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: 1
-            }}
-          />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div 
-            className="text-center mb-16"
-            variants={fadeInUp}
-          >
-            <motion.h2 
-              className="text-4xl md:text-5xl font-bold mb-4"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-            >
-              Perché Scegliere{" "}
-              <motion.span 
-                className="text-yellow-400 inline-block"
-                animate={{ 
-                  textShadow: [
-                    "0 0 0px rgba(234, 179, 8, 0)",
-                    "0 0 30px rgba(234, 179, 8, 0.8)",
-                    "0 0 0px rgba(234, 179, 8, 0)"
-                  ]
-                }}
-                transition={{
-                  duration: 4,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              >
-                Maskio Barber Concept
-              </motion.span>
-            </motion.h2>            <motion.p 
-              className="text-lg text-gray-200 max-w-3xl mx-auto font-medium"
-              variants={fadeInUp}
-            >
-              Non siamo solo un barbiere, siamo i tuoi partner nella cura del tuo stile
-            </motion.p>
-          </motion.div>
-
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-            variants={staggerContainer}
-          >
-            {[
-              {
-                icon: '👨‍💼',
-                title: 'Professionisti Esperti',
-                description: 'Team di barbieri qualificati con anni di esperienza',
-                color: 'from-blue-500/20 to-purple-500/20',
-                accent: 'blue'
-              },
-              {
-                icon: '🏆',
-                title: 'Qualità Premium',
-                description: 'Utilizziamo solo prodotti professionali di alta qualità',
-                color: 'from-yellow-500/20 to-yellow-500/20',
-                accent: 'yellow'
-              },
-              {
-                icon: '🎯',
-                title: 'Stile Personalizzato',
-                description: 'Ogni servizio è studiato per le tue esigenze specifiche',
-                color: 'from-green-500/20 to-emerald-500/20',
-                accent: 'green'
-              },
-              {
-                icon: '🌟',
-                title: 'Esperienza Unica',
-                description: 'Un ambiente moderno e accogliente per il tuo relax',
-                color: 'from-rose-500/20 to-pink-500/20',
-                accent: 'rose'
-              }
-            ].map((feature, index) => (
-              <motion.div
-                key={index}
-                variants={scaleIn}
-                className={`relative text-center p-6 rounded-2xl bg-gradient-to-br ${feature.color} backdrop-blur-sm border border-white/10 group cursor-pointer overflow-hidden`}
-                onMouseEnter={() => setHoveredFeature(`feature-${index}`)}
-                onMouseLeave={() => setHoveredFeature(null)}
-                whileHover={{ 
-                  scale: 1.05,
-                  y: -8,
-                  rotateY: 5,
-                  rotateX: 2,
-                }}
-                transition={{ 
-                  duration: 0.4, 
-                  ease: "easeOut",
-                  type: "spring",
-                  stiffness: 150
-                }}
-                style={{
-                  transformStyle: "preserve-3d",
-                  perspective: "1000px"
-                }}
-              >
-                {/* Glowing Background Effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-yellow-400/10 rounded-2xl"
-                  animate={hoveredFeature === `feature-${index}` ? {
-                    background: [
-                      "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(234,179,8,0.1) 100%)",
-                      "linear-gradient(225deg, rgba(255,255,255,0.05) 0%, transparent 50%, rgba(234,179,8,0.2) 100%)",
-                      "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(234,179,8,0.1) 100%)"
-                    ]
-                  } : {}}
-                  transition={{ duration: 2, ease: "easeInOut" }}
-                />
-
-                {/* Animated Icon with Pulsing Circle */}
-                <motion.div className="relative mb-6 flex justify-center">
-                  <motion.div
-                    className="absolute inset-0 w-16 h-16 mx-auto bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-full"
-                    animate={hoveredFeature === `feature-${index}` ? {
-                      scale: [1, 1.3, 1],
-                      opacity: [0.2, 0.4, 0.2]
-                    } : {}}
-                    transition={{ 
-                      duration: 2, 
-                      ease: "easeInOut",
-                      repeat: hoveredFeature === `feature-${index}` ? Infinity : 0
-                    }}
-                  />
-                  <motion.div 
-                    className="text-5xl relative z-10"
-                    animate={hoveredFeature === `feature-${index}` ? {
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 10, -10, 0],
-                    } : {
-                      scale: 1,
-                      rotate: 0
-                    }}
-                    transition={{ 
-                      duration: 2, 
-                      ease: "easeInOut",
-                      repeat: hoveredFeature === `feature-${index}` ? Infinity : 0
-                    }}
-                  >
-                    {feature.icon}
-                  </motion.div>
-                </motion.div>
-
-                <motion.h3 
-                  className="text-xl font-bold mb-3 text-white relative z-10"
-                  animate={hoveredFeature === `feature-${index}` ? {
-                    color: ["#ffffff", "#fbbf24", "#ffffff"]
-                  } : {}}
-                  transition={{ duration: 1.5, ease: "easeInOut" }}
-                >
-                  {feature.title}
-                </motion.h3>
-                
-                <p className="text-gray-200 relative z-10 leading-relaxed font-medium">{feature.description}</p>
-
-                {/* 3D Shadow Effect */}
-                <motion.div
-                  className="absolute inset-0 bg-black/20 rounded-2xl -z-10"
-                  animate={hoveredFeature === `feature-${index}` ? {
-                    x: 6,
-                    y: 6,
-                    scale: 0.98
-                  } : {
-                    x: 2,
-                    y: 2,
-                    scale: 1
-                  }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                />
-
-                {/* Animated Border */}
-                <motion.div
-                  className="absolute inset-0 rounded-2xl border-2 border-transparent"
-                  animate={hoveredFeature === `feature-${index}` ? {
-                    borderColor: ["rgba(245, 158, 11, 0)", "rgba(245, 158, 11, 0.5)", "rgba(245, 158, 11, 0)"]
-                  } : {}}
-                  transition={{ duration: 2, ease: "easeInOut", repeat: Infinity }}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </motion.section>      {/* Gallery Preview with Advanced 3D Effects */}
-      <motion.section 
-        className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-yellow-900/20 relative overflow-hidden"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        variants={staggerContainer}
-      >
-        {/* Floating Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            className="absolute top-32 right-24 w-2 h-2 bg-yellow-400/20 rounded-full"
-            animate={{
-              y: [-25, 25, -25],
-              x: [-12, 12, -12],
-              scale: [1, 3, 1],
-              opacity: [0.2, 0.6, 0.2]
-            }}
-            transition={{
-              duration: 10,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-          />
-          <motion.div
-            className="absolute bottom-40 left-20 w-3 h-3 bg-yellow-300/15 rounded-full"
-            animate={{
-              y: [18, -18, 18],
-              x: [9, -9, 9],
-              scale: [1.2, 0.8, 1.2],
-              opacity: [0.15, 0.4, 0.15]
-            }}
-            transition={{
-              duration: 12,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: 4
-            }}
-          />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">          <motion.div 
-            className="text-center mb-16"
-            variants={fadeInUp}
-          >
-            <motion.h2 
-              className="text-4xl md:text-5xl font-bold text-white mb-4"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-            >
-              I Nostri{" "}
-              <motion.span 
-                className="text-yellow-600 inline-block"
-                animate={{ 
-                  textShadow: [
-                    "0 0 0px rgba(234, 179, 8, 0)",
-                    "0 0 25px rgba(234, 179, 8, 0.6)",
-                    "0 0 0px rgba(234, 179, 8, 0)"
-                  ]
-                }}
-                transition={{
-                  duration: 4,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              >
-                Lavori
-              </motion.span>
-            </motion.h2>
-            <motion.p 
-              className="text-lg text-gray-300 max-w-3xl mx-auto"
-              variants={fadeInUp}
-            >
-              Scopri alcune delle nostre creazioni e lasciati ispirare per il tuo prossimo look
-            </motion.p>
-          </motion.div>
-
-          <motion.div 
-            className="grid grid-cols-2 md:grid-cols-4 gap-6"
-            variants={staggerContainer}
-          >            {[
-              { src: '/taglio1.jpg', title: 'Taglio Moderno' },
-              { src: '/taglio2.jpg', title: 'Styling Classico' },
-              { src: '/sediaOro.jpg', title: 'Ambiente Premium' },
-              { src: '/prodotti.jpg', title: 'Prodotti Professionali' }
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                variants={scaleIn}
-                className="relative group cursor-pointer"
-                onMouseEnter={() => setHoveredCard(`gallery-${index}`)}
-                onMouseLeave={() => setHoveredCard(null)}
-                whileHover={{ 
-                  scale: 1.05,
-                  rotateY: 8,
-                  rotateX: 3,
-                  z: 50
-                }}
-                transition={{ 
-                  duration: 0.4, 
-                  ease: "easeOut",
-                  type: "spring",
-                  stiffness: 150
-                }}
-                style={{
-                  transformStyle: "preserve-3d",
-                  perspective: "1000px"
-                }}
-              >
-                <motion.div
-                  className="relative aspect-square rounded-2xl overflow-hidden shadow-lg"
-                  whileHover={{
-                    boxShadow: "0 25px 50px rgba(0, 0, 0, 0.25)"
-                  }}
-                >
+              <m.div variants={fadeInRight} className="relative group">
+                <div className="relative h-96 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 group-hover:scale-[1.02]">
                   <Image
-                    src={item.src}
-                    alt={item.title}
+                    src="/taglio1.webp"
+                    alt="Il nostro barbiere al lavoro"
                     fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    loading="lazy"
                   />
-                  
-                  {/* Overlay with Gradient Animation */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-yellow-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    animate={hoveredCard === `gallery-${index}` ? {
-                      background: [
-                        "linear-gradient(45deg, rgba(0,0,0,0.4) 0%, transparent 50%, rgba(234,179,8,0.3) 100%)",
-                        "linear-gradient(90deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(234,179,8,0.5) 100%)",
-                        "linear-gradient(45deg, rgba(0,0,0,0.4) 0%, transparent 50%, rgba(234,179,8,0.3) 100%)"
-                      ]
-                    } : {}}
-                    transition={{ duration: 2, ease: "easeInOut" }}
-                  />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-yellow-500/20 group-hover:from-black/10 transition-colors" />
+                </div>
+                <div className="absolute inset-0 bg-black/10 rounded-2xl -z-10 translate-x-2 translate-y-2 group-hover:translate-x-4 group-hover:translate-y-4 transition-transform" />
+              </m.div>
+            </m.div>
+          </div>
+        </m.section>
 
-                  {/* Title Overlay */}
-                  <motion.div
-                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    initial={{ y: 20 }}
-                    whileHover={{ y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.h3 
-                      className="text-white text-lg font-semibold text-center px-4 py-2 bg-black/50 rounded-lg backdrop-blur-sm"
-                      animate={hoveredCard === `gallery-${index}` ? {
-                        scale: [1, 1.05, 1],
-                        textShadow: [
-                          "0 0 0px rgba(255, 255, 255, 0)",
-                          "0 0 10px rgba(255, 255, 255, 0.5)",
-                          "0 0 0px rgba(255, 255, 255, 0)"
-                        ]
-                      } : {}}
-                      transition={{ duration: 1.5, ease: "easeInOut" }}
-                    >
-                      {item.title}
-                    </motion.h3>
-                  </motion.div>
+        {/* Services Preview */}
+        <m.section 
+          className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-yellow-900/20 relative overflow-hidden"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={staggerContainer}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <m.div className="text-center mb-16" variants={fadeInUp}>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                I Nostri <span className="text-yellow-600">Servizi</span>
+              </h2>
+              <p className="text-lg text-gray-200 max-w-3xl mx-auto font-medium">
+                Dalla consulenza personalizzata ai trattamenti più avanzati, 
+                offriamo una gamma completa di servizi per la cura dell&apos;uomo moderno
+              </p>
+            </m.div>
 
-                  {/* Floating Decorative Elements */}
-                  <motion.div
-                    className="absolute top-3 right-3 w-2 h-2 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-70"
-                    animate={hoveredCard === `gallery-${index}` ? {
-                      scale: [1, 1.8, 1],
-                      opacity: [0.7, 1, 0.7]
-                    } : {}}
-                    transition={{
-                      duration: 2,
-                      ease: "easeInOut",
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
-                  />
-                </motion.div>
-
-                {/* 3D Shadow Effect */}
-                <motion.div
-                  className="absolute inset-0 bg-black/10 rounded-2xl -z-10"
-                  animate={hoveredCard === `gallery-${index}` ? {
-                    x: 8,
-                    y: 8,
-                    scale: 0.96
-                  } : {
-                    x: 3,
-                    y: 3,
-                    scale: 1
-                  }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
-
-                {/* Glowing Border Effect */}
-                <motion.div
-                  className="absolute inset-0 rounded-2xl border-2 border-transparent"
-                  animate={hoveredCard === `gallery-${index}` ? {
-                    borderColor: ["rgba(245, 158, 11, 0)", "rgba(245, 158, 11, 0.4)", "rgba(245, 158, 11, 0)"]
-                  } : {}}
-                  transition={{ duration: 2, ease: "easeInOut", repeat: Infinity }}
-                />
-              </motion.div>
-            ))}
-          </motion.div>          <motion.div 
-            className="text-center mt-12"
-            variants={fadeInUp}
-          >
-            <Link href="/testimonianze">
-              <motion.button
-                className="bg-gradient-to-r from-black to-gray-900 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 relative overflow-hidden group"
-                variants={magneticHover}
-                initial="rest"
-                whileTap="tap"
-                whileHover={{
-                  boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
-                  y: -3,
-                  background: "linear-gradient(135deg, #000000 0%, #111827 100%)"
-                }}
-              >
-                <motion.span
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                  initial={{ x: "-100%" }}
-                  whileHover={{ x: "100%" }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                />
-                <span className="relative z-10">Vedi Tutte le Recensioni</span>
-              </motion.button>
-            </Link>
-          </motion.div>        </div>
-      </motion.section>
-
-      {/* CTA Section with Advanced Animations */}
-      <motion.section 
-        className="py-20 bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white relative overflow-hidden"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-        variants={staggerContainer}
-      >
-        {/* Animated Background Effects */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Floating Particles */}
-          <motion.div
-            className="absolute top-20 left-20 w-3 h-3 bg-yellow-400/30 rounded-full"
-            animate={{
-              y: [-40, 40, -40],
-              x: [-20, 20, -20],
-              scale: [1, 2, 1],
-              opacity: [0.3, 0.8, 0.3]
-            }}
-            transition={{
-              duration: 15,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-          />
-          <motion.div
-            className="absolute bottom-24 right-32 w-2 h-2 bg-yellow-300/25 rounded-full"
-            animate={{
-              y: [25, -25, 25],
-              x: [15, -15, 15],
-              scale: [1.5, 1, 1.5],
-              opacity: [0.25, 0.6, 0.25]
-            }}
-            transition={{
-              duration: 12,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: 3
-            }}
-          />
-          <motion.div
-            className="absolute top-1/2 right-1/4 w-1 h-1 bg-yellow-500/40 rounded-full"
-            animate={{
-              scale: [1, 5, 1],
-              opacity: [0.4, 1, 0.4],
-              rotate: [0, 360, 720]
-            }}
-            transition={{
-              duration: 10,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: 2
-            }}
-          />
-
-          {/* Dynamic Gradient Background */}
-          <motion.div
-            className="absolute inset-0 opacity-10"
-            style={{
-              background: "radial-gradient(circle at 25% 25%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 75% 75%, #fbbf24 0%, transparent 50%)"
-            }}
-            animate={{
-              background: [
-                "radial-gradient(circle at 25% 25%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 75% 75%, #fbbf24 0%, transparent 50%)",
-                "radial-gradient(circle at 75% 25%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 25% 75%, #fbbf24 0%, transparent 50%)",
-                "radial-gradient(circle at 25% 25%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 75% 75%, #fbbf24 0%, transparent 50%)"
-              ]
-            }}
-            transition={{
-              duration: 20,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-          />
-        </div>
-
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <motion.div variants={staggerContainer}>
-            <motion.h2 
-              className="text-4xl md:text-5xl font-bold mb-6"
-              variants={fadeInUp}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-            >
-              Pronto per il Tuo{" "}
-              <motion.span 
-                className="text-yellow-400 inline-block"
-                animate={{ 
-                  textShadow: [
-                    "0 0 0px rgba(234, 179, 8, 0)",
-                    "0 0 30px rgba(234, 179, 8, 0.8)",
-                    "0 0 0px rgba(234, 179, 8, 0)"
-                  ]
-                }}
-                transition={{
-                  duration: 4,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              >
-                Nuovo Look?
-              </motion.span>
-            </motion.h2>
-            
-            <motion.p 
-              className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed"
-              variants={fadeInUp}
-            >
-              Prenota ora il tuo appuntamento e scopri l'esperienza Maskio Barber Concept
-            </motion.p>
-            
-            <motion.div 
-              className="flex flex-col sm:flex-row gap-6 justify-center items-center"
-              variants={fadeInUp}
-            >
-              <motion.div
-                variants={magneticHover}
-                initial="rest"
-                whileHover="hover"
-                whileTap="tap"
-                className="relative"
-              >
-                <BookingButton size="lg" className="text-lg px-10 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg transition-all duration-300">
-                  Prenota il Tuo Appuntamento
-                </BookingButton>
-              </motion.div>
-              
-              <Link href="/contatti">
-                <motion.button 
-                  className="border-2 border-white text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300 relative overflow-hidden group"                  variants={magneticHover}
-                  initial="rest"
-                  whileTap="tap"
-                  whileHover={{
-                    backgroundColor: "rgba(255, 255, 255, 1)",
-                    color: "#000000",
-                    boxShadow: "0 15px 30px rgba(255, 255, 255, 0.2)",
-                    y: -2
-                  }}
+            <m.div className="grid grid-cols-1 md:grid-cols-3 gap-8" variants={staggerContainer}>
+              {[
+                {
+                  title: 'Taglio & Styling',
+                  description: 'Tagli personalizzati per esaltare la tua personalità e stile',
+                  image: '/servizi-taglio.webp',
+                  price: 'da 18€',
+                  gradient: 'from-rose-200/20 to-slate-100/25'
+                },
+                {
+                  title: 'Taglio Barba',
+                  description: 'Taglio barba con rifinitura professionale',
+                  image: '/servizi-barba.webp',
+                  price: 'da 10€',
+                  gradient: 'from-yellow-100/20 to-gray-100/25'
+                },
+                {
+                  title: 'Altri Servizi',
+                  description: 'Colore capelli o servizi su richiesta',
+                  image: '/servizi-altri.webp',
+                  price: 'Contattare Maskio Barber Concept',
+                  gradient: 'from-blue-100/20 to-gray-100/25'
+                }
+              ].map((service, index) => (
+                <m.div
+                  key={index}
+                  variants={scaleIn}
+                  className={`relative bg-gradient-to-br ${service.gradient} backdrop-blur-sm p-7 pt-6 pb-9 rounded-2xl text-center group cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02]`}
                 >
-                  <motion.span
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: "100%" }}
-                    transition={{ duration: 0.6, ease: "easeInOut" }}
-                  />
-                  <span className="relative z-10">Contattaci</span>
-                </motion.button>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/30 to-yellow-100/30 rounded-2xl" />
+
+                  <div className="h-56 w-full mb-8 relative z-10 overflow-hidden rounded-lg">
+                    <Image 
+                      src={service.image}
+                      alt={service.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      loading="lazy"
+                      quality={75}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/10 opacity-75"></div>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-black mb-4 relative z-10 drop-shadow-sm">{service.title}</h3>
+                  <p className="text-gray-900 mb-5 relative z-10 font-medium drop-shadow-sm">{service.description}</p>
+                  
+                  <div className="text-lg font-semibold text-yellow-900 mb-4 relative z-10">
+                    {service.price}
+                  </div>
+
+                  <div className="absolute inset-0 bg-black/5 rounded-2xl -z-10 translate-x-1 translate-y-1 group-hover:translate-x-3 group-hover:translate-y-3 transition-transform" />
+                  <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-yellow-600/30 transition-colors" />
+                </m.div>
+              ))}
+            </m.div>
+
+            <m.div className="text-center mt-12" variants={fadeInUp}>
+              <Link href="/servizi">
+                <button className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 hover:shadow-[0_20px_40px_rgba(234,179,8,0.3)] hover:-translate-y-1 hover:from-yellow-600 hover:to-yellow-700 relative overflow-hidden group">
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                  <span className="relative z-10">Vedi Tutti i Servizi</span>
+                </button>
               </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </motion.section>
-    </div>
+            </m.div>
+          </div>
+        </m.section>
+
+        {/* Why Choose Us */}
+        <m.section 
+          className="py-20 bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white relative overflow-hidden"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={staggerContainer}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <m.div className="text-center mb-16" variants={fadeInUp}>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                Perché Scegliere <span className="text-yellow-400">Maskio Barber Concept</span>
+              </h2>
+              <p className="text-lg text-gray-200 max-w-3xl mx-auto font-medium">
+                Non siamo solo un barbiere, siamo i tuoi partner nella cura del tuo stile
+              </p>
+            </m.div>
+
+            <m.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" variants={staggerContainer}>
+              {[
+                {
+                  icon: '👨‍💼',
+                  title: 'Professionisti Esperti',
+                  description: 'Team di barbieri qualificati con anni di esperienza',
+                  color: 'from-blue-500/20 to-purple-500/20'
+                },
+                {
+                  icon: '🏆',
+                  title: 'Qualità Premium',
+                  description: 'Utilizziamo solo prodotti professionali di alta qualità',
+                  color: 'from-yellow-500/20 to-yellow-500/20'
+                },
+                {
+                  icon: '🎯',
+                  title: 'Stile Personalizzato',
+                  description: 'Ogni servizio è studiato per le tue esigenze specifiche',
+                  color: 'from-green-500/20 to-emerald-500/20'
+                },
+                {
+                  icon: '🌟',
+                  title: 'Esperienza Unica',
+                  description: 'Un ambiente moderno e accogliente per il tuo relax',
+                  color: 'from-rose-500/20 to-pink-500/20'
+                }
+              ].map((feature, index) => (
+                <m.div
+                  key={index}
+                  variants={scaleIn}
+                  className={`relative text-center p-6 rounded-2xl bg-gradient-to-br ${feature.color} backdrop-blur-sm border border-white/10 group cursor-pointer overflow-hidden transition-all duration-300 hover:scale-105 hover:-translate-y-2`}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-yellow-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="relative mb-6 flex justify-center">
+                    <div className="text-5xl relative z-10 transition-transform group-hover:scale-110">
+                      {feature.icon}
+                    </div>
+                  </div>
+
+                  <h3 className="text-xl font-bold mb-3 text-white relative z-10 group-hover:text-yellow-400 transition-colors">
+                    {feature.title}
+                  </h3>
+                  
+                  <p className="text-gray-200 relative z-10 leading-relaxed font-medium">{feature.description}</p>
+
+                  <div className="absolute inset-0 bg-black/20 rounded-2xl -z-10 translate-x-1 translate-y-1 group-hover:translate-x-3 group-hover:translate-y-3 transition-transform" />
+                  <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-yellow-500/30 transition-colors" />
+                </m.div>
+              ))}
+            </m.div>
+          </div>
+        </m.section>
+
+        {/* Gallery Preview */}
+        <m.section 
+          className="py-20 bg-gradient-to-br from-black via-gray-900/30 to-yellow-900/20 relative overflow-hidden"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={staggerContainer}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <m.div className="text-center mb-16" variants={fadeInUp}>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                I Nostri <span className="text-yellow-600">Lavori</span>
+              </h2>
+              <p className="text-lg text-gray-300 max-w-3xl mx-auto">
+                Scopri alcune delle nostre creazioni e lasciati ispirare per il tuo prossimo look
+              </p>
+            </m.div>
+
+            <m.div className="grid grid-cols-2 md:grid-cols-4 gap-6" variants={staggerContainer}>
+              {[
+                { src: '/taglio1.webp', title: 'Taglio Moderno' },
+                { src: '/taglio2.webp', title: 'Styling Classico' },
+                { src: '/sediaOro.webp', title: 'Ambiente Premium' },
+                { src: '/prodotti.webp', title: 'Prodotti Professionali' }
+              ].map((item, index) => (
+                <m.div
+                  key={index}
+                  variants={scaleIn}
+                  className="relative group cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-2"
+                >
+                  <div className="relative aspect-square rounded-2xl overflow-hidden shadow-lg group-hover:shadow-[0_25px_50px_rgba(0,0,0,0.25)] transition-shadow">
+                    <Image
+                      src={item.src}
+                      alt={item.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      loading="lazy"
+                    />
+                    
+                    <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-yellow-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <h3 className="text-white text-lg font-semibold text-center px-4 py-2 bg-black/50 rounded-lg backdrop-blur-sm">
+                        {item.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="absolute inset-0 bg-black/10 rounded-2xl -z-10 translate-x-1 translate-y-1 group-hover:translate-x-4 group-hover:translate-y-4 transition-transform" />
+                  <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-yellow-500/30 transition-colors" />
+                </m.div>
+              ))}
+            </m.div>
+
+            <m.div className="text-center mt-12" variants={fadeInUp}>
+              <Link href="/testimonianze">
+                <button className="bg-gradient-to-r from-black to-gray-900 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:-translate-y-1 relative overflow-hidden group">
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                  <span className="relative z-10">Vedi Tutte le Recensioni</span>
+                </button>
+              </Link>
+            </m.div>
+          </div>
+        </m.section>
+
+        {/* CTA Section */}
+        <m.section 
+          className="py-20 bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white relative overflow-hidden"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={staggerContainer}
+        >
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <m.div variants={staggerContainer}>
+              <m.h2 
+                className="text-4xl md:text-5xl font-bold mb-6"
+                variants={fadeInUp}
+              >
+                Pronto per il Tuo <span className="text-yellow-400">Nuovo Look?</span>
+              </m.h2>
+              
+              <m.p 
+                className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed"
+                variants={fadeInUp}
+              >
+                Prenota ora il tuo appuntamento e scopri l&apos;esperienza Maskio Barber Concept
+              </m.p>
+              
+              <m.div 
+                className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+                variants={fadeInUp}
+              >
+                <div className="relative group">
+                  <BookingButton size="lg" className="text-lg px-10 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg transition-all duration-300 hover:shadow-[0_20px_40px_rgba(234,179,8,0.3)] hover:-translate-y-1">
+                    Prenota il Tuo Appuntamento
+                  </BookingButton>
+                </div>
+                
+                <Link href="/contatti">
+                  <button className="border-2 border-white text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300 relative overflow-hidden group hover:bg-white hover:text-black hover:shadow-[0_15px_30px_rgba(255,255,255,0.2)] hover:-translate-y-1">
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                    <span className="relative z-10">Contattaci</span>
+                  </button>
+                </Link>
+              </m.div>
+            </m.div>
+          </div>
+        </m.section>
+      </div>
+    </LazyMotion>
   );
 }

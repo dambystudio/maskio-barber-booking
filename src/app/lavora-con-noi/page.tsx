@@ -221,7 +221,7 @@ export default function LavoraConNoi() {  const [formData, setFormData] = useSta
                 promuove la crescita e celebra l'eccellenza del barbering moderno.
               </p>              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/fotoPosterioreBarbieri.jpg"
+                  src="/fotoPosterioreBarbieri.webp"
                   alt="Team Maskio Barber al lavoro"
                   width={800}
                   height={600}

@@ -317,7 +317,7 @@ export default function Page() {
                   perspective: "1000px"
                 }}
               >                <Image
-                  src="/fotoSalone.jpg"
+                  src="/fotoSalone.webp"
                   alt="Salone Maskio Barber Concept"
                   width={600}
                   height={400}
@@ -526,7 +526,7 @@ export default function Page() {
                 }}
               >
                 <Image
-                  src="/strumenti.jpg"
+                  src="/strumenti.webp"
                   alt="Strumenti professionali Maskio Barber"
                   width={600}
                   height={500}

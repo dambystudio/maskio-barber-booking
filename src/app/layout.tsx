@@ -123,9 +123,9 @@ export default function RootLayout({
   return (      
       <html lang="it">
         <head>
-          <link rel="preload" as="video" href="/videoLoopCompresso.mp4" type="video/mp4" />
-          <link rel="preload" as="image" href="/sediaOro.webp" />        
-          <link rel="preload" as="image" href="/LogoSimboloNome_BiancoOrizzontale_BUONO.png" />
+          {/* Preload only critical hero image - video loads lazily */}
+          <link rel="preload" as="image" href="/sediaOro.webp" fetchPriority="high" />
+          <link rel="preload" as="image" href="/LogoSimboloNome_Bianco(1).png" fetchPriority="high" />
           
           {/* PWA Meta Tags */}
           <meta name="application-name" content="Maskio Barber" />

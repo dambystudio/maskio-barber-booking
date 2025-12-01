@@ -162,7 +162,7 @@ export default function ChiSiamo() {
                 className="absolute inset-0 h-full w-full"
               >
                 <Image
-                  src="/fotoBarbieri_dietro.jpg"
+                  src="/fotoBarbieri_dietro.webp"
                   alt="Il nostro salone"
                   fill
                   className="object-cover"
