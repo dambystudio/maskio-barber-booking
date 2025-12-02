@@ -648,6 +648,16 @@ export default function BookingSwapModal({
     return dates;
   };
 
+  // Blocca lo scroll del body quando la modale è aperta
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -655,6 +665,7 @@ export default function BookingSwapModal({
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      onTouchMove={(e) => e.stopPropagation()}
       style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}
     >
       <motion.div
@@ -753,7 +764,11 @@ export default function BookingSwapModal({
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-3">Seleziona nuova data:</label>
               <div className="relative">
-                <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 px-1">
+                <div 
+                  className="flex gap-3 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 px-1"
+                  style={{ touchAction: 'pan-x', overscrollBehavior: 'contain' }}
+                  onTouchMove={(e) => e.stopPropagation()}
+                >
                   {generateDates().map(date => (
                     <button
                       key={date}
@@ -947,14 +962,24 @@ export default function BookingSwapModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-10 overflow-y-auto"
+            className="fixed inset-0 bg-black/90 z-[60] overflow-hidden"
             onClick={(e) => e.target === e.currentTarget && setShowConfirmation(false)}
+            onTouchMove={(e) => e.stopPropagation()}
+            style={{ touchAction: 'none' }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-gray-800 border-2 border-blue-500 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto my-auto"
+              className="bg-gray-800 border-2 border-blue-500 rounded-xl p-6 max-w-2xl w-full mx-auto overflow-y-auto"
+              style={{ 
+                maxHeight: 'calc(100vh - 120px)', 
+                marginTop: '20px',
+                marginBottom: '100px',
+                touchAction: 'pan-y',
+                overscrollBehavior: 'contain'
+              }}
+              onTouchMove={(e) => e.stopPropagation()}
             >
               <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
                 {slotAvailability.available ? '📅 Conferma Spostamento' : '🔄 Conferma Scambio'}
@@ -1107,7 +1132,7 @@ export default function BookingSwapModal({
                 )}
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 mt-6 pb-4 sticky bottom-0 bg-gray-800 pt-4 -mx-6 px-6 border-t border-gray-700">
                 <button
                   onClick={() => setShowConfirmation(false)}
                   className="flex-1 px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
