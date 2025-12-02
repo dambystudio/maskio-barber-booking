@@ -947,14 +947,14 @@ export default function BookingSwapModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-10"
+            className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-10 overflow-y-auto"
             onClick={(e) => e.target === e.currentTarget && setShowConfirmation(false)}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-gray-800 border-2 border-blue-500 rounded-xl p-6 max-w-2xl w-full"
+              className="bg-gray-800 border-2 border-blue-500 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto my-auto"
             >
               <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
                 {slotAvailability.available ? '📅 Conferma Spostamento' : '🔄 Conferma Scambio'}
