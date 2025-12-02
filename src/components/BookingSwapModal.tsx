@@ -962,20 +962,20 @@ export default function BookingSwapModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 z-[60] overflow-hidden"
+            className="fixed inset-0 bg-black/90 z-[60] flex items-start justify-center p-4 overflow-y-auto"
             onClick={(e) => e.target === e.currentTarget && setShowConfirmation(false)}
             onTouchMove={(e) => e.stopPropagation()}
-            style={{ touchAction: 'none' }}
+            style={{ 
+              touchAction: 'pan-y',
+              paddingBottom: 'max(120px, calc(env(safe-area-inset-bottom, 0px) + 120px))'
+            }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-gray-800 border-2 border-blue-500 rounded-xl p-6 max-w-2xl w-full mx-auto overflow-y-auto"
+              className="bg-gray-800 border-2 border-blue-500 rounded-xl p-6 max-w-2xl w-full my-4"
               style={{ 
-                maxHeight: 'calc(100vh - 120px)', 
-                marginTop: '20px',
-                marginBottom: '100px',
                 touchAction: 'pan-y',
                 overscrollBehavior: 'contain'
               }}
