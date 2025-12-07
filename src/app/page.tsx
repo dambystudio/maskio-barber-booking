@@ -266,9 +266,9 @@ export default function Home() {
             >
               <m.div variants={fadeInLeft} className="space-y-8">
                 <div className="space-y-6">
-                  <h1 className="text-4xl md:text-5xl font-bold text-white">
+                  <h1 className="text-6xl md:text-5xl font-bold text-white font-alien">
                     L&apos;Arte del{" "}
-                    <span className="text-yellow-600">Barbiere Moderno</span>
+                    <span className="text-yellow-600 font-alien">Barbiere Moderno</span>
                   </h1>
                   <p className="text-lg text-gray-300 leading-relaxed">
                     Maskio Barber Concept rappresenta l&apos;eccellenza nella cura dell&apos;uomo. 
@@ -316,7 +316,7 @@ export default function Home() {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <m.div className="text-center mb-16" variants={fadeInUp}>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              <h2 className="text-6xl md:text-5xl font-bold text-white mb-4 font-alien">
                 I Nostri <span className="text-yellow-600">Servizi</span>
               </h2>
               <p className="text-lg text-gray-200 max-w-3xl mx-auto font-medium">
@@ -403,8 +403,8 @@ export default function Home() {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <m.div className="text-center mb-16" variants={fadeInUp}>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Perché Scegliere <span className="text-yellow-400">Maskio Barber Concept</span>
+              <h2 className="text-6xl md:text-5xl font-bold mb-4 font-alien">
+                Perché Scegliere <span className="text-yellow-400 font-alien">Maskio Barber Concept</span>
               </h2>
               <p className="text-lg text-gray-200 max-w-3xl mx-auto font-medium">
                 Non siamo solo un barbiere, siamo i tuoi partner nella cura del tuo stile
@@ -475,7 +475,7 @@ export default function Home() {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <m.div className="text-center mb-16" variants={fadeInUp}>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              <h2 className="text-6xl md:text-5xl font-bold text-white mb-4 font-alien">
                 I Nostri <span className="text-yellow-600">Lavori</span>
               </h2>
               <p className="text-lg text-gray-300 max-w-3xl mx-auto">

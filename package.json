@@ -31,7 +31,7 @@
     "drizzle-kit": "^0.18.1",
     "drizzle-orm": "^0.43.1",
     "framer-motion": "^12.12.2",
-    "next": "^15.3.3",
+    "next": "^15.3.6",
     "next-auth": "^4.24.5",
     "node-fetch": "^3.3.2",
     "pg": "^8.16.0",

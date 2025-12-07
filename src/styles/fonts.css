@@ -1,0 +1,128 @@
+/* Alien League Font Family */
+
+/* Regular */
+@font-face {
+  font-family: 'Alien League';
+  src: url('/fonts/alien-league/alienleague.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold */
+@font-face {
+  font-family: 'Alien League';
+  src: url('/fonts/alien-league/alienleaguebold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Italic */
+@font-face {
+  font-family: 'Alien League';
+  src: url('/fonts/alien-league/alienleagueital.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bold Italic */
+@font-face {
+  font-family: 'Alien League';
+  src: url('/fonts/alien-league/alienleaguebolditalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 3D Version */
+@font-face {
+  font-family: 'Alien League 3D';
+  src: url('/fonts/alien-league/alienleague3d.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Gradient Version */
+@font-face {
+  font-family: 'Alien League Gradient';
+  src: url('/fonts/alien-league/alienleaguegrad.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Outline Version */
+@font-face {
+  font-family: 'Alien League Outline';
+  src: url('/fonts/alien-league/alienleagueout.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Condensed Version */
+@font-face {
+  font-family: 'Alien League Condensed';
+  src: url('/fonts/alien-league/alienleaguecond.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Expanded Version */
+@font-face {
+  font-family: 'Alien League Expanded';
+  src: url('/fonts/alien-league/alienleagueexpand.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Alien League II Variants */
+@font-face {
+  font-family: 'Alien League II';
+  src: url('/fonts/alien-league/alienleagueii.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Alien League II';
+  src: url('/fonts/alien-league/alienleagueiibold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Utility classes for easy usage */
+.font-alien {
+  font-family: 'Alien League', sans-serif;
+}
+
+.font-alien-3d {
+  font-family: 'Alien League 3D', sans-serif;
+}
+
+.font-alien-gradient {
+  font-family: 'Alien League Gradient', sans-serif;
+}
+
+.font-alien-outline {
+  font-family: 'Alien League Outline', sans-serif;
+}
+
+.font-alien-condensed {
+  font-family: 'Alien League Condensed', sans-serif;
+}
+
+.font-alien-expanded {
+  font-family: 'Alien League Expanded', sans-serif;
+}
+
+.font-alien-ii {
+  font-family: 'Alien League II', sans-serif;
+}
