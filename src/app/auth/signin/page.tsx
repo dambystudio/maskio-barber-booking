@@ -21,7 +21,7 @@ export default function SignIn() {
   useEffect(() => {
     setChristmasActive(isChristmasThemeActive());
   }, []);
-  });
+
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
