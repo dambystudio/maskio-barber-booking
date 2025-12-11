@@ -5,6 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import BookingButton from '../components/BookingButton';
+import ChristmasDecorations from '../components/ChristmasDecorations';
+// 🎄 CHRISTMAS THEME - Logo natalizio
+import { isChristmasThemeActive } from '../config/christmas-theme';
+// 🎄 END CHRISTMAS THEME
 
 // Lazy load video component for better LCP
 function HeroVideo() {
@@ -45,6 +49,14 @@ function HeroVideo() {
 }
 
 export default function Home() {
+  // 🎄 CHRISTMAS THEME - Stato per logo natalizio
+  const [christmasActive, setChristmasActive] = useState(false);
+  
+  useEffect(() => {
+    setChristmasActive(isChristmasThemeActive());
+  }, []);
+  // 🎄 END CHRISTMAS THEME
+
   // Simplified Animation Variants for better INP
   const fadeInUp = {
     hidden: { opacity: 0, y: 40 },
@@ -95,6 +107,9 @@ export default function Home() {
 
   return (
     <LazyMotion features={domAnimation}>
+      {/* 🎄 DECORAZIONI NATALIZIE */}
+      <ChristmasDecorations />
+      
       <div className="min-h-screen bg-black">
         {/* Simplified Background Elements - Static for performance */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -144,14 +159,16 @@ export default function Home() {
               <m.div variants={fadeInUp} className="flex flex-col items-center">
                 <div className="relative">
                   <div className="absolute -inset-16 opacity-10 blur-[80px] bg-gradient-radial from-yellow-400/20 via-yellow-400/5 to-transparent" />
+                  {/* 🎄 CHRISTMAS THEME - Logo natalizio condizionale */}
                   <Image
-                    src="/LogoSimboloNome_Bianco(1).png"
+                    src={christmasActive ? "/LogoSimboloNome_BiancoNatalizio.png" : "/LogoSimboloNome_Bianco(1).png"}
                     alt="Maskio Barber Concept"
                     width={320}
                     height={32}
                     className="mb-1 relative z-10 drop-shadow-lg w-64 h-auto sm:w-72 md:w-80 lg:w-96"
                     priority
                   />
+                  {/* 🎄 END CHRISTMAS THEME */}
                 </div>
                 
                 {/* Decorative line under logo */}

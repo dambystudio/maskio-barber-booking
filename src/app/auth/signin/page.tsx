@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // 🎄 CHRISTMAS THEME: Added useEffect
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { isChristmasThemeActive } from '@/config/christmas-theme'; // 🎄 CHRISTMAS THEME: Christmas activation check
 
 export default function SignIn() {
   const router = useRouter();
@@ -13,6 +14,13 @@ export default function SignIn() {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
+  });
+
+  // 🎄 CHRISTMAS THEME: Check if Christmas theme is active for logo
+  const [christmasActive, setChristmasActive] = useState(false);
+  useEffect(() => {
+    setChristmasActive(isChristmasThemeActive());
+  }, []);
   });
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -80,8 +88,9 @@ export default function SignIn() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
+          {/* 🎄 CHRISTMAS THEME: Conditional logo based on Christmas theme activation */}
           <Image
-            src="/LogoSimboloNome_Bianco(1).png"
+            src={christmasActive ? "/LogoSimboloNome_BiancoNatalizio.png" : "/LogoSimboloNome_Bianco(1).png"}
             alt="Maskio Barber"
             width={160}
             height={40}

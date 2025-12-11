@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import '../styles/pwa.css';
 import '../styles/fonts.css';
+import '../styles/christmas.css';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SecurityProvider from '../components/SecurityProvider';
@@ -126,6 +127,9 @@ export default function RootLayout({
         <head>
           {/* Preload only critical hero image - video loads lazily */}
           <link rel="preload" as="image" href="/sediaOro.webp" fetchPriority="high" />
+          {/* 🎄 CHRISTMAS THEME - Preload logo natalizio */}
+          <link rel="preload" as="image" href="/LogoSimboloNome_BiancoNatalizio.png" fetchPriority="high" />
+          {/* 🎄 END CHRISTMAS THEME */}
           <link rel="preload" as="image" href="/LogoSimboloNome_Bianco(1).png" fetchPriority="high" />
           
           {/* PWA Meta Tags */}

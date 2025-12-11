@@ -1,0 +1,353 @@
+/* 🎄 TEMA NATALIZIO - CSS */
+/* Questo file contiene tutti gli stili per il tema natalizio */
+/* Per disattivare: cambia enabled: false in christmas-theme.ts */
+
+/* ❄️ NEVE ANIMATA */
+@keyframes snowfall {
+  0% {
+    transform: translateY(-10vh) translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) translateX(100px);
+    opacity: 0.8;
+  }
+}
+
+@keyframes snowfall-slow {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(0deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(100vh) translateX(-80px) rotate(360deg);
+    opacity: 0.7;
+  }
+}
+
+.christmas-snow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.snowflake {
+  position: absolute;
+  top: -10px;
+  color: white;
+  font-size: 1em;
+  font-family: Arial, sans-serif;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  animation: snowfall linear infinite;
+  opacity: 0.8;
+}
+
+.snowflake:nth-child(odd) {
+  animation-name: snowfall-slow;
+}
+
+/* 💡 LUCI DI NATALE */
+@keyframes christmas-lights {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.7;
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes christmas-lights-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 15px currentColor, 0 0 30px currentColor, 0 0 40px currentColor;
+  }
+}
+
+.christmas-lights-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.christmas-light {
+  position: absolute;
+  width: 10px;
+  height: 14px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  animation: christmas-lights 1.5s ease-in-out infinite;
+}
+
+.christmas-light::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 3px;
+  width: 4px;
+  height: 4px;
+  background: #333;
+  border-radius: 50%;
+}
+
+.christmas-light::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.8;
+}
+
+.christmas-light-red {
+  background: linear-gradient(to bottom, #ff4444, #cc0000);
+  color: #ff4444;
+  animation-delay: 0s;
+}
+
+.christmas-light-green {
+  background: linear-gradient(to bottom, #44ff44, #00cc00);
+  color: #44ff44;
+  animation-delay: 0.3s;
+}
+
+.christmas-light-yellow {
+  background: linear-gradient(to bottom, #ffff44, #cccc00);
+  color: #ffff44;
+  animation-delay: 0.6s;
+}
+
+.christmas-light-blue {
+  background: linear-gradient(to bottom, #4444ff, #0000cc);
+  color: #4444ff;
+  animation-delay: 0.9s;
+}
+
+.christmas-light-white {
+  background: linear-gradient(to bottom, #ffffff, #dddddd);
+  color: #ffffff;
+  animation-delay: 1.2s;
+}
+
+/* Cavo delle luci */
+.christmas-lights-wire {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, 
+    transparent 0%, 
+    rgba(0, 0, 0, 0.3) 10%, 
+    rgba(0, 0, 0, 0.3) 90%, 
+    transparent 100%
+  );
+}
+
+/* 🎅 DECORAZIONI NATALIZIE */
+.christmas-decoration {
+  position: fixed;
+  pointer-events: none;
+  z-index: 40;
+}
+
+@keyframes float-decoration {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+}
+
+.christmas-decoration.floating {
+  animation: float-decoration 4s ease-in-out infinite;
+}
+
+/* 🎄 ALBERO DI NATALE DECORATIVO */
+.christmas-tree-decoration {
+  position: absolute;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+/* ⭐ STELLE NATALIZIE */
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+.christmas-star {
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+/* 🎨 COLORI NATALIZI PER I GRADIENT */
+.christmas-gradient-red {
+  background: linear-gradient(135deg, #cc0000 0%, #ff4444 100%);
+}
+
+.christmas-gradient-green {
+  background: linear-gradient(135deg, #00cc00 0%, #44ff44 100%);
+}
+
+.christmas-gradient-gold {
+  background: linear-gradient(135deg, #d4af37 0%, #ffdf00 100%);
+}
+
+/* OVERLAY NATALIZIO PER ELEMENTI */
+.christmas-overlay {
+  position: relative;
+}
+
+.christmas-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(204, 0, 0, 0.05) 0%,
+    rgba(0, 204, 0, 0.05) 50%,
+    rgba(212, 175, 55, 0.05) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 🎄 CARD PRENOTAZIONI NATALIZIE */
+.christmas-booking-card {
+  position: relative;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(204, 0, 0, 0.03) 0%,
+    rgba(0, 0, 0, 0.8) 50%,
+    rgba(0, 204, 0, 0.03) 100%
+  );
+}
+
+.christmas-booking-card::before {
+  content: '🎄';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 16px;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+.christmas-booking-card:hover::before {
+  opacity: 0.6;
+  animation: float-decoration 2s ease-in-out infinite;
+}
+
+/* HEADER NATALIZIO */
+.christmas-header {
+  background: linear-gradient(
+    90deg,
+    rgba(204, 0, 0, 0.1) 0%,
+    rgba(0, 204, 0, 0.1) 50%,
+    rgba(204, 0, 0, 0.1) 100%
+  );
+  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+}
+
+/* BOTTONI NATALIZI */
+.christmas-button {
+  position: relative;
+  background: linear-gradient(135deg, #cc0000 0%, #00cc00 100%);
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  transition: all 0.3s ease;
+}
+
+.christmas-button:hover {
+  border-color: rgba(212, 175, 55, 1);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}
+
+.christmas-button::after {
+  content: '✨';
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.christmas-button:hover::after {
+  opacity: 1;
+  right: -25px;
+}
+
+/* EFFETTO GHIACCIO SUI BORDI */
+@keyframes ice-shimmer {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.christmas-ice-border {
+  position: relative;
+  border: 2px solid rgba(173, 216, 230, 0.3);
+  box-shadow: 
+    inset 0 0 20px rgba(173, 216, 230, 0.2),
+    0 0 20px rgba(173, 216, 230, 0.2);
+}
+
+.christmas-ice-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 60%
+  );
+  background-size: 200% 200%;
+  animation: ice-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* FIOCCO DI NEVE DECORATIVO */
+.christmas-snowflake-decoration {
+  color: rgba(173, 216, 230, 0.6);
+  filter: drop-shadow(0 0 5px rgba(173, 216, 230, 0.8));
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .christmas-light {
+    width: 8px;
+    height: 12px;
+  }
+  
+  .christmas-lights-container {
+    height: 80px;
+  }
+}

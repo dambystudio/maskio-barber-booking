@@ -2,6 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+// 🎄 CHRISTMAS THEME - Rimuovi dopo le feste
+import PannelloChristmasWrapper from '@/components/PannelloChristmasWrapper';
+import ChristmasDecorations from '@/components/ChristmasDecorations';
+// 🎄 END CHRISTMAS THEME
 
 export default function PannelloLayout({
   children,
@@ -14,8 +18,13 @@ export default function PannelloLayout({
   // Il controllo di accesso è gestito dalla pagina stessa, non dal layout
   return (
     <div className="min-h-screen bg-black">
+      {/* 🎄 CHRISTMAS THEME - Decorazioni natalizie */}
+      <ChristmasDecorations />
+      {/* 🎄 END CHRISTMAS THEME */}
+      
       {/* Header del pannello (solo se l'utente è autorizzato) - Ottimizzato per mobile */}
       {session?.user?.role === 'barber' || session?.user?.role === 'admin' ? (
+        <PannelloChristmasWrapper>
         <div className="bg-gray-900 border-b border-gray-800 shadow-lg sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-3 md:py-4">
@@ -52,6 +61,12 @@ export default function PannelloLayout({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
         {children}
       </div>
+        </PannelloChristmasWrapper>
+      ) : (
+        <>
+          {children}
+        </>
+      )}
     </div>
   );
 }

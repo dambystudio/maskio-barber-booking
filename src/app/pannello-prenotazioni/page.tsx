@@ -8,6 +8,10 @@ import { motion } from 'framer-motion';
 import CalendarGrid from '@/components/CalendarGrid';
 // import WaitlistPanel from '@/components/WaitlistPanel'; // TODO: Create component
 import BookingSwapModal from '@/components/BookingSwapModal';
+// 🎄 CHRISTMAS THEME - Rimuovi dopo le feste
+import ChristmasDecorations from '@/components/ChristmasDecorations';
+import { isChristmasThemeActive } from '@/config/christmas-theme';
+// 🎄 END CHRISTMAS THEME
 
 interface Booking {
   id: string;
