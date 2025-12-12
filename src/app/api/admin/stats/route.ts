@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService } from '../../../../lib/database';
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,57 +17,59 @@ export async function GET(request: NextRequest) {
 
     console.log(`📊 Calculating stats for date: ${targetDate}${barberEmail ? ` (barber: ${barberEmail})` : ''}`);
 
-    // Get all bookings
-    let allBookings = await DatabaseService.getAllBookings();
+    // Ottimizzazione: Query SQL aggregata invece di filtrare in memoria
+    let barberCondition = '';
+    let barberId = null;
     
-    // Applica filtro barbiere se specificato
     if (barberEmail) {
-      // Get all barbers and find by email
       const allBarbers = await DatabaseService.getBarbers();
       const barber = allBarbers.find(b => b.email === barberEmail);
       if (barber) {
-        allBookings = allBookings.filter(booking => booking.barberId === barber.id);
-        console.log(`🧔 Filtering for barber: ${barberEmail} (ID: ${barber.id}) - ${allBookings.length} bookings found`);
+        barberId = barber.id;
+        barberCondition = `AND barber_id = '${barberId}'`;
+        console.log(`🧔 Filtering for barber: ${barberEmail} (ID: ${barber.id})`);
       } else {
         console.warn(`⚠️ Barber not found: ${barberEmail}`);
-        // If barber not found, return empty stats
-        allBookings = [];
+        // Return empty stats
+        return NextResponse.json({
+          totalBookings: 0,
+          todayBookings: 0,
+          selectedDateBookings: 0,
+          dailyRevenue: 0,
+          selectedDate: targetDate
+        });
       }
     }
-    
-    // Get selected date's bookings (non-cancelled)
-    const selectedDateBookings = allBookings.filter(booking => 
-      booking.date === targetDate && booking.status !== 'cancelled'
-    );
-    
-    // Get today's bookings for comparison (non-cancelled)
-    const todayBookings = allBookings.filter(booking => 
-      booking.date === todayStr && booking.status !== 'cancelled'
-    );
-    
-    // Calculate total bookings (non-cancelled)
-    const totalBookings = allBookings.filter(booking => 
-      booking.status !== 'cancelled'
-    );
-    
-    // Calculate daily revenue for selected date (confirmed bookings only)
-    const dailyRevenue = selectedDateBookings
-      .filter(booking => booking.status === 'confirmed')
-      .reduce((sum, booking) => 
-        sum + (parseFloat(booking.price?.toString() || '0') || 0), 0
-      );
 
-    console.log(`💰 Revenue for ${targetDate}: €${dailyRevenue} (${selectedDateBookings.length} bookings)`);
+    // Query aggregata per statistiche (molto più veloce)
+    const statsQuery = await sql`
+      SELECT 
+        COUNT(*) FILTER (WHERE status != 'cancelled') as total_bookings,
+        COUNT(*) FILTER (WHERE date = ${todayStr} AND status != 'cancelled') as today_bookings,
+        COUNT(*) FILTER (WHERE date = ${targetDate} AND status != 'cancelled') as selected_date_bookings,
+        COALESCE(SUM(CASE WHEN date = ${targetDate} AND status = 'confirmed' THEN price ELSE 0 END), 0) as daily_revenue
+      FROM bookings
+      WHERE date >= (CURRENT_DATE - INTERVAL '90 days')
+      ${barberCondition ? sql`AND barber_id = ${barberId}` : sql``}
+    `;
+
+    const result = statsQuery[0];
+
+    console.log(`💰 Revenue for ${targetDate}: €${result.daily_revenue} (${result.selected_date_bookings} bookings)`);
 
     const stats = {
-      totalBookings: totalBookings.length,
-      todayBookings: todayBookings.length,
-      selectedDateBookings: selectedDateBookings.length,
-      dailyRevenue: dailyRevenue,
+      totalBookings: Number(result.total_bookings),
+      todayBookings: Number(result.today_bookings),
+      selectedDateBookings: Number(result.selected_date_bookings),
+      dailyRevenue: Number(result.daily_revenue),
       selectedDate: targetDate
     };
 
-    return NextResponse.json(stats);
+    return NextResponse.json(stats, {
+      headers: {
+        'Cache-Control': 'private, max-age=60' // Cache 1 minuto
+      }
+    });
   } catch (error) {
     console.error('Error fetching admin stats:', error);
     return NextResponse.json(

@@ -89,7 +89,18 @@ export class DatabaseService {
   }
 
   static async getAllBookings(): Promise<schema.Booking[]> {
-    return await db.select().from(schema.bookings).orderBy(desc(schema.bookings.createdAt));
+    // Ottimizzazione: Limita ai prossimi 90 giorni per ridurre carico CPU
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const dateLimit = ninetyDaysAgo.toISOString().split('T')[0];
+    
+    const result = await sql`
+      SELECT * FROM bookings 
+      WHERE date >= ${dateLimit}
+      ORDER BY created_at DESC
+      LIMIT 2000
+    `;
+    return result as schema.Booking[];
   }
 
   static async getBookingsByUser(userId: string): Promise<schema.Booking[]> {

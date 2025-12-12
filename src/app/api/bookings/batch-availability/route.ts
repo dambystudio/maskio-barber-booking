@@ -249,7 +249,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       availability,
       exceptionalOpenings 
-    } as BatchAvailabilityResponse);
+    } as BatchAvailabilityResponse, {
+      headers: {
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600'
+      }
+    });
   } catch (error) {
     console.error('Error in batch availability check:', error);
     return NextResponse.json(

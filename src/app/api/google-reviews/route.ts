@@ -177,7 +177,12 @@ export async function GET(request: NextRequest) {
     };
 
     console.log(`✅ Recensioni caricate e salvate in cache - Totale: ${transformedReviews.length}`);
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600',
+        'CDN-Cache-Control': 'public, s-maxage=1800'
+      }
+    });
 
   } catch (error) {
     console.error('❌ Errore finale nel caricamento recensioni:', error);
