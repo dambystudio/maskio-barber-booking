@@ -323,8 +323,8 @@ export default function PannelloPrenotazioni() {
           ...booking,
           booking_date: booking.booking_date || booking.date,
           booking_time: booking.booking_time || booking.time,
-          barber_name: booking.barber_name || booking.barber,
-          service_name: booking.service_name || booking.service
+          barber_name: booking.barber_name || booking.barberName || booking.barber,
+          service_name: booking.service_name || booking.serviceName || booking.service
         }));
         
         console.log('🔄 Mapped bookings sample (first 3):', mappedBookings.slice(0, 3));

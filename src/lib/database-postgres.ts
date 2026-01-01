@@ -95,9 +95,14 @@ export class DatabaseService {
     const dateLimit = ninetyDaysAgo.toISOString().split('T')[0];
     
     const result = await sql`
-      SELECT * FROM bookings 
-      WHERE date >= ${dateLimit}
-      ORDER BY created_at DESC
+      SELECT 
+        b.*,
+        COALESCE(b.barber_name, br.name, 'N/A') as barber_name,
+        COALESCE(b.service, b.service_name, 'N/A') as service_name
+      FROM bookings b
+      LEFT JOIN barbers br ON b.barber_id = br.id
+      WHERE b.date >= ${dateLimit}
+      ORDER BY b.created_at DESC
       LIMIT 2000
     `;
     return result as schema.Booking[];
