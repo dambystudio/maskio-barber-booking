@@ -98,7 +98,7 @@ export class DatabaseService {
       SELECT 
         b.*,
         COALESCE(b.barber_name, br.name, 'N/A') as barber_name,
-        COALESCE(b.service, b.service_name, 'N/A') as service_name
+        b.service as service_name
       FROM bookings b
       LEFT JOIN barbers br ON b.barber_id = br.id
       WHERE b.date >= ${dateLimit}
