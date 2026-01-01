@@ -318,21 +318,36 @@ export default function PannelloPrenotazioni() {
         const data = await response.json();
         console.log('✅ TUTTE le prenotazioni di tutti i barbieri ricevute:', data.bookings);
         
+        // Get barbers list to map barber_id to name
+        const barbersResponse = await fetch('/api/barbers');
+        const barbersData = await barbersResponse.json();
+        const barbersMap = new Map(barbersData.map((b: any) => [b.id, b.name]));
+        
         // Map database fields to UI fields
-        const mappedBookings = (data.bookings || []).map((booking: any) => ({
-          ...booking,
-          booking_date: booking.booking_date || booking.date,
-          booking_time: booking.booking_time || booking.time,
-          barber_name: booking.barber_name || booking.barberName || booking.barber,
-          service_name: booking.service_name || booking.serviceName || booking.service
-        }));
+        const mappedBookings = (data.bookings || []).map((booking: any) => {
+          const barberName = booking.barber_name 
+            || booking.barberName 
+            || booking.barber 
+            || (booking.barber_id && barbersMap.get(booking.barber_id))
+            || (booking.barberId && barbersMap.get(booking.barberId))
+            || 'N/A';
+          
+          return {
+            ...booking,
+            booking_date: booking.booking_date || booking.date,
+            booking_time: booking.booking_time || booking.time,
+            barber_name: barberName,
+            service_name: booking.service_name || booking.serviceName || booking.service
+          };
+        });
         
         console.log('🔄 Mapped bookings sample (first 3):', mappedBookings.slice(0, 3));
         console.log('🔍 Fields check:', mappedBookings[0] ? {
           has_booking_date: !!mappedBookings[0].booking_date,
           has_date: !!mappedBookings[0].date,
           booking_date_value: mappedBookings[0].booking_date,
-          date_value: mappedBookings[0].date
+          date_value: mappedBookings[0].date,
+          barber_name: mappedBookings[0].barber_name
         } : 'No bookings');
         
         setAllBookings(mappedBookings);
