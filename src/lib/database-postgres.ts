@@ -96,9 +96,22 @@ export class DatabaseService {
     
     const result = await sql`
       SELECT 
-        b.*,
-        COALESCE(b.barber_name, br.name, 'N/A') as barber_name,
-        b.service as service_name
+        b.id,
+        b.user_id,
+        b.customer_name,
+        b.customer_email,
+        b.customer_phone,
+        b.barber_id,
+        COALESCE(b.barber_name, br.name) as barber_name,
+        b.service,
+        b.price,
+        b.date,
+        b.time,
+        b.duration,
+        b.status,
+        b.notes,
+        b.created_at,
+        b.updated_at
       FROM bookings b
       LEFT JOIN barbers br ON b.barber_id = br.id
       WHERE b.date >= ${dateLimit}
