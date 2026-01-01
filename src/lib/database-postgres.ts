@@ -89,32 +89,23 @@ export class DatabaseService {
   }
 
   static async getAllBookings(): Promise<schema.Booking[]> {
-    console.log('[getAllBookings] NEW VERSION - No JOIN, TypeScript mapping');
+    // Ottimizzazione: Limita ai prossimi 90 giorni per ridurre carico CPU
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const dateLimit = ninetyDaysAgo.toISOString().split('T')[0];
     
-    // Query semplice senza filtro temporale e senza JOIN
-    const bookingsResult = await sql`
-      SELECT * FROM bookings
-      ORDER BY created_at DESC
+    const result = await sql`
+      SELECT 
+        b.*,
+        COALESCE(b.barber_name, br.name, 'N/A') as barber_name,
+        b.service as service_name
+      FROM bookings b
+      LEFT JOIN barbers br ON b.barber_id = br.id
+      WHERE b.date >= ${dateLimit}
+      ORDER BY b.created_at DESC
       LIMIT 2000
     `;
-    
-    console.log(`[getAllBookings] Fetched ${bookingsResult.length} bookings from DB`);
-    
-    // Get all barbers for name mapping
-    const barbersResult = await sql`SELECT id, name FROM barbers`;
-    const barbersMap = new Map(barbersResult.map((b: any) => [b.id, b.name]));
-    
-    console.log(`[getAllBookings] Loaded ${barbersMap.size} barbers for mapping`);
-    
-    // Map barber names
-    const bookings = bookingsResult.map((booking: any) => ({
-      ...booking,
-      barber_name: booking.barber_name || barbersMap.get(booking.barber_id) || 'N/A'
-    }));
-    
-    console.log('[getAllBookings] Mapping complete, returning bookings');
-    
-    return bookings as schema.Booking[];
+    return result as schema.Booking[];
   }
 
   static async getBookingsByUser(userId: string): Promise<schema.Booking[]> {
