@@ -170,20 +170,23 @@ export async function GET(request: NextRequest) {  try {
 
     // Format bookings for the admin panel
     const formattedBookings = bookings.map(booking => {
-      const barber = barberMap.get(booking.barberId || '');
+      // Handle both camelCase (ORM) and snake_case (Raw SQL)
+      const barberId = booking.barberId || (booking as any).barber_id;
+      const barber = barberMap.get(barberId || '');
+      
       return {
         id: booking.id,
-        service_name: booking.service,
-        barber_id: booking.barberId, // ✅ AGGIUNTO per mostrare il nome del barbiere
-        barber_name: booking.barberName,
-        barber_phone: barber?.phone, // Add barber phone
-        booking_date: booking.date,
-        booking_time: booking.time,
-        customer_name: booking.customerName,
-        customer_phone: booking.customerPhone,
-        customer_email: booking.customerEmail,
+        service_name: booking.service || (booking as any).service_name,
+        barber_id: barberId, // ✅ FIX: Ora gestisce entrambi i formati
+        barber_name: booking.barberName || (booking as any).barber_name,
+        barber_phone: barber?.phone || (booking as any).barber_phone,
+        booking_date: booking.date || (booking as any).date, // Note: raw SQL might return 'date' or 'booking_date' depending on query
+        booking_time: booking.time || (booking as any).time,
+        customer_name: booking.customerName || (booking as any).customer_name,
+        customer_phone: booking.customerPhone || (booking as any).customer_phone,
+        customer_email: booking.customerEmail || (booking as any).customer_email,
         status: booking.status,
-        created_at: booking.createdAt?.toISOString(),
+        created_at: booking.createdAt?.toISOString() || (booking as any).created_at,
         notes: booking.notes,
       };
     });
