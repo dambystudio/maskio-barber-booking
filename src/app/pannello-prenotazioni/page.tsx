@@ -327,6 +327,14 @@ export default function PannelloPrenotazioni() {
           service_name: booking.service_name || booking.service
         }));
         
+        console.log('🔄 Mapped bookings sample (first 3):', mappedBookings.slice(0, 3));
+        console.log('🔍 Fields check:', mappedBookings[0] ? {
+          has_booking_date: !!mappedBookings[0].booking_date,
+          has_date: !!mappedBookings[0].date,
+          booking_date_value: mappedBookings[0].booking_date,
+          date_value: mappedBookings[0].date
+        } : 'No bookings');
+        
         setAllBookings(mappedBookings);
       } else {
         console.error('❌ Errore nel fetch di tutte le prenotazioni:', response.statusText);
@@ -2356,10 +2364,17 @@ Grazie! 😊`;
       </div>      {/* Lista prenotazioni - Modalità Griglia o Tabella */}
       {displayMode === 'grid' ? (
         /* Modalità Calendario a Griglia - Mostra TUTTI i barbieri */
-        <CalendarGrid
-          bookings={allBookings.filter(booking => booking.booking_date === selectedDate)}
-          selectedDate={selectedDate}
-          onWhatsAppClick={(booking) => openWhatsApp(
+        <>
+          {(() => {
+            const filteredBookings = allBookings.filter(booking => booking.booking_date === selectedDate);
+            console.log(`📅 Filtering bookings for date: ${selectedDate}`);
+            console.log(`📊 Total bookings available: ${allBookings.length}`);
+            console.log(`✅ Bookings matching date: ${filteredBookings.length}`, filteredBookings);
+            return (
+              <CalendarGrid
+                bookings={filteredBookings}
+                selectedDate={selectedDate}
+                onWhatsAppClick={(booking) => openWhatsApp(
             booking.customer_phone, 
             booking.customer_name, 
             booking.service_name, 
@@ -2372,6 +2387,9 @@ Grazie! 😊`;
           canModifyBookings={isAdmin || !!currentBarber}
           currentUserEmail={currentBarber}
         />
+            );
+          })()}
+        </>
       ) : (
         /* Modalità Tabella Tradizionale */
         <div className="bg-gray-900 border border-gray-800 rounded-lg shadow overflow-hidden">
