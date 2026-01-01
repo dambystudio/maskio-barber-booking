@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+// API Version: 1.0.1 - Fix barber_id inclusion
 // Rate limiting per IP
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT = 10; // 10 requests per minute
