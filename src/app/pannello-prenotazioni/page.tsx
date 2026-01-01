@@ -317,7 +317,17 @@ export default function PannelloPrenotazioni() {
       if (response.ok) {
         const data = await response.json();
         console.log('✅ TUTTE le prenotazioni di tutti i barbieri ricevute:', data.bookings);
-        setAllBookings(data.bookings || []);
+        
+        // Map database fields to UI fields
+        const mappedBookings = (data.bookings || []).map((booking: any) => ({
+          ...booking,
+          booking_date: booking.booking_date || booking.date,
+          booking_time: booking.booking_time || booking.time,
+          barber_name: booking.barber_name || booking.barber,
+          service_name: booking.service_name || booking.service
+        }));
+        
+        setAllBookings(mappedBookings);
       } else {
         console.error('❌ Errore nel fetch di tutte le prenotazioni:', response.statusText);
       }
