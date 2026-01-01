@@ -605,14 +605,13 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
     
-    // Determina la data di partenza
-    const currentYear = today.getFullYear();
-    const september1st = new Date(currentYear, 8, 1); // 8 = September (0-indexed)
-    september1st.setHours(0, 0, 0, 0);
+    // Determina la data di partenza (1 gennaio 2026)
+    const launchDate = new Date(2026, 0, 1); // 0 = gennaio
+    launchDate.setHours(0, 0, 0, 0);
     
-    // Se siamo prima del 1 settembre, parti dal 1 settembre
+    // Se siamo prima del 1 gennaio 2026, parti dal 1 gennaio 2026
     // Altrimenti parti da oggi
-    const startDate = today < september1st ? september1st : today;
+    const startDate = today < launchDate ? launchDate : today;
     
     let lastMonth = startDate.getMonth();
     
