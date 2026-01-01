@@ -42,16 +42,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Query aggregata per statistiche (molto più veloce)
-    const statsQuery = await sql`
+    const baseQuery = `
       SELECT 
         COUNT(*) FILTER (WHERE status != 'cancelled') as total_bookings,
-        COUNT(*) FILTER (WHERE date = ${todayStr} AND status != 'cancelled') as today_bookings,
-        COUNT(*) FILTER (WHERE date = ${targetDate} AND status != 'cancelled') as selected_date_bookings,
-        COALESCE(SUM(CASE WHEN date = ${targetDate} AND status = 'confirmed' THEN price ELSE 0 END), 0) as daily_revenue
+        COUNT(*) FILTER (WHERE date = '${todayStr}' AND status != 'cancelled') as today_bookings,
+        COUNT(*) FILTER (WHERE date = '${targetDate}' AND status != 'cancelled') as selected_date_bookings,
+        COALESCE(SUM(CASE WHEN date = '${targetDate}' AND status = 'confirmed' THEN price ELSE 0 END), 0) as daily_revenue
       FROM bookings
       WHERE date >= (CURRENT_DATE - INTERVAL '90 days')
-      ${barberCondition ? sql`AND barber_id = ${barberId}` : sql``}
+      ${barberCondition}
     `;
+    
+    const statsQuery = await sql([baseQuery]);
 
     const result = statsQuery[0];
 

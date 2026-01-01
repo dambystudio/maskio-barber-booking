@@ -487,7 +487,7 @@ export default function BookingSwapModal({
     if (dayOfWeek === 1) {
       // Michele: NO mattina, pomeriggio 15:00-18:00
       // Fabio: CHIUSO completamente
-      const barberName = booking.barber_name.toLowerCase();
+      const barberName = booking.barber_name?.toLowerCase() || '';
       
       if (barberName === 'fabio') {
         // Fabio è chiuso il lunedì - nessuno slot
