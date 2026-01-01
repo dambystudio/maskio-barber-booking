@@ -321,16 +321,25 @@ export default function PannelloPrenotazioni() {
         // Get barbers list to map barber_id to name
         const barbersResponse = await fetch('/api/barbers');
         const barbersData = await barbersResponse.json();
+        console.log('👥 Barbers data received:', barbersData);
         const barbersMap = new Map(barbersData.map((b: any) => [b.id, b.name]));
+        console.log('🗺️ Barbers map:', Array.from(barbersMap.entries()));
         
         // Map database fields to UI fields
         const mappedBookings = (data.bookings || []).map((booking: any) => {
+          const barberId = booking.barber_id || booking.barberId;
           const barberName = booking.barber_name 
             || booking.barberName 
             || booking.barber 
-            || (booking.barber_id && barbersMap.get(booking.barber_id))
-            || (booking.barberId && barbersMap.get(booking.barberId))
+            || (barberId && barbersMap.get(barberId))
             || 'N/A';
+          
+          console.log('🔍 Booking mapping:', {
+            booking_id: booking.id,
+            barber_id: barberId,
+            mapped_name: barberName,
+            has_in_map: barberId ? barbersMap.has(barberId) : false
+          });
           
           return {
             ...booking,
