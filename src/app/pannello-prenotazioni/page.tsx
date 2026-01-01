@@ -233,6 +233,11 @@ export default function PannelloPrenotazioni() {
 
   // Funzione helper per ottenere email dal nome del barbiere
   const getBarberEmailFromName = (barberName: string): string => {
+    // ✅ FIX: Aggiungi controllo null/undefined
+    if (!barberName) {
+      return Object.keys(barberMapping)[0]; // Default al primo barbiere
+    }
+    
     const nameLower = barberName.toLowerCase();
     if (nameLower.includes('fabio')) {
       return 'fabio.cassano97@icloud.com';

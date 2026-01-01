@@ -159,16 +159,18 @@ const CalendarGrid = ({
       if (booking.status !== 'cancelled') {
         // Normalizziamo il nome del barbiere per la chiave
         // La chiave deve corrispondere esattamente al nome in BARBERS
-        let barberKey = booking.barber_name;
+        let barberKey = booking.barber_name || 'Unknown';
         
         // Gestione dei vari formati di nome che potrebbero arrivare dal database
-        if (booking.barber_name.toLowerCase().includes('fabio')) {
+        // ✅ FIX: Aggiungi controllo null/undefined prima di chiamare toLowerCase
+        const barberNameLower = booking.barber_name?.toLowerCase() || '';
+        if (barberNameLower.includes('fabio')) {
           barberKey = 'Fabio';
-        } else if (booking.barber_name.toLowerCase().includes('michele')) {
+        } else if (barberNameLower.includes('michele')) {
           barberKey = 'Michele';
-        } else if (booking.barber_name.toLowerCase().includes('nicolò') || 
-                   booking.barber_name.toLowerCase().includes('nicolo') ||
-                   booking.barber_name.toLowerCase().includes('de santis')) {
+        } else if (barberNameLower.includes('nicolò') || 
+                   barberNameLower.includes('nicolo') ||
+                   barberNameLower.includes('de santis')) {
           barberKey = 'Nicolò';
         }
         
