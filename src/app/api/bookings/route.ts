@@ -173,6 +173,7 @@ export async function GET(request: NextRequest) {  try {
       return {
         id: booking.id,
         service_name: booking.service,
+        barber_id: booking.barberId, // ✅ AGGIUNTO per mostrare il nome del barbiere
         barber_name: booking.barberName,
         barber_phone: barber?.phone, // Add barber phone
         booking_date: booking.date,
