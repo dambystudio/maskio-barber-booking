@@ -325,6 +325,12 @@ export default function PannelloPrenotazioni() {
         const barbersMap = new Map(barbersData.map((b: any) => [b.id, b.name]));
         console.log('🗺️ Barbers map:', Array.from(barbersMap.entries()));
         
+        // 🔥 DEBUG: Stampo TUTTI i campi della prima prenotazione
+        if (data.bookings && data.bookings.length > 0) {
+          console.log('🔥 PRIMA PRENOTAZIONE - TUTTI I CAMPI:', data.bookings[0]);
+          console.log('🔥 Campi disponibili:', Object.keys(data.bookings[0]));
+        }
+        
         // Map database fields to UI fields
         const mappedBookings = (data.bookings || []).map((booking: any) => {
           const barberId = booking.barber_id || booking.barberId;
