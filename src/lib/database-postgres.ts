@@ -94,31 +94,25 @@ export class DatabaseService {
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     const dateLimit = ninetyDaysAgo.toISOString().split('T')[0];
     
-    const result = await sql`
-      SELECT 
-        b.id,
-        b.user_id,
-        b.customer_name,
-        b.customer_email,
-        b.customer_phone,
-        b.barber_id,
-        COALESCE(b.barber_name, br.name) as barber_name,
-        b.service,
-        b.price,
-        b.date,
-        b.time,
-        b.duration,
-        b.status,
-        b.notes,
-        b.created_at,
-        b.updated_at
-      FROM bookings b
-      LEFT JOIN barbers br ON b.barber_id = br.id
-      WHERE b.date >= ${dateLimit}
-      ORDER BY b.created_at DESC
+    // Query semplice senza JOIN per evitare problemi di cache
+    const bookingsResult = await sql`
+      SELECT * FROM bookings
+      WHERE date >= ${dateLimit}
+      ORDER BY created_at DESC
       LIMIT 2000
     `;
-    return result as schema.Booking[];
+    
+    // Get all barbers for name mapping
+    const barbersResult = await sql`SELECT id, name FROM barbers`;
+    const barbersMap = new Map(barbersResult.map((b: any) => [b.id, b.name]));
+    
+    // Map barber names
+    const bookings = bookingsResult.map((booking: any) => ({
+      ...booking,
+      barber_name: booking.barber_name || barbersMap.get(booking.barber_id) || 'N/A'
+    }));
+    
+    return bookings as schema.Booking[];
   }
 
   static async getBookingsByUser(userId: string): Promise<schema.Booking[]> {
