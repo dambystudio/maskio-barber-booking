@@ -22,6 +22,8 @@ import DynamicManifest from '../components/DynamicManifest';
 // Importazione URL per metadataBase
 import { URL } from 'url';
 import JsonLdScript from '../components/JsonLdScript';
+import { CookieConsentProvider } from '../components/CookieConsentContext';
+import CookieConsentBanner from '../components/CookieConsentBanner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -37,7 +39,7 @@ export const metadata: Metadata = {
   generator: 'Next.js',
   keywords: [
     'barbiere',
-    'barbiere San Giovanni Rotondo', 
+    'barbiere San Giovanni Rotondo',
     'taglio capelli uomo',
     'trattamenti barba',
     'Maskio',
@@ -64,7 +66,7 @@ export const metadata: Metadata = {
     },
   },
   manifest: '/api/manifest',
-  
+
   // Open Graph avanzato
   openGraph: {
     type: 'website',
@@ -90,7 +92,7 @@ export const metadata: Metadata = {
       }
     ],
   },
-    // Twitter Cards ottimizzato
+  // Twitter Cards ottimizzato
   twitter: {
     card: 'summary_large_image',
     site: '@maskiobarber',
@@ -99,12 +101,12 @@ export const metadata: Metadata = {
     description: 'Barbiere professionale a San Giovanni Rotondo. Prenota online il tuo taglio di capelli e trattamenti barba.',
     images: ['/twitter-image.jpg'],
   },
-  
+
   // Canonical URL per prevenire contenuti duplicati
   alternates: {
     canonical: 'https://www.maskiobarberconcept.it',
   },
-  
+
   // Security headers (rimossi i cache headers troppo restrittivi)
   other: {
     'X-Frame-Options': 'DENY',
@@ -121,49 +123,51 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {  
-  return (      
-      <html lang="it">
-        <head>
-          {/* Preload only critical hero image - video loads lazily */}
-          <link rel="preload" as="image" href="/sediaOro.webp" fetchPriority="high" />
-          {/* 🎄 CHRISTMAS THEME - Preload logo natalizio */}
-          <link rel="preload" as="image" href="/LogoSimboloNome_BiancoNatalizio.png" fetchPriority="high" />
-          {/* 🎄 END CHRISTMAS THEME */}
-          <link rel="preload" as="image" href="/LogoSimboloNome_Bianco(1).png" fetchPriority="high" />
-          
-          {/* PWA Meta Tags */}
-          <meta name="application-name" content="Maskio Barber" />
-          <meta name="apple-mobile-web-app-capable" content="yes" />
-          <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-          <meta name="apple-mobile-web-app-title" content="Maskio Barber" />
-          <meta name="format-detection" content="telephone=no" />
-          <meta name="mobile-web-app-capable" content="yes" />
-          <meta name="msapplication-config" content="/browserconfig.xml" />
-          <meta name="msapplication-TileColor" content="#eab308" />
-          <meta name="msapplication-tap-highlight" content="no" />
-          <meta name="theme-color" content="#eab308" />
-          
-          {/* Developer Attribution */}
-          <meta name="developer" content="dambystudio - https://linktr.ee/dambystudio" />
-          
-          {/* Apple Touch Icons */}
-          <link rel="apple-touch-icon" href="/icone/predefinita/180x180.png" />
-          <link rel="apple-touch-icon" sizes="152x152" href="/icone/predefinita/180x180.png" />
-          <link rel="apple-touch-icon" sizes="180x180" href="/icone/predefinita/180x180.png" />
-          <link rel="apple-touch-icon" sizes="167x167" href="/icone/predefinita/180x180.png" />
-          
-          {/* Favicon */}
-          <link rel="icon" type="image/png" sizes="32x32" href="/icone/predefinita/32x32.png" />
-          <link rel="icon" type="image/png" sizes="16x16" href="/icone/predefinita/16x16.png" />
-          <link rel="shortcut icon" href="/icone/predefinita/32x32.png" />
-          
-          {/* Service Worker Initialization System - Coordinates registration and push manager */}
-          <script src="/sw-init.js"></script>
-          <script src="/push-manager.js"></script>
-        </head>
-        <body className={inter.className}>
+}>) {
+  return (
+    <html lang="it">
+      <head>
+        {/* Preload only critical hero image - video loads lazily */}
+        <link rel="preload" as="image" href="/sediaOro.webp" fetchPriority="high" />
+        {/* 🎄 CHRISTMAS THEME - Preload logo natalizio */}
+        <link rel="preload" as="image" href="/LogoSimboloNome_BiancoNatalizio.png" fetchPriority="high" />
+        {/* 🎄 END CHRISTMAS THEME */}
+        <link rel="preload" as="image" href="/LogoSimboloNome_Bianco(1).png" fetchPriority="high" />
+
+        {/* PWA Meta Tags */}
+        <meta name="application-name" content="Maskio Barber" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-title" content="Maskio Barber" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        <meta name="msapplication-TileColor" content="#eab308" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="theme-color" content="#eab308" />
+
+        {/* Developer Attribution */}
+        <meta name="developer" content="dambystudio - https://linktr.ee/dambystudio" />
+
+        {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" href="/icone/predefinita/180x180.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icone/predefinita/180x180.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icone/predefinita/180x180.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icone/predefinita/180x180.png" />
+
+        {/* Favicon */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/icone/predefinita/32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icone/predefinita/16x16.png" />
+        <link rel="shortcut icon" href="/icone/predefinita/32x32.png" />
+
+        {/* Service Worker Initialization System - Coordinates registration and push manager */}
+        <script src="/sw-init.js"></script>
+        <script src="/push-manager.js"></script>
+      </head>
+      <body className={inter.className}>
+        <CookieConsentProvider>
           <GoogleAnalytics />
+          <CookieConsentBanner />
           <SessionProvider>
             <SecurityProvider>
               <DynamicManifest />
@@ -184,8 +188,9 @@ export default function RootLayout({
               <JsonLdScript />
             </SecurityProvider>
           </SessionProvider>
-          <AddToHomeBanner />
-        </body>
-      </html>
+        </CookieConsentProvider>
+        <AddToHomeBanner />
+      </body>
+    </html>
   );
 }
