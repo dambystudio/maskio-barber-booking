@@ -9,12 +9,12 @@ export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=Sunday, 1=Monday, etc.
  */
 export function getUniversalSlots(dayOfWeek: DayOfWeek): string[] {
   const slots: string[] = [];
-  
+
   // Sunday (0) - Always closed
   if (dayOfWeek === 0) {
     return [];
   }
-  
+
   // Monday (1): 09:00-12:30 + 15:00-18:00
   if (dayOfWeek === 1) {
     // Morning: 09:00-12:30 (8 slots)
@@ -23,16 +23,16 @@ export function getUniversalSlots(dayOfWeek: DayOfWeek): string[] {
       if (hour < 12) slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
     slots.push('12:30');
-    
+
     // Afternoon: 15:00-18:00 (7 slots)
     for (let hour = 15; hour <= 18; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
       if (hour < 18) slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
-    
+
     return slots;
   }
-  
+
   // Tuesday-Friday (2-5): 09:00-12:30 + 15:00-17:30
   if (dayOfWeek >= 2 && dayOfWeek <= 5) {
     // Morning: 09:00-12:30 (8 slots)
@@ -41,16 +41,16 @@ export function getUniversalSlots(dayOfWeek: DayOfWeek): string[] {
       if (hour < 12) slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
     slots.push('12:30');
-    
+
     // Afternoon: 15:00-17:30 (6 slots)
     for (let hour = 15; hour <= 17; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
       if (hour <= 17) slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
-    
+
     return slots;
   }
-  
+
   // Saturday (6): 09:00-12:30 + 14:30-17:00
   if (dayOfWeek === 6) {
     // Morning: 09:00-12:30 (8 slots)
@@ -59,17 +59,17 @@ export function getUniversalSlots(dayOfWeek: DayOfWeek): string[] {
       if (hour < 12) slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
     slots.push('12:30');
-    
+
     // Afternoon: 14:30-17:00 (6 slots, NO 17:30)
     slots.push('14:30');
     for (let hour = 15; hour <= 17; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
       if (hour < 17) slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
-    
+
     return slots;
   }
-  
+
   return [];
 }
 
@@ -93,21 +93,21 @@ export function isAfternoonSlot(timeSlot: string): boolean {
  * Filter slots based on closure type
  */
 export function filterSlotsByClosureType(
-  slots: string[], 
+  slots: string[],
   closureType: 'full' | 'morning' | 'afternoon' | null
 ): string[] {
   if (!closureType) return slots;
-  
+
   if (closureType === 'full') return [];
-  
+
   if (closureType === 'morning') {
     return slots.filter(slot => isAfternoonSlot(slot));
   }
-  
+
   if (closureType === 'afternoon') {
     return slots.filter(slot => isMorningSlot(slot));
   }
-  
+
   return slots;
 }
 
@@ -116,25 +116,22 @@ export function filterSlotsByClosureType(
  * Returns closure type if one should be created, null otherwise
  */
 export function getAutoClosureType(
-  barberEmail: string, 
+  barberEmail: string,
   dayOfWeek: DayOfWeek
 ): 'full' | 'morning' | 'afternoon' | null {
-  
+
   // Michele: morning closure on Monday
   if (barberEmail === 'michelebiancofiore0230@gmail.com' && dayOfWeek === 1) {
     return 'morning';
   }
-  
+
   // Fabio: full closure on Monday
   if (barberEmail === 'fabio.cassano97@icloud.com' && dayOfWeek === 1) {
     return 'full';
   }
-  
-  // Nicolò: morning closure every day (Mon-Sat)
-  if (barberEmail === 'nicolodesantis069@gmail.com' && dayOfWeek >= 1 && dayOfWeek <= 6) {
-    return 'morning';
-  }
-  
+
+
+
   return null;
 }
 
@@ -156,20 +153,18 @@ export function getClosureTypeLabel(closureType: 'full' | 'morning' | 'afternoon
  * Get description for automatic closure (Italian)
  */
 export function getAutoClosureReason(
-  barberEmail: string, 
+  barberEmail: string,
   closureType: 'full' | 'morning' | 'afternoon'
 ): string {
   if (barberEmail === 'michelebiancofiore0230@gmail.com') {
     return 'Chiusura automatica - Solo pomeriggio il lunedì';
   }
-  
+
   if (barberEmail === 'fabio.cassano97@icloud.com') {
     return 'Chiusura automatica - Riposo settimanale';
   }
-  
-  if (barberEmail === 'nicolodesantis069@gmail.com') {
-    return 'Chiusura automatica - Solo appuntamenti pomeridiani';
-  }
-  
+
+
+
   return 'Chiusura automatica';
 }
