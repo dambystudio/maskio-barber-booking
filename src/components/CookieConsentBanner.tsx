@@ -33,7 +33,7 @@ export default function CookieConsentBanner() {
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: 100, opacity: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6"
+                    className="fixed bottom-0 left-0 right-0 z-[60] p-4 md:p-6"
                 >
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-white/95 backdrop-blur-md border border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.1)] rounded-2xl p-6 md:flex md:items-center md:justify-between gap-6">
