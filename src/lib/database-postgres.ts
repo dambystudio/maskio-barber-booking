@@ -1,7 +1,7 @@
 // Database Layer - PostgreSQL with Neon
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { eq, and, desc, asc } from 'drizzle-orm';
+import { eq, and, desc, asc, sql as dsql } from 'drizzle-orm';
 import * as schema from './schema';
 
 // Initialize database connection
@@ -13,27 +13,29 @@ export interface BookingWithDetails extends schema.Booking {
 }
 
 export class DatabaseService {
+  private static STANDARD_SLOTS_CACHE: Record<number, string[]> = {};
+
   // === USER MANAGEMENT ===
-  
+
   static async createUser(userData: schema.NewUser): Promise<schema.User> {
     const [newUser] = await db.insert(schema.users).values(userData).returning();
     return newUser;
   }
-  
+
   static async getUserById(userId: string): Promise<schema.User | null> {
     const users = await db.select().from(schema.users).where(eq(schema.users.id, userId));
     return users[0] || null;
   }
-    static async getUserByEmail(email: string): Promise<schema.User | null> {
+  static async getUserByEmail(email: string): Promise<schema.User | null> {
     const users = await db.select().from(schema.users).where(eq(schema.users.email, email));
     return users[0] || null;
   }
-  
+
   static async getUserByPhone(phone: string): Promise<schema.User | null> {
     const users = await db.select().from(schema.users).where(eq(schema.users.phone, phone));
     return users[0] || null;
   }
-  
+
   static async getAllUsers(): Promise<schema.User[]> {
     return await db.select().from(schema.users).orderBy(asc(schema.users.createdAt));
   }
@@ -52,7 +54,7 @@ export class DatabaseService {
   }
 
   // === SERVICE MANAGEMENT ===
-  
+
   static async getServices(): Promise<schema.Service[]> {
     return await db.select().from(schema.services).orderBy(asc(schema.services.name));
   }
@@ -63,7 +65,7 @@ export class DatabaseService {
   }
 
   // === BARBER MANAGEMENT ===
-  
+
   static async getBarbers(): Promise<schema.Barber[]> {
     return await db.select().from(schema.barbers).orderBy(asc(schema.barbers.name));
   }
@@ -74,7 +76,7 @@ export class DatabaseService {
   }
 
   // === BOOKING MANAGEMENT ===
-  
+
   static async createBooking(bookingData: schema.NewBooking): Promise<schema.Booking> {
     const [newBooking] = await db.insert(schema.bookings).values({
       ...bookingData,
@@ -93,7 +95,7 @@ export class DatabaseService {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     const dateLimit = ninetyDaysAgo.toISOString().split('T')[0];
-    
+
     const result = await sql`
       SELECT 
         b.*,
@@ -130,7 +132,7 @@ export class DatabaseService {
       .from(schema.bookings)
       .where(eq(schema.bookings.date, date))
       .orderBy(asc(schema.bookings.time));
-  }  static async getBookingsByDateRange(startDate: string, endDate: string): Promise<schema.Booking[]> {
+  } static async getBookingsByDateRange(startDate: string, endDate: string): Promise<schema.Booking[]> {
     return await db
       .select()
       .from(schema.bookings)
@@ -144,7 +146,7 @@ export class DatabaseService {
   static async searchBookingsByCustomer(customerName: string): Promise<any[]> {
     const { neon } = await import('@neondatabase/serverless');
     const sql = neon(process.env.DATABASE_URL!);
-    
+
     // Simple query - bookings table already has all needed fields
     const result = await sql`
       SELECT 
@@ -165,7 +167,7 @@ export class DatabaseService {
       ORDER BY date DESC, time DESC
       LIMIT 100
     `;
-    
+
     return result;
   }
 
@@ -206,7 +208,8 @@ export class DatabaseService {
       .select()
       .from(schema.barbers)
       .where(eq(schema.barbers.isActive, true))
-      .orderBy(asc(schema.barbers.name));  }
+      .orderBy(asc(schema.barbers.name));
+  }
 
   static async updateBarber(barberId: string, updates: Partial<schema.NewBarber>): Promise<schema.Barber | null> {
     const [updatedBarber] = await db
@@ -233,7 +236,7 @@ export class DatabaseService {
   static async setBarberSchedule(scheduleData: schema.NewBarberSchedule): Promise<schema.BarberSchedule> {
     // Check if schedule already exists
     const existing = await this.getBarberSchedule(scheduleData.barberId!, scheduleData.date);
-    
+
     if (existing) {
       // Update existing schedule
       const [updated] = await db
@@ -260,15 +263,15 @@ export class DatabaseService {
 
   static async getAvailableSlots(barberId: string, date: string): Promise<string[]> {
     const schedule = await this.getBarberSchedule(barberId, date);
-    
+
     let availableSlots: string[] = [];
-    
+
     if (schedule && !schedule.dayOff) {
       // Se esiste un record specifico per questa data, usalo
       try {
         availableSlots = schedule.availableSlots ? JSON.parse(schedule.availableSlots) : [];
         const unavailableSlots = schedule.unavailableSlots ? JSON.parse(schedule.unavailableSlots) : [];
-        
+
         // Rimuovi gli slot non disponibili
         availableSlots = availableSlots.filter((slot: string) => !unavailableSlots.includes(slot));
       } catch (error) {
@@ -294,14 +297,20 @@ export class DatabaseService {
     return availableSlots.filter((slot: string) => !bookedSlots.includes(slot));
   }
 
-  // Nuova funzione per generare gli slot standard
+  // Nuova funzione per generare gli slot standard (Optimized with Memoization)
   private static generateStandardSlots(dateString: string): string[] {
-    const slots: string[] = [];
     const date = new Date(dateString);
     const dayOfWeek = date.getDay();
-    
+
+    if (DatabaseService.STANDARD_SLOTS_CACHE[dayOfWeek]) {
+      return [...DatabaseService.STANDARD_SLOTS_CACHE[dayOfWeek]];
+    }
+
+    const slots: string[] = [];
+
     // Skip domenica (0) - giorno di chiusura standard
     if (dayOfWeek === 0) {
+      DatabaseService.STANDARD_SLOTS_CACHE[dayOfWeek] = slots;
       return slots;
     }
 
@@ -315,6 +324,7 @@ export class DatabaseService {
           slots.push(timeString);
         }
       }
+      DatabaseService.STANDARD_SLOTS_CACHE[dayOfWeek] = slots;
       return slots;
     }
 
@@ -328,7 +338,7 @@ export class DatabaseService {
           slots.push(timeString);
         }
       }
-      
+
       // Afternoon slots 14:30-17:00 (aggiunto 14:30, rimosso 17:30)
       slots.push('14:30'); // Nuovo orario aggiunto
       for (let hour = 15; hour <= 17; hour++) {
@@ -338,6 +348,7 @@ export class DatabaseService {
           slots.push(timeString);
         }
       }
+      DatabaseService.STANDARD_SLOTS_CACHE[dayOfWeek] = slots;
       return slots;
     }
 
@@ -349,7 +360,7 @@ export class DatabaseService {
         slots.push(timeString);
       }
     }
-    
+
     // Tuesday-Friday: Afternoon slots 15:00-17:30
     for (let hour = 15; hour <= 17; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
@@ -358,7 +369,8 @@ export class DatabaseService {
         slots.push(timeString);
       }
     }
-    
+
+    DatabaseService.STANDARD_SLOTS_CACHE[dayOfWeek] = slots;
     return slots;
   }
 
@@ -374,23 +386,29 @@ export class DatabaseService {
       .select()
       .from(schema.services)
       .where(eq(schema.services.isActive, true))
-      .orderBy(asc(schema.services.name));  }
+      .orderBy(asc(schema.services.name));
+  }
 
   // === STATISTICS ===
 
   static async getBookingStats(startDate?: string, endDate?: string) {
-    // This would need more complex queries for date ranges
-    const totalBookings = await db.select().from(schema.bookings);
-    
+    // Optimized: Use SQL aggregation instead of fetching all records
+    const [stats] = await db.select({
+      total: dsql<number>`count(*)`,
+      confirmed: dsql<number>`count(*) filter (where ${schema.bookings.status} = 'confirmed')`,
+      pending: dsql<number>`count(*) filter (where ${schema.bookings.status} = 'pending')`,
+      cancelled: dsql<number>`count(*) filter (where ${schema.bookings.status} = 'cancelled')`,
+      completed: dsql<number>`count(*) filter (where ${schema.bookings.status} = 'completed')`,
+      revenue: dsql<number>`coalesce(sum(${schema.bookings.price}) filter (where ${schema.bookings.status} = 'completed'), 0)`
+    }).from(schema.bookings);
+
     return {
-      totalBookings: totalBookings.length,
-      confirmedBookings: totalBookings.filter(b => b.status === 'confirmed').length,
-      pendingBookings: totalBookings.filter(b => b.status === 'pending').length,
-      cancelledBookings: totalBookings.filter(b => b.status === 'cancelled').length,
-      completedBookings: totalBookings.filter(b => b.status === 'completed').length,
-      totalRevenue: totalBookings
-        .filter(b => b.status === 'completed')
-        .reduce((sum, b) => sum + parseFloat(b.price.toString()), 0),
+      totalBookings: Number(stats.total),
+      confirmedBookings: Number(stats.confirmed),
+      pendingBookings: Number(stats.pending),
+      cancelledBookings: Number(stats.cancelled),
+      completedBookings: Number(stats.completed),
+      totalRevenue: Number(stats.revenue),
     };
   }
 
@@ -403,7 +421,7 @@ export class DatabaseService {
 
   static async getUpcomingBookings(userId?: string): Promise<schema.Booking[]> {
     const today = new Date().toISOString().split('T')[0];
-    
+
     if (userId) {
       return await db
         .select()

@@ -4,15 +4,14 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const pwaConfig = {
   dest: "public",
-  register: false, // Disabilita la registrazione automatica, la gestiamo noi
+  register: true,
   skipWaiting: true,
-  // Disabilita completamente next-pwa, usiamo solo il nostro SW statico
-  disable: true, // SEMPRE disabilitato - usiamo sw.js statico senza build
+  disable: process.env.NODE_ENV === "development",
 };
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  
+
   // Escludi web-push dal bundling Webpack (richiede moduli Node.js)
   webpack: (config, { isServer }) => {
     if (isServer) {
@@ -20,13 +19,13 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  
+
   // Ottimizzazioni per produzione ultra-sicure
   compress: true,
   poweredByHeader: false,
   generateEtags: false,
   trailingSlash: false,
-  
+
   // Ottimizzazioni immagini
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -36,12 +35,12 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: false,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-  },  
+  },
   // Ottimizzazioni experimental per performance
   experimental: {
     optimizePackageImports: ['framer-motion', 'next-auth'],
   },
-  
+
   // Redirect da non-www a www
   async redirects() {
     return [
@@ -58,7 +57,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  
+
   // Header di sicurezza avanzati
   async headers() {
     return [
@@ -170,7 +169,7 @@ const nextConfig: NextConfig = {
             value: '*'
           },
           {
-            key: 'Access-Control-Allow-Methods', 
+            key: 'Access-Control-Allow-Methods',
             value: 'GET, HEAD, OPTIONS'
           }
         ]

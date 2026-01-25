@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { kv } from '@vercel/kv';
 
 // Rate limiting storage (in production use Redis or database)
 const requestCounts = new Map<string, { count: number; resetTime: number }>();
@@ -24,42 +25,56 @@ function getClientIP(request: NextRequest): string {
   const xForwardedFor = request.headers.get('x-forwarded-for');
   const xRealIP = request.headers.get('x-real-ip');
   const cfConnectingIP = request.headers.get('cf-connecting-ip');
-  
+
   if (xForwardedFor) {
     return xForwardedFor.split(',')[0].trim();
   }
-  
+
   if (xRealIP) {
     return xRealIP;
   }
-  
+
   if (cfConnectingIP) {
     return cfConnectingIP;
   }
-    // Fallback to a default IP address
+  // Fallback to a default IP address
   return 'unknown';
 }
 
-function isRateLimited(ip: string, path: string): boolean {
+async function isRateLimited(ip: string, path: string): Promise<boolean> {
   const config = apiLimits[path] || defaultConfig;
-  const key = `${ip}:${path}`;
+  const key = `ratelimit:${ip}:${path}`;
+
+  // Try Vercel KV if configured
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    try {
+      const count = await kv.incr(key);
+      if (count === 1) {
+        await kv.expire(key, Math.ceil(config.windowMs / 1000));
+      }
+      return count > config.maxRequests;
+    } catch (error) {
+      console.error('Rate limit KV error:', error);
+      // Fall through to memory fallback
+    }
+  }
+
+  // Fallback to memory
   const now = Date.now();
-  
   const record = requestCounts.get(key);
-  
+
   if (!record || now > record.resetTime) {
-    // First request or window expired
     requestCounts.set(key, {
       count: 1,
       resetTime: now + config.windowMs
     });
     return false;
   }
-  
+
   if (record.count >= config.maxRequests) {
     return true;
   }
-  
+
   record.count++;
   return false;
 }
@@ -89,18 +104,18 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
   response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
-  
+
   // Hide server information
   response.headers.delete('Server');
   response.headers.delete('X-Powered-By');
-  
+
   return response;
 }
 
 function detectSuspiciousActivity(request: NextRequest): boolean {
   // Temporarily disable aggressive bot detection for testing
   const userAgent = request.headers.get('user-agent') || '';
-  
+
   // Allow legitimate search engines and crawlers
   const allowedBots = [
     /googlebot/i,
@@ -115,19 +130,19 @@ function detectSuspiciousActivity(request: NextRequest): boolean {
     /msnbot/i,
     /slackbot/i,
   ];
-  
+
   // Check if it's an allowed bot
   for (const botPattern of allowedBots) {
     if (botPattern.test(userAgent)) {
       return false; // Allow these known good bots
     }
   }
-  
+
   // Allow playwright test runs
   if (userAgent.includes('Playwright')) {
     return false;
   }
-  
+
   const suspiciousPatterns = [
     /bot/i,
     /crawler/i,
@@ -142,13 +157,13 @@ function detectSuspiciousActivity(request: NextRequest): boolean {
     /^Go-http-client/i,
     /node-fetch/i, // Block generic node-fetch, allow specific test scripts if needed
   ];
-  
+
   return suspiciousPatterns.some(pattern => pattern.test(userAgent));
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Skip middleware for static files, images, and SEO-critical files
   if (
     pathname.startsWith('/_next/') ||
@@ -163,25 +178,25 @@ export function middleware(request: NextRequest) {
   }
 
   const ip = getClientIP(request);
-  
+
   // Skip rate limiting for localhost/development
   const isLocalhost = ip === 'unknown' || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.') || process.env.NODE_ENV === 'development';
-  
+
   if (!isLocalhost) {
     // Detect suspicious activity
     if (detectSuspiciousActivity(request)) {
       return new NextResponse('Access Denied', { status: 403 });
     }
-    
+
     // Apply rate limiting for API routes
     if (pathname.startsWith('/api/')) {
-      if (isRateLimited(ip, pathname)) {
+      if (await isRateLimited(ip, pathname)) {
         return new NextResponse(
-          JSON.stringify({ 
+          JSON.stringify({
             error: 'Too many requests',
             retryAfter: '60 seconds'
           }),
-          { 
+          {
             status: 429,
             headers: {
               'Content-Type': 'application/json',
@@ -191,13 +206,13 @@ export function middleware(request: NextRequest) {
         );
       }
     }
-    
+
     // Apply general rate limiting
-    if (isRateLimited(ip, 'general')) {
+    if (await isRateLimited(ip, 'general')) {
       return new NextResponse('Too Many Requests', { status: 429 });
     }
   }
-  
+
   const response = NextResponse.next();
   return addSecurityHeaders(response);
 }
