@@ -1,11 +1,11 @@
 // API endpoint for daily system updates - Maskio Barber
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { 
-  getUniversalSlots, 
-  getAutoClosureType, 
-  getAutoClosureReason,
-  type DayOfWeek 
+import {
+    getUniversalSlots,
+    getAutoClosureType,
+    getAutoClosureReason,
+    type DayOfWeek
 } from '@/lib/universal-slots';
 
 const sql = neon(process.env.DATABASE_URL!);
@@ -17,12 +17,12 @@ async function isBarberClosedOnDay(barberEmail: string, dayOfWeek: number): Prom
             SELECT closed_days FROM barber_recurring_closures
             WHERE barber_email = ${barberEmail}
         `;
-        
+
         if (closures.length > 0) {
             const closedDays = JSON.parse(closures[0].closed_days);
             return closedDays.includes(dayOfWeek);
         }
-        
+
         return false;
     } catch (error) {
         console.error('Error checking barber closure:', error);
@@ -49,11 +49,11 @@ async function createAutoClosureIfNeeded(
     dayOfWeek: DayOfWeek
 ): Promise<boolean> {
     const closureType = getAutoClosureType(barberEmail, dayOfWeek);
-    
+
     if (!closureType) {
         return false; // No automatic closure needed
     }
-    
+
     // Check if closure already exists
     const existing = await sql`
         SELECT id FROM barber_closures
@@ -61,11 +61,11 @@ async function createAutoClosureIfNeeded(
         AND closure_date = ${dateString}
         AND closure_type = ${closureType}
     `;
-    
+
     if (existing.length > 0) {
         return false; // Closure already exists
     }
-    
+
     // ✅ NUOVO: Verifica se il barbiere ha rimosso intenzionalmente questa chiusura
     // Se sì, rispetta la scelta del barbiere e NON ricreare la chiusura
     const wasManuallyRemoved = await sql`
@@ -74,15 +74,15 @@ async function createAutoClosureIfNeeded(
         AND closure_date = ${dateString}
         AND closure_type = ${closureType}
     `;
-    
+
     if (wasManuallyRemoved.length > 0) {
         console.log(`ℹ️ Skipping auto-closure (was manually removed): ${barberEmail} on ${dateString}`);
         return false; // Rispetta la rimozione manuale, NON ricreare
     }
-    
+
     // Create the automatic closure
     const reason = getAutoClosureReason(barberEmail, closureType);
-    
+
     await sql`
         INSERT INTO barber_closures (
             barber_email,
@@ -102,7 +102,7 @@ async function createAutoClosureIfNeeded(
             NOW()
         )
     `;
-    
+
     console.log(`✅ Created automatic ${closureType} closure for ${barberEmail} on ${dateString}`);
     return true;
 }
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         console.log('🌅 Starting daily update via API...');
         // Get all active barbers with their email
         const barbers = await sql`SELECT id, email FROM barbers WHERE is_active = true`;
-        
+
         // Calculate date range: today + next 60 days
         const today = new Date();
         let addedCount = 0;
@@ -120,41 +120,41 @@ export async function POST(request: NextRequest) {
         let skippedSundaysCount = 0;
         let skippedExceptionalCount = 0;
         let autoClosuresCreated = 0;
-        
+
         for (let i = 0; i < 60; i++) {
             const date = new Date(today);
             date.setDate(today.getDate() + i);
             const dateString = date.toISOString().split('T')[0];
             const dayOfWeek = date.getDay() as DayOfWeek;
-            
+
             // Skip Sundays (barbershop closed)
             if (dayOfWeek === 0) {
                 skippedSundaysCount++;
                 continue;
             }
-            
+
             for (const barber of barbers) {
                 try {
                     // ✅ NEW: Get universal slots for this day (same for all barbers)
                     const slotsForDay = getUniversalSlots(dayOfWeek);
                     const isDayOff = slotsForDay.length === 0;
-                    
+
                     // Check if barber has recurring closure for this day
                     const isRecurringClosed = await isBarberClosedOnDay(barber.email, dayOfWeek);
-                    
+
                     // Check if schedule already exists
                     const existingSchedule = await sql`
                         SELECT id, available_slots FROM barber_schedules 
                         WHERE barber_id = ${barber.id} AND date = ${dateString}
                     `;
-                    
+
                     // ✅ CRITICAL: Always check for automatic closures (not just on new schedules)
                     // This ensures closures are created even when updating existing schedules
                     const closureCreated = await createAutoClosureIfNeeded(barber.email, dateString, dayOfWeek);
                     if (closureCreated) {
                         autoClosuresCreated++;
                     }
-                    
+
                     if (existingSchedule.length === 0) {
                         // Create new schedule for this date with UNIVERSAL slots
                         await sql`
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
                         // è un'apertura eccezionale e NON deve essere sovrascritto dal daily update
                         const currentSchedule = existingSchedule[0];
                         const isExceptionalOpening = !currentSchedule.day_off && isRecurringClosed;
-                        
+
                         if (isExceptionalOpening) {
                             // Skip exceptional openings - they are manually managed
                             skippedExceptionalCount++;
@@ -189,16 +189,16 @@ export async function POST(request: NextRequest) {
                 }
             }
         }
-        
+
         // Clean up old schedules (older than today)
         const yesterday = new Date(today);
         yesterday.setDate(today.getDate() - 1);
         const yesterdayString = yesterday.toISOString().split('T')[0];
-          const deletedResult = await sql`
+        const deletedResult = await sql`
             DELETE FROM barber_schedules 
             WHERE date < ${yesterdayString}
         `;
-        
+
         const summary = {
             success: true,
             timestamp: new Date().toISOString(),
@@ -216,14 +216,14 @@ export async function POST(request: NextRequest) {
                 to: new Date(today.getTime() + 59 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
             }
         };
-        
+
         console.log('✅ Daily update completed:', summary);
-        
+
         return NextResponse.json(summary);
-        
+
     } catch (error) {
         console.error('❌ Error in daily update API:', error);
-        
+
         return NextResponse.json({
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error',
@@ -236,17 +236,17 @@ export async function GET(request: NextRequest) {
     // Return information about the daily update system
     try {
         const today = new Date().toISOString().split('T')[0];
-        
+
         // Check current schedule coverage
         const scheduleCount = await sql`
             SELECT COUNT(*) as total FROM barber_schedules 
             WHERE date >= ${today}
         `;
-          const barberCount = await sql`
+        const barberCount = await sql`
             SELECT COUNT(*) as total FROM barbers 
             WHERE is_active = true
         `;
-        
+
         return NextResponse.json({
             system: 'Daily Update System - Universal Slots',
             status: 'active',
@@ -260,12 +260,11 @@ export async function GET(request: NextRequest) {
             },
             automaticClosures: {
                 michele: 'Monday morning',
-                fabio: 'Monday full day',
-                nicolo: 'Every day morning'
+                fabio: 'Monday full day'
             },
             lastCheck: new Date().toISOString()
         });
-        
+
     } catch (error) {
         return NextResponse.json({
             error: 'Failed to get system status',
