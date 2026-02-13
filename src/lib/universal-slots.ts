@@ -125,6 +125,11 @@ export function getAutoClosureType(
     return 'morning';
   }
 
+  // Nicolò: morning closure on Monday
+  if (barberEmail === 'nicolodesantis069@gmail.com' && dayOfWeek === 1) {
+    return 'morning';
+  }
+
   // Fabio: full closure on Monday
   if (barberEmail === 'fabio.cassano97@icloud.com' && dayOfWeek === 1) {
     return 'full';
@@ -157,6 +162,10 @@ export function getAutoClosureReason(
   closureType: 'full' | 'morning' | 'afternoon'
 ): string {
   if (barberEmail === 'michelebiancofiore0230@gmail.com') {
+    return 'Chiusura automatica - Solo pomeriggio il lunedì';
+  }
+
+  if (barberEmail === 'nicolodesantis069@gmail.com') {
     return 'Chiusura automatica - Solo pomeriggio il lunedì';
   }
 

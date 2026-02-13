@@ -260,6 +260,7 @@ export async function GET(request: NextRequest) {
             },
             automaticClosures: {
                 michele: 'Monday morning',
+                nicolò: 'Monday morning',
                 fabio: 'Monday full day'
             },
             lastCheck: new Date().toISOString()
