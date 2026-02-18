@@ -24,6 +24,14 @@ export default function AdminUsersPage() {
   const [isBarber, setIsBarber] = useState(false);
   const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const [permissionsChecked, setPermissionsChecked] = useState(false);
+  // State for search
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filtered users
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Verifica permessi tramite API invece che da sessione
   const checkAdminPermissions = async () => {
@@ -192,24 +200,28 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">        <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Gestione Utenti {isAdmin ? '(Admin)' : '(Barbiere)'}
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              Gestione Utenti
+              <span className={`text-sm px-3 py-1 rounded-full ${isAdmin ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
+                {isAdmin ? '👑 Admin' : '✂️ Barbiere'}
+              </span>
             </h1>
             <p className="text-gray-600 mt-2">
-              Gestisci i ruoli degli utenti del sistema ed elimina account se necessario
+              Gestisci i ruoli degli utenti ed elimina account.
             </p>
           </div>
 
-          {/* Indicatore ruolo */}
-          <div className="flex items-center space-x-2">
-            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${isAdmin
-                ? 'bg-red-100 text-red-800'
-                : 'bg-amber-100 text-amber-800'
-              }`}>
-              {isAdmin ? '👑 Admin' : '✂️ Barbiere'}
-            </span>
+          {/* Search Bar */}
+          <div className="w-full md:w-auto">
+            <input
+              type="text"
+              placeholder="Cerca utente per nome o email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+            />
           </div>
         </div>
 
@@ -238,7 +250,78 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        {/* Mobile View: Cards */}
+        <div className="space-y-4 md:hidden">
+          {filteredUsers.map(user => (
+            <div key={user.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-gray-900 font-bold text-lg">{user.name}</h3>
+                  <p className="text-gray-500 text-sm break-all">{user.email}</p>
+                </div>
+                <span className={`px-2 py-1 text-xs font-semibold rounded-full h-fit ${user.role === 'admin'
+                  ? 'bg-red-100 text-red-800'
+                  : user.role === 'barber'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-green-100 text-green-800'
+                  }`}>
+                  {user.role === 'admin' ? 'Admin' : user.role === 'barber' ? 'Barbiere' : 'Cliente'}
+                </span>
+              </div>
+
+              <div className="text-xs text-gray-400 border-t border-gray-100 pt-2 flex justify-between">
+                <span>Reg: {new Date(user.createdAt).toLocaleDateString('it-IT')}</span>
+                <span>Login: {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('it-IT') : 'Mai'}</span>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                {user.role !== 'customer' && (
+                  <button
+                    onClick={() => updateUserRole(user.id, 'customer')}
+                    disabled={updateLoading === user.id || deleteLoading === user.id}
+                    className="flex-1 text-green-600 hover:bg-green-50 border border-green-300 rounded py-1 px-2 text-xs text-center"
+                  >
+                    Cliente
+                  </button>
+                )}
+                {user.role !== 'barber' && (
+                  <button
+                    onClick={() => updateUserRole(user.id, 'barber')}
+                    disabled={updateLoading === user.id || deleteLoading === user.id}
+                    className="flex-1 text-amber-600 hover:bg-amber-50 border border-amber-300 rounded py-1 px-2 text-xs text-center"
+                  >
+                    Barbiere
+                  </button>
+                )}
+                {user.role !== 'admin' && (
+                  <button
+                    onClick={() => updateUserRole(user.id, 'admin')}
+                    disabled={updateLoading === user.id || deleteLoading === user.id}
+                    className="flex-1 text-red-600 hover:bg-red-50 border border-red-300 rounded py-1 px-2 text-xs text-center"
+                  >
+                    Admin
+                  </button>
+                )}
+              </div>
+
+              <button
+                onClick={() => deleteUser(user.id, user.name, user.email)}
+                disabled={updateLoading === user.id || deleteLoading === user.id}
+                className="w-full text-red-600 hover:bg-red-50 border border-red-300 rounded py-2 text-xs font-bold flex items-center justify-center gap-1 mt-2"
+              >
+                <span>🗑️</span> Elimina Account
+              </button>
+
+              {(updateLoading === user.id || deleteLoading === user.id) && (
+                <div className="w-full flex justify-center mt-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500"></div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden md:block bg-white shadow-sm rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -262,7 +345,7 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
+                {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{user.name}</div>
@@ -343,9 +426,9 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        {users.length === 0 && (
+        {filteredUsers.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-500">Nessun utente trovato.</p>
+            <p className="text-gray-500">Nessun utente trovato {searchTerm && `per "${searchTerm}"`}.</p>
           </div>
         )}
       </div>
