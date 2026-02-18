@@ -29,7 +29,7 @@ export default function AdminUsersPage() {
   const checkAdminPermissions = async () => {
     try {
       if (!session?.user?.email) return;
-      
+
       const response = await fetch('/api/debug/check-permissions', {
         method: 'POST',
         headers: {
@@ -37,13 +37,13 @@ export default function AdminUsersPage() {
         },
         body: JSON.stringify({ email: session.user.email })
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Admin page permissions check:', data);
         const isAdminUser = data.success && data.permissions.isAdmin || false;
         const isBarberUser = data.success && data.permissions.isBarber || false;
-        
+
         setIsAdmin(isAdminUser);
         setIsBarber(isBarberUser);
         setHasAdminAccess(isAdminUser || isBarberUser); // Admin O Barbiere possono accedere
@@ -65,7 +65,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     if (status === 'loading') return;
-    
+
     if (!session) {
       router.push('/auth/signin');
       return;
@@ -76,12 +76,12 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     if (!permissionsChecked) return;
-    
+
     if (!hasAdminAccess) {
       router.push('/');
       return;
     }
-    
+
     fetchUsers();
   }, [permissionsChecked, hasAdminAccess, router]);
 
@@ -127,13 +127,13 @@ export default function AdminUsersPage() {
   const deleteUser = async (userId: string, userName: string, userEmail: string) => {
     // Conferma con l'admin prima di eliminare
     const confirmMessage = `⚠️ ATTENZIONE: Stai per eliminare definitivamente l'account di ${userName} (${userEmail}).\n\n` +
-                          `Questa azione eliminerà:\n` +
-                          `- L'account utente\n` +
-                          `- Tutte le prenotazioni associate\n` +
-                          `- Tutte le sessioni e i dati di login\n\n` +
-                          `Questa operazione NON PUÒ essere annullata.\n\n` +
-                          `Sei sicuro di voler procedere?`;
-    
+      `Questa azione eliminerà:\n` +
+      `- L'account utente\n` +
+      `- Tutte le prenotazioni associate\n` +
+      `- Tutte le sessioni e i dati di login\n\n` +
+      `Questa operazione NON PUÒ essere annullata.\n\n` +
+      `Sei sicuro di voler procedere?`;
+
     if (!window.confirm(confirmMessage)) {
       return;
     }
@@ -147,16 +147,16 @@ export default function AdminUsersPage() {
       if (response.ok) {
         const result = await response.json();
         console.log('User deleted successfully:', result);
-        
+
         // Mostra messaggio di successo
         alert(`✅ Account eliminato con successo: ${userName} (${userEmail})`);
-        
+
         // Ricarica la lista utenti
         await fetchUsers();
       } else {
         const errorData = await response.json();
         console.error('Failed to delete user:', errorData);
-        
+
         if (response.status === 400 && errorData.error.includes('Non puoi eliminare')) {
           alert('❌ Non puoi eliminare il tuo stesso account.');
         } else {
@@ -192,52 +192,51 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Gestione Utenti {isAdmin ? '(Admin)' : '(Barbiere)'}
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Gestisci i ruoli degli utenti del sistema ed elimina account se necessario
-              </p>
-            </div>
-            
-            {/* Indicatore ruolo */}
-            <div className="flex items-center space-x-2">
-              <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                isAdmin 
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-amber-100 text-amber-800'
-              }`}>
-                {isAdmin ? '👑 Admin' : '✂️ Barbiere'}
-              </span>
-            </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Gestione Utenti {isAdmin ? '(Admin)' : '(Barbiere)'}
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Gestisci i ruoli degli utenti del sistema ed elimina account se necessario
+            </p>
           </div>
 
-          {/* Avviso di sicurezza */}
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  ⚠️ Attenzione - Poteri di Amministratore
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>Come admin hai il potere di:</p>
-                  <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li><strong>Cambiare ruoli</strong> (Cliente → Barbiere → Admin)</li>
-                    <li><strong>Eliminare account</strong> in modo permanente (include prenotazioni e dati)</li>
-                  </ul>
-                  <p className="mt-2 font-semibold">🚨 L'eliminazione degli account è irreversibile!</p>
-                </div>
+          {/* Indicatore ruolo */}
+          <div className="flex items-center space-x-2">
+            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${isAdmin
+                ? 'bg-red-100 text-red-800'
+                : 'bg-amber-100 text-amber-800'
+              }`}>
+              {isAdmin ? '👑 Admin' : '✂️ Barbiere'}
+            </span>
+          </div>
+        </div>
+
+        {/* Avviso di sicurezza */}
+        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                ⚠️ Attenzione - Poteri di Amministratore
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>Come admin hai il potere di:</p>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li><strong>Cambiare ruoli</strong> (Cliente → Barbiere → Admin)</li>
+                  <li><strong>Eliminare account</strong> in modo permanente (include prenotazioni e dati)</li>
+                </ul>
+                <p className="mt-2 font-semibold">🚨 L'eliminazione degli account è irreversibile!</p>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
@@ -272,13 +271,12 @@ export default function AdminUsersPage() {
                       <div className="text-sm text-gray-900">{user.email}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.role === 'admin' 
-                          ? 'bg-red-100 text-red-800'
-                          : user.role === 'barber'
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'admin'
+                        ? 'bg-red-100 text-red-800'
+                        : user.role === 'barber'
                           ? 'bg-amber-100 text-amber-800'
                           : 'bg-green-100 text-green-800'
-                      }`}>
+                        }`}>
                         {user.role === 'admin' ? 'Admin' : user.role === 'barber' ? 'Barbiere' : 'Cliente'}
                       </span>
                     </td>
@@ -321,7 +319,7 @@ export default function AdminUsersPage() {
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500"></div>
                           )}
                         </div>
-                        
+
                         {/* Pulsante eliminazione separato e ben visibile */}
                         <div className="flex space-x-2 pt-1 border-t border-gray-200">
                           <button

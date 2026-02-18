@@ -60,12 +60,63 @@ const AllBookingsTable = ({
     new Date(`${a.booking_date}T${a.booking_time}`).getTime()
   );
 
+  // Componente Card per Mobile
+  const MobileBookingCard = ({ booking }: { booking: Booking }) => (
+    <div className="bg-gray-800 p-4 rounded-lg shadow-md border border-gray-700 space-y-3">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-gray-400 text-sm">
+            {format(parseISO(booking.booking_date), 'dd/MM/yyyy')} alle {booking.booking_time}
+          </p>
+          <h3 className="text-white font-bold text-lg mt-1">{booking.customer_name}</h3>
+          <p className="text-amber-500 text-sm">{booking.service_name}</p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <span className={`px-2 py-1 text-xs rounded-full ${booking.status === 'confirmed' ? 'bg-green-900/50 text-green-300' :
+            booking.status === 'pending' ? 'bg-yellow-900/50 text-yellow-300' :
+              'bg-red-900/50 text-red-300'
+            }`}>
+            {booking.status === 'confirmed' ? 'Confermata' :
+              booking.status === 'pending' ? 'In Attesa' : 'Annullata'}
+          </span>
+        </div>
+      </div>
+
+      {/* Azioni Mobile - Full Width */}
+      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-700">
+        <button
+          type="button"
+          onClick={() => onWhatsAppClick(booking)}
+          className="flex items-center justify-center gap-2 bg-green-900/30 text-green-400 border border-green-800 p-2 rounded-lg hover:bg-green-900/50 transition-colors"
+        >
+          <span role="img" aria-label="whatsapp">💬</span> WhatsApp
+        </button>
+        <button
+          type="button"
+          onClick={() => onPhoneClick(booking.customer_phone)}
+          className="flex items-center justify-center gap-2 bg-blue-900/30 text-blue-400 border border-blue-800 p-2 rounded-lg hover:bg-blue-900/50 transition-colors"
+        >
+          <span role="img" aria-label="phone">📞</span> Chiama
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="mt-12 bg-gray-900 shadow-lg rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-4">
+    <div className="mt-8 bg-gray-900 shadow-lg rounded-lg p-4 md:p-6">
+      <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 border-b border-gray-700 pb-4">
         Storico Prenotazioni
       </h2>
-      <div className="overflow-x-auto">
+
+      {/* Mobile View: Cards */}
+      <div className="space-y-4 md:hidden">
+        {sortedBookings.map(booking => (
+          <MobileBookingCard key={booking.id} booking={booking} />
+        ))}
+      </div>
+
+      {/* Desktop View: Table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full text-white">
           <thead className="bg-gray-800">
             <tr>
@@ -1576,8 +1627,8 @@ Grazie! 😊`;
           type="button"
           onClick={() => setShowCustomerSearch(!showCustomerSearch)}
           className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm flex items-center gap-2 ${showCustomerSearch
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            ? 'bg-blue-600 text-white hover:bg-blue-700'
+            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
         >
           🔍 Ricerca Cliente
@@ -1761,8 +1812,8 @@ Grazie! 😊`;
             <button
               onClick={() => setShowClosureSettings(!showClosureSettings)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border ${showClosureSettings
-                  ? 'bg-amber-600 text-white border-amber-500'
-                  : 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
+                ? 'bg-amber-600 text-white border-amber-500'
+                : 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
                 }`}
             >
               <span>🔒</span>
@@ -1788,8 +1839,8 @@ Grazie! 😊`;
                       type="button"
                       onClick={() => toggleClosedDay(index)}
                       className={`p-3 md:p-4 rounded-xl border-2 transition-all duration-200 text-center touch-manipulation ${isClosed
-                          ? 'border-red-400 bg-red-900/50 text-red-300 shadow-lg'
-                          : 'border-green-400 bg-green-900/30 text-green-300 hover:border-green-300 hover:bg-green-900/50'
+                        ? 'border-red-400 bg-red-900/50 text-red-300 shadow-lg'
+                        : 'border-green-400 bg-green-900/30 text-green-300 hover:border-green-300 hover:bg-green-900/50'
                         }`}
                     >
                       <div className="text-xl md:text-2xl mb-1 md:mb-2">
@@ -1856,8 +1907,8 @@ Grazie! 😊`;
                         type="button"
                         onClick={() => setSelectedClosureType(option.value as 'full' | 'morning' | 'afternoon')}
                         className={`p-3 rounded-lg border-2 transition-all duration-200 text-left ${selectedClosureType === option.value
-                            ? 'border-amber-400 bg-amber-900/30 text-amber-300'
-                            : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-amber-400/50'
+                          ? 'border-amber-400 bg-amber-900/30 text-amber-300'
+                          : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-amber-400/50'
                           }`}
                       >
                         <div className="font-medium text-sm">{option.label}</div>
@@ -2273,8 +2324,8 @@ Grazie! 😊`;
               <button
                 onClick={() => switchToOwnBookings()}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'own'
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
               >
                 👤 Le tue prenotazioni
@@ -2286,8 +2337,8 @@ Grazie! 😊`;
                   key={otherBarberEmail}
                   onClick={() => switchToBarber(otherBarberEmail)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'other' && viewingBarber === otherBarberEmail
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                 >
                   👁️ Vedi {barberMapping[otherBarberEmail as keyof typeof barberMapping] || 'Barbiere'}
@@ -2315,14 +2366,14 @@ Grazie! 😊`;
                 type="button"
                 onClick={() => setSelectedDate(dateStr)}
                 className={`flex-shrink-0 px-3 py-3 md:px-4 md:py-3 rounded-xl border-2 transition-all duration-200 min-w-[90px] md:min-w-[100px] relative touch-manipulation ${isSelected
-                    ? isClosedDay
-                      ? 'border-red-500 bg-red-900/50 text-red-300 shadow-lg scale-105'
-                      : 'border-amber-500 bg-amber-900/50 text-amber-300 shadow-lg scale-105'
-                    : isClosedDay
-                      ? 'border-red-500 bg-red-900/30 text-red-400 hover:border-red-400 hover:scale-105'
-                      : isDateToday
-                        ? 'border-blue-500 bg-blue-900/50 text-blue-300 hover:border-blue-400 hover:scale-105'
-                        : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500 hover:bg-gray-700 hover:scale-105'
+                  ? isClosedDay
+                    ? 'border-red-500 bg-red-900/50 text-red-300 shadow-lg scale-105'
+                    : 'border-amber-500 bg-amber-900/50 text-amber-300 shadow-lg scale-105'
+                  : isClosedDay
+                    ? 'border-red-500 bg-red-900/30 text-red-400 hover:border-red-400 hover:scale-105'
+                    : isDateToday
+                      ? 'border-blue-500 bg-blue-900/50 text-blue-300 hover:border-blue-400 hover:scale-105'
+                      : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500 hover:bg-gray-700 hover:scale-105'
                   }`}
               >
                 {isClosedDay && (
@@ -2379,8 +2430,8 @@ Grazie! 😊`;
                 type="button"
                 onClick={() => setDisplayMode('grid')}
                 className={`px-4 py-3 md:py-2 text-sm font-medium transition-colors ${displayMode === 'grid'
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
               >
                 📅 Calendario
@@ -2389,8 +2440,8 @@ Grazie! 😊`;
                 type="button"
                 onClick={() => setDisplayMode('table')}
                 className={`px-4 py-3 md:py-2 text-sm font-medium transition-colors ${displayMode === 'table'
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
               >
                 📋 Tabella

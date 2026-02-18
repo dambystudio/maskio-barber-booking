@@ -163,7 +163,10 @@ export class DatabaseService {
         barber_name,
         barber_id
       FROM bookings
-      WHERE LOWER(customer_name) LIKE LOWER(${'%' + customerName + '%'})
+      WHERE 
+        LOWER(customer_name) LIKE LOWER(${'%' + customerName + '%'}) OR
+        LOWER(customer_email) LIKE LOWER(${'%' + customerName + '%'}) OR
+        LOWER(customer_phone) LIKE LOWER(${'%' + customerName + '%'})
       ORDER BY date DESC, time DESC
       LIMIT 100
     `;
