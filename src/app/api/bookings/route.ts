@@ -5,6 +5,9 @@ import { Booking } from '@/lib/schema';
 import { randomUUID } from 'crypto';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { isDateClosed } from '@/lib/closure-utils';
+import { isBarberClosed } from '@/lib/barber-closures';
+
 
 // API Version: 1.0.1 - Fix barber_id inclusion
 // Rate limiting per IP
@@ -289,13 +292,39 @@ export async function POST(request: NextRequest) {  try {    // Check authentica
       );
     }
 
-    // Validazione giorno (non domenica)
+    // Validazione giorno (non domenica) - hardcoded come fallback sicuro
     if (bookingDateTime.getDay() === 0) {
       return NextResponse.json(
         { error: 'Siamo chiusi la domenica' },
         { status: 400 }
       );
-    }    // Verifica se lo slot è ancora disponibile
+    }
+
+    // 🔐 SECURITY FIX: Validazione chiusure lato server (sourced from DB, non localStorage)
+    // Blocca prenotazioni in giorni/date chiusi anche se il client ha localStorage alterato
+    const shopClosed = await isDateClosed(bookingData.date);
+    if (shopClosed) {
+      return NextResponse.json(
+        { error: 'Il salone è chiuso in questa data' },
+        { status: 400 }
+      );
+    }
+
+    // Controlla le chiusure specifiche del barbiere per la data e fascia oraria
+    if (bookingData.barberId) {
+      const barber = await DatabaseService.getBarberById(String(bookingData.barberId));
+      if (barber?.email) {
+        const barberClosed = await isBarberClosed(barber.email, bookingData.date, bookingData.time);
+        if (barberClosed) {
+          return NextResponse.json(
+            { error: 'Il barbiere non è disponibile in questo orario' },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    // Verifica se lo slot è ancora disponibile
     const existingBookings = await DatabaseService.getBookingsByDate(bookingData.date);
     const barberBookings = existingBookings.filter(booking => booking.barberId === String(bookingData.barberId));    
     const conflictingBooking = barberBookings.find(

@@ -109,13 +109,14 @@ const nextConfig: NextConfig = {
           }
         ]
       },
-      // Headers specifici per API routes - permettiamo accesso completo ai bot
+      // Headers specifici per API routes - CORS ristretto al dominio del sito
+      // 🔐 SECURITY FIX: rimosso wildcard *, ora solo il dominio ufficiale è autorizzato
       {
         source: '/api/(.*)',
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: '*'
+            value: 'https://www.maskiobarberconcept.it'
           },
           {
             key: 'Access-Control-Allow-Methods',
@@ -123,11 +124,15 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization, User-Agent'
+            value: 'Content-Type, Authorization'
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true'
           },
           {
             key: 'Cache-Control',
-            value: 'public, max-age=3600'
+            value: 'no-store, max-age=0'
           }
         ]
       },

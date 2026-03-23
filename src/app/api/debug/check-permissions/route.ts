@@ -1,20 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // 🔐 SECURITY FIX: accessibile solo agli admin
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.role || session.user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Accesso negato. Solo gli admin possono accedere a questa route.' },
+        { status: 403 }
+      );
+    }
+
     const { email } = await request.json();
-    
+
     if (!email) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Email richiesta',
-        success: false 
+        success: false
       });
     }
 
-    // Controlla le variabili d'ambiente
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
-    const barberEmails = process.env.BARBER_EMAILS?.split(',').map(email => email.trim()) || [];
-    
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+    const barberEmails = process.env.BARBER_EMAILS?.split(',').map(e => e.trim()) || [];
+
     const isAdmin = adminEmails.includes(email);
     const isBarber = barberEmails.includes(email);
 
@@ -31,24 +42,15 @@ export async function POST(request: NextRequest) {
         hasBarberEmails: !!process.env.BARBER_EMAILS,
         adminEmailsCount: adminEmails.length,
         barberEmailsCount: barberEmails.length
-      },
-      debug: {
-        adminEmailsArray: adminEmails,
-        barberEmailsArray: barberEmails,
-        emailComparison: adminEmails.map(adminEmail => ({
-          stored: adminEmail,
-          user: email,
-          match: adminEmail === email
-        }))
+        // ⚠️ Array completi delle email rimossi per sicurezza
       }
     });
 
   } catch (error) {
     console.error('Check permissions error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: false,
-      error: 'Errore del server',
-      details: error instanceof Error ? error.message : 'Errore sconosciuto'
+      error: 'Errore del server'
     }, { status: 500 });
   }
 }

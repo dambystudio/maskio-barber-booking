@@ -1,0 +1,72 @@
+# Workflow Status
+# This tracks progress through BMM methodology Analysis, Planning, and Solutioning phases.
+# Implementation phase is tracked separately in sprint-status.yaml
+
+generated: "2026-01-24"
+project: "Maskio Barber Concept"
+project_type: "brownfield"
+selected_track: "bmad-method"
+field_type: "brownfield"
+workflow_path: "_bmad/bmm/workflows/workflow-status/paths/method-brownfield.yaml"
+
+workflow_status:
+  - phase: 0
+    name: "Documentation"
+    status: "pending"
+    workflows:
+      - id: "document-project"
+        status: "required"
+        agent: "analyst"
+        command: "/bmad:bmm:workflows:document-project"
+
+  - phase: 1
+    name: "Analysis (Optional)"
+    status: "optional"
+    workflows:
+      - id: "brainstorm-project"
+        status: "optional"
+        agent: "analyst"
+      - id: "research"
+        status: "optional"
+        agent: "analyst"
+      - id: "product-brief"
+        status: "optional"
+        agent: "analyst"
+
+  - phase: 2
+    name: "Planning"
+    status: "pending"
+    workflows:
+      - id: "prd"
+        status: "completed"
+        agent: "pm"
+        completed_at: "2026-01-24T22:24:32Z"
+        output_file: "_bmad-output/planning-artifacts/prd.md"
+      - id: "create-ux-design"
+        status: "conditional"
+        agent: "ux-designer"
+
+  - phase: 3
+    name: "Solutioning"
+    status: "pending"
+    workflows:
+      - id: "create-architecture"
+        status: "required"
+        agent: "architect"
+      - id: "create-epics-and-stories"
+        status: "required"
+        agent: "pm"
+      - id: "test-design"
+        status: "optional"
+        agent: "tea"
+      - id: "implementation-readiness"
+        status: "required"
+        agent: "architect"
+
+  - phase: 4
+    name: "Implementation"
+    status: "pending"
+    workflows:
+      - id: "sprint-planning"
+        status: "required"
+        agent: "sm"

@@ -1,49 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '../../../../lib/auth';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { db } from '../../../../lib/database-postgres';
 import { users } from '../../../../lib/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
-    // Primo tentativo: ottieni la sessione
-    let session = null;
-    try {
-      session = await auth();
-    } catch (authError) {
-      console.error('Auth error:', authError);
-      return NextResponse.json({ 
-        error: 'Errore autenticazione',
-        authenticated: false,
-        authError: authError instanceof Error ? authError.message : 'Auth error'
-      }, { status: 500 });
-    }
-    
+    // 🔐 SECURITY FIX: accessibile solo agli admin
+    const session = await getServerSession(authOptions);
+
     if (!session?.user?.email) {
-      return NextResponse.json({ 
-        error: 'Non autenticato',
-        authenticated: false,
-        debug: {
-          hasSession: !!session,
-          hasUser: !!session?.user,
-          hasEmail: !!session?.user?.email,
-          sessionData: session
-        }
-      });
+      return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
     }
 
-    // Controlla le variabili d'ambiente
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
-    const barberEmails = process.env.BARBER_EMAILS?.split(',').map(email => email.trim()) || [];
-    
+    if (session.user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Accesso negato. Solo gli admin possono accedere a questa route.' },
+        { status: 403 }
+      );
+    }
+
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+    const barberEmails = process.env.BARBER_EMAILS?.split(',').map(e => e.trim()) || [];
+
     const userEmail = session.user.email;
     const isAdmin = adminEmails.includes(userEmail);
     const isBarber = barberEmails.includes(userEmail);
 
-    // Cerca l'utente nel database per info aggiuntive
     let dbUser = null;
     try {
-      const dbUsers = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
+      const dbUsers = await db.select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+      }).from(users).where(eq(users.email, userEmail)).limit(1);
       dbUser = dbUsers[0] || null;
     } catch (dbError) {
       console.error('Errore database:', dbError);
@@ -57,7 +49,8 @@ export async function GET(request: NextRequest) {
         id: session.user.id,
         dbExists: !!dbUser,
         dbId: dbUser?.id,
-        dbPhone: dbUser?.phone
+        dbRole: dbUser?.role,
+        // ⚠️ Telefono e dati personali rimossi dalla risposta debug
       },
       permissions: {
         isAdmin,
@@ -65,35 +58,18 @@ export async function GET(request: NextRequest) {
         hasSpecialPermissions: isAdmin || isBarber
       },
       environment: {
-        adminEmails: adminEmails,
-        barberEmails: barberEmails,
-        adminEmailsRaw: process.env.ADMIN_EMAILS,
-        barberEmailsRaw: process.env.BARBER_EMAILS,
+        // ⚠️ Email complete e valori raw rimossi per sicurezza
+        adminEmailsCount: adminEmails.length,
+        barberEmailsCount: barberEmails.length,
         hasAdminEmails: !!process.env.ADMIN_EMAILS,
         hasBarberEmails: !!process.env.BARBER_EMAILS
-      },
-      debug: {
-        emailMatch: {
-          userEmail,
-          exactMatch: adminEmails.includes(userEmail),
-          adminEmailsArray: adminEmails,
-          comparison: adminEmails.map(email => ({
-            stored: email,
-            user: userEmail,
-            match: email === userEmail,
-            length: { stored: email.length, user: userEmail.length },
-            trimmed: email.trim() === userEmail.trim()
-          }))
-        }
       }
     });
 
   } catch (error) {
     console.error('Debug endpoint error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Errore del server',
-      details: error instanceof Error ? error.message : 'Errore sconosciuto',
-      stack: error instanceof Error ? error.stack : undefined
     }, { status: 500 });
   }
 }

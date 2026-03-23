@@ -1,0 +1,92 @@
+{
+    "workflow_version": "1.2.0",
+    "timestamps": {
+        "started": "2026-01-24T19:43:05+01:00",
+        "last_updated": "2026-01-24T19:55:00+01:00",
+        "completed": "2026-01-24T19:55:00+01:00"
+    },
+    "mode": "initial_scan",
+    "scan_level": "deep",
+    "project_root": "/Users/damby/Desktop/Programmazione/maskio-barber-booking copia",
+    "output_folder": "/Users/damby/Desktop/Programmazione/maskio-barber-booking copia/_bmad-output",
+    "completed_steps": [
+        {
+            "step": "step_1",
+            "status": "completed",
+            "timestamp": "2026-01-24T19:45:00+01:00",
+            "summary": "Classified as monolith (web) with 1 part"
+        },
+        {
+            "step": "step_2",
+            "status": "completed",
+            "timestamp": "2026-01-24T19:48:00+01:00",
+            "summary": "Found 86 existing docs"
+        },
+        {
+            "step": "step_3",
+            "status": "completed",
+            "timestamp": "2026-01-24T19:50:00+01:00",
+            "summary": "Tech stack: Next.js (App Router), Drizzle, Tailwind"
+        },
+        {
+            "step": "step_4",
+            "status": "completed",
+            "timestamp": "2026-01-24T19:52:00+01:00",
+            "summary": "Conditional analysis complete (API, Data, UI)"
+        },
+        {
+            "step": "step_5",
+            "status": "completed",
+            "timestamp": "2026-01-24T19:55:00+01:00",
+            "summary": "Source tree documented"
+        },
+        {
+            "step": "step_6",
+            "status": "completed",
+            "timestamp": "2026-01-24T19:55:00+01:00",
+            "summary": "Dev/deployment guides written"
+        },
+        {
+            "step": "step_8",
+            "status": "completed",
+            "timestamp": "2026-01-24T19:55:00+01:00",
+            "summary": "Architecture documented"
+        },
+        {
+            "step": "step_9",
+            "status": "completed",
+            "timestamp": "2026-01-24T19:55:00+01:00",
+            "summary": "Supporting docs written"
+        },
+        {
+            "step": "step_10",
+            "status": "completed",
+            "timestamp": "2026-01-24T19:55:00+01:00",
+            "summary": "Master index generated"
+        }
+    ],
+    "current_step": "completed",
+    "findings": {
+        "project_classification": {
+            "repository_type": "monolith",
+            "parts_count": 1,
+            "primary_tech": "Next.js",
+            "project_type_id": "web"
+        },
+        "existing_docs": {
+            "count": 86
+        }
+    },
+    "outputs_generated": [
+        "project-scan-report.json",
+        "project-overview.md",
+        "index.md",
+        "source-tree-analysis.md",
+        "development-guide.md",
+        "deployment-guide.md",
+        "api-contracts.md",
+        "data-models.md",
+        "component-inventory.md"
+    ],
+    "resume_instructions": "Workflow complete"
+}

@@ -1,16 +1,22 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export async function GET() {
   try {
-    // Check delle variabili d'ambiente (senza dati sensibili)
+    // 🔐 SECURITY FIX: route accessibile solo agli admin
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.role || session.user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Accesso negato. Solo gli admin possono accedere a questa route.' },
+        { status: 403 }
+      );
+    }
+
     const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
     const barberEmails = process.env.BARBER_EMAILS?.split(',').map(email => email.trim()) || [];
-    
-    // Test specifico per davide431@outlook.it
-    const testEmail = 'davide431@outlook.it';
-    const isDavideAdmin = adminEmails.includes(testEmail);
-    const isDavideBarber = barberEmails.includes(testEmail);
-    
+
     return NextResponse.json({
       success: true,
       config: {
@@ -18,31 +24,18 @@ export async function GET() {
         barberEmailsCount: barberEmails.length,
         hasAdminEmails: !!process.env.ADMIN_EMAILS,
         hasBarberEmails: !!process.env.BARBER_EMAILS,
-        testResults: {
-          email: testEmail,
-          isAdmin: isDavideAdmin,
-          isBarber: isDavideBarber,
-          hasManagementAccess: isDavideAdmin || isDavideBarber
-        }
-      },
-      // Solo per debug, senza mostrare le email complete
-      debugInfo: {
-        adminEmailsPresent: adminEmails.length > 0,
-        firstAdminEmailPrefix: adminEmails[0]?.substring(0, 5) + '...',
-        barberEmailsPresent: barberEmails.length > 0,
         envVarsSet: {
-          ADMIN_EMAILS: !!process.env.ADMIN_EMAILS,
-          BARBER_EMAILS: !!process.env.BARBER_EMAILS,
           NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET,
           DATABASE_URL: !!process.env.DATABASE_URL
         }
-      }
+        // ⚠️ Email complete, prefissi e valori raw rimossi per sicurezza
+      },
     });
   } catch (error) {
     console.error('Error in public-env-check:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }

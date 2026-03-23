@@ -182,7 +182,31 @@ const CalendarGrid = ({
     return grid;
   }, [dayBookings]);
 
-  const timeSlots = generateTimeSlots();
+  // Genera gli slot di base in base al giorno della settimana,
+  // poi aggiunge dinamicamente qualsiasi orario eccezionale presente
+  // nelle prenotazioni del giorno ma non negli slot standard.
+  const timeSlots = useMemo(() => {
+    const standard = generateTimeSlots();
+    const standardSet = new Set(standard);
+
+    const extra: string[] = [];
+    dayBookings.forEach(booking => {
+      if (booking.status !== 'cancelled' && !standardSet.has(booking.booking_time)) {
+        extra.push(booking.booking_time);
+      }
+    });
+
+    if (extra.length === 0) return standard;
+
+    // Merge e ordina tutti gli slot
+    const all = [...standard, ...extra];
+    all.sort((a, b) => {
+      const [ah, am] = a.split(':').map(Number);
+      const [bh, bm] = b.split(':').map(Number);
+      return ah * 60 + am - (bh * 60 + bm);
+    });
+    return all;
+  }, [dayBookings, selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // State per il modal
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);

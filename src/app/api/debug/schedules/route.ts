@@ -1,50 +1,51 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { DatabaseService } from '@/lib/database-postgres';
 
 export async function GET() {
   try {
-    // Check schedules for both barbers
+    // 🔐 SECURITY FIX: accessibile solo agli admin
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.role || session.user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Accesso negato. Solo gli admin possono accedere a questa route.' },
+        { status: 403 }
+      );
+    }
+
+    // Mantiene la funzionalità di debug degli schedule solo per gli admin
     const barbers = ['fabio', 'michele'];
-    const date = '2025-05-28';
-    
+    const date = new Date().toISOString().split('T')[0]; // oggi invece di data hardcoded
+
     const result = [];
-    
+
     for (const barberId of barbers) {
       const schedule = await DatabaseService.getBarberSchedule(barberId, date);
-      
-      let availableSlots = [];
-      let unavailableSlots = [];
-      
+
+      let availableSlots: string[] = [];
+      let unavailableSlots: string[] = [];
+
       if (schedule) {
         availableSlots = schedule.availableSlots ? JSON.parse(schedule.availableSlots) : [];
         unavailableSlots = schedule.unavailableSlots ? JSON.parse(schedule.unavailableSlots) : [];
       }
-      
+
       result.push({
         barberId,
         date,
         dayOff: schedule?.dayOff || false,
         availableSlots,
         unavailableSlots,
-        hasLunchInAvailable: availableSlots.includes('12:00') || availableSlots.includes('12:30'),
-        hasLunchInUnavailable: unavailableSlots.includes('12:00') || unavailableSlots.includes('12:30'),
-        lunchSlots: {
-          '12:00': {
-            inAvailable: availableSlots.includes('12:00'),
-            inUnavailable: unavailableSlots.includes('12:00')
-          },
-          '12:30': {
-            inAvailable: availableSlots.includes('12:30'),
-            inUnavailable: unavailableSlots.includes('12:30')
-          }
-        }
       });
     }
-    
-    return NextResponse.json(result);  } catch (error) {
+
+    return NextResponse.json(result);
+  } catch (error) {
     console.error('Error checking schedules:', error);
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
     }, { status: 500 });
   }
 }

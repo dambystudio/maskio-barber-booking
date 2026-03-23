@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 import { kv } from '@vercel/kv';
 
 // Rate limiting storage (in production use Redis or database)
@@ -175,6 +176,31 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/sitemap')
   ) {
     return NextResponse.next();
+  }
+
+  // 🔐 SECURITY FIX: protezione server-side per rotte riservate
+  // Il controllo avviene a livello Edge, prima che il browser riceva HTML/JS
+  const protectedRoutes = ['/pannello-prenotazioni', '/admin'];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+
+  if (isProtectedRoute) {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+
+    if (!token) {
+      // Utente non autenticato → redirect al login
+      const loginUrl = new URL('/auth/signin', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    const role = token.role as string | undefined;
+    if (role !== 'barber' && role !== 'admin') {
+      // Utente autenticato ma senza i privilegi necessari → redirect alla home
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
 
   const ip = getClientIP(request);
