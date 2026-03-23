@@ -4,12 +4,12 @@ import { authOptions } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    // 🔐 SECURITY FIX: accessibile solo agli admin
+    // 🔐 SECURITY FIX: accessibile solo ad admin e barbieri (usato dal frontend per check permessi)
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.role || session.user.role !== 'admin') {
+    if (!session?.user?.role || (session.user.role !== 'admin' && session.user.role !== 'barber')) {
       return NextResponse.json(
-        { error: 'Accesso negato. Solo gli admin possono accedere a questa route.' },
+        { error: 'Accesso negato. Riservato allo staff.' },
         { status: 403 }
       );
     }
