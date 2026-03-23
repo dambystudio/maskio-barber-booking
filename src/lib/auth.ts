@@ -320,12 +320,28 @@ export const authOptions: NextAuthOptions = {
         }
       }
       return session
-    },    async jwt({ token, user }: { token: any; user?: any }) {      if (user) {
-        // Per OAuth providers, il ruolo viene determinato nel session callback
-        // Per credentials provider, il ruolo viene già determinato nell'authorize
-        token.role = user.role || 'customer';
+    },    async jwt({ token, user, trigger, session }: { token: any; user?: any; trigger?: "signIn" | "signUp" | "update"; session?: any }) {      
+      if (user) {
         token.id = user.id;
+        token.role = user.role || 'customer';
+        
+        // Se è un utente OAuth, l'oggetto user non ha il ruolo definitivo. Ricalcoliamolo:
+        if (user.email) {
+          const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+          const barberEmails = process.env.BARBER_EMAILS?.split(',').map(e => e.trim()) || [];
+          if (adminEmails.includes(user.email)) {
+            token.role = 'admin';
+          } else if (barberEmails.includes(user.email)) {
+            token.role = 'barber';
+          }
+        }
       }
+      
+      // Permette gli aggiornamenti dinamici della sessione
+      if (trigger === "update" && session?.role) {
+        token.role = session.role;
+      }
+      
       return token
     }},
   pages: {
