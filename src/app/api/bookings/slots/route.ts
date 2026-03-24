@@ -170,6 +170,20 @@ function generateAllTimeSlots(dateString: string, barberName?: string): string[]
     return slots;
   }
 
+  // 11 aprile 2026 (Sabato eccezionale)
+  if (dateString === '2026-04-11') {
+    // 9:00-12:30
+    for (let hour = 9; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 12 && minute > 30) break;
+        slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+      }
+    }
+    // Aggiunti 13:00, 13:30, 14:00, 14:30
+    slots.push('13:00', '13:30', '14:00', '14:30');
+    return slots; // Pomeriggio chiuso
+  }
+
   // Monday (1) - Michele: pomeriggio 15:00-18:00 | Fabio: chiuso
   if (dayOfWeek === 1) {
     const barberNameLower = (barberName || '').toLowerCase();

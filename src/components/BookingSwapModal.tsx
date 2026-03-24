@@ -78,6 +78,12 @@ function TimeSlotGrid({
       }
     }
     
+    if (selectedDate === '2026-04-11') {
+      // 11 aprile 2026: chiusura ore 15, orario continuato (ultimo slot 14:30)
+      slots.push('13:00', '13:30', '14:00', '14:30');
+      return slots;
+    }
+    
     // Pomeriggio: dipende dal giorno
     if (dayOfWeek === 6) {
       // ✅ SABATO: 14:30-17:00

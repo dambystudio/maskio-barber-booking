@@ -277,6 +277,17 @@ async function generateAllTimeSlots(dateString: string, requestCache?: RequestCa
     return slots; // Return empty array if day is closed
   }
 
+  if (dateString === '2026-04-11') {
+    for (let hour = 9; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 12 && minute > 30) break;
+        slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+      }
+    }
+    slots.push('13:00', '13:30', '14:00', '14:30');
+    return slots;
+  }
+
   // Saturday has same hours as weekdays (9:00-12:30, 15:00-17:30)
   if (dayOfWeek === 6) {
     // Morning slots 9:00-12:30
