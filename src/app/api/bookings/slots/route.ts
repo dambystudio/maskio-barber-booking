@@ -43,8 +43,10 @@ export async function GET(request: NextRequest) {
     // This is important because barber_schedules might have custom hours (e.g., Monday with morning slots)
     const schedule = await DatabaseService.getBarberSchedule(barberId, date);
     let allPossibleSlots: string[] = [];
-    
-    if (schedule && !schedule.dayOff && schedule.availableSlots) {
+
+    if (date === '2026-04-11') {
+      allPossibleSlots = generateAllTimeSlots(date, barberName);
+    } else if (schedule && !schedule.dayOff && schedule.availableSlots) {
       // Use slots from database schedule (includes both available and unavailable)
       try {
         const availableFromSchedule = JSON.parse(schedule.availableSlots);
@@ -60,6 +62,8 @@ export async function GET(request: NextRequest) {
       // No specific schedule found, use standard generated slots
       allPossibleSlots = generateAllTimeSlots(date, barberName);
     }
+
+    const morningCutoffHour = date === '2026-04-11' ? 15 : 14;
     
     // ✅ FIX: Determina se questo è un'apertura eccezionale
     // Se lo schedule esiste e ha day_off=false, NON controllare le chiusure ricorrenti
@@ -95,14 +99,14 @@ export async function GET(request: NextRequest) {
       // Se c'è una chiusura mattutina, mostra solo slot pomeridiani (>= 14:00)
       filteredSlots = allPossibleSlots.filter(time => {
         const hour = parseInt(time.split(':')[0]);
-        return hour >= 14;
+        return hour >= morningCutoffHour;
       });
       console.log(`Barber ${barberEmail} has morning closure on ${date}, showing only afternoon slots`);
     } else if (closureType === 'afternoon') {
       // Se c'è una chiusura pomeridiana, mostra solo slot mattutini (< 14:00)
       filteredSlots = allPossibleSlots.filter(time => {
         const hour = parseInt(time.split(':')[0]);
-        return hour < 14;
+        return hour < morningCutoffHour;
       });
       console.log(`Barber ${barberEmail} has afternoon closure on ${date}, showing only morning slots`);
     }
@@ -119,7 +123,7 @@ export async function GET(request: NextRequest) {
           // (ignora le chiusure ricorrenti)
           if (barberClosures.length > 0) {
             const hour = parseInt(time.split(':')[0]);
-            const isMorning = hour < 14;
+            const isMorning = hour < morningCutoffHour;
             
             const isClosedSpecific = barberClosures.some(closure => {
               if (closure.closureType === 'full') return true;
@@ -164,24 +168,22 @@ function generateAllTimeSlots(dateString: string, barberName?: string): string[]
   const slots: string[] = [];
   const date = new Date(dateString);
   const dayOfWeek = date.getDay();
+
+  if (dateString === '2026-04-11') {
+    for (let hour = 9; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 12 && minute > 30) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+    slots.push('13:00', '13:30', '14:00', '14:30');
+    return slots;
+  }
   
   // Skip domenica (0) - giorno di chiusura standard
   if (dayOfWeek === 0) {
     return slots;
-  }
-
-  // 11 aprile 2026 (Sabato eccezionale)
-  if (dateString === '2026-04-11') {
-    // 9:00-12:30
-    for (let hour = 9; hour <= 12; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        if (hour === 12 && minute > 30) break;
-        slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-      }
-    }
-    // Aggiunti 13:00, 13:30, 14:00, 14:30
-    slots.push('13:00', '13:30', '14:00', '14:30');
-    return slots; // Pomeriggio chiuso
   }
 
   // Monday (1) - Michele: pomeriggio 15:00-18:00 | Fabio: chiuso

@@ -77,6 +77,11 @@ function TimeSlotGrid({
         }
       }
     }
+
+    if (selectedDate === '2026-04-11') {
+      slots.push('13:00', '13:30', '14:00', '14:30');
+      return slots;
+    }
     
     if (selectedDate === '2026-04-11') {
       // 11 aprile 2026: chiusura ore 15, orario continuato (ultimo slot 14:30)
@@ -267,7 +272,7 @@ function TimeSlotGrid({
                     <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                       {getAllSlotsToRender(typeof barberName !== 'undefined' ? barberName : (selectedBarber as string)).filter(time => {
                         const hour = parseInt(time.split(':')[0]);
-                        return hour >= 9 && hour <= 12;
+                        return hour >= 9 && hour < 15;
                       }).map(time => {
                         const key = `${time}|${barberName}`;
                         const availability = slotsAvailability[key];
@@ -374,7 +379,7 @@ function TimeSlotGrid({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {getAllSlotsToRender(selectedBarber as string).filter(time => {
                     const hour = parseInt(time.split(':')[0]);
-                    return hour >= 9 && hour <= 12;
+                    return hour >= 9 && hour < 15;
                   }).map(time => {
                     const key = `${time}|${selectedBarber}`;
                     return (
@@ -407,7 +412,7 @@ function TimeSlotGrid({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {getAllSlotsToRender(selectedBarber as string).filter(time => {
                     const hour = parseInt(time.split(':')[0]);
-                    return hour >= 15 && hour <= 18;
+                    return hour >= 15;
                   }).map(time => {
                     const key = `${time}|${selectedBarber}`;
                     return (

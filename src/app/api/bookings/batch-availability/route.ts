@@ -267,6 +267,18 @@ async function generateAllTimeSlots(dateString: string, requestCache?: RequestCa
   const slots: string[] = [];
   const date = new Date(dateString);
   const dayOfWeek = date.getDay();
+
+  if (dateString === '2026-04-11') {
+    for (let hour = 9; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 12 && minute > 30) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+    slots.push('13:00', '13:30', '14:00', '14:30');
+    return slots;
+  }
   
   // Check if the day is closed according to closure settings
   const dateIsClosed = requestCache 

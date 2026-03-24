@@ -15,6 +15,14 @@ export interface BookingWithDetails extends schema.Booking {
 export class DatabaseService {
   private static STANDARD_SLOTS_CACHE: Record<number, string[]> = {};
 
+  private static getExceptionalSlotsFor20260411(): string[] {
+    return [
+      '09:00', '09:30', '10:00', '10:30',
+      '11:00', '11:30', '12:00', '12:30',
+      '13:00', '13:30', '14:00', '14:30'
+    ];
+  }
+
   // === USER MANAGEMENT ===
 
   static async createUser(userData: schema.NewUser): Promise<schema.User> {
@@ -269,7 +277,9 @@ export class DatabaseService {
 
     let availableSlots: string[] = [];
 
-    if (schedule && !schedule.dayOff) {
+    if (date === '2026-04-11') {
+      availableSlots = this.getExceptionalSlotsFor20260411();
+    } else if (schedule && !schedule.dayOff) {
       // Se esiste un record specifico per questa data, usalo
       try {
         availableSlots = schedule.availableSlots ? JSON.parse(schedule.availableSlots) : [];
@@ -303,15 +313,7 @@ export class DatabaseService {
   // Nuova funzione per generare gli slot standard (Optimized with Memoization)
   private static generateStandardSlots(dateString: string): string[] {
     if (dateString === '2026-04-11') {
-      const slots: string[] = [];
-      for (let hour = 9; hour <= 12; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          if (hour === 12 && minute > 30) break;
-          slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-        }
-      }
-      slots.push('13:00', '13:30', '14:00', '14:30');
-      return slots;
+      return this.getExceptionalSlotsFor20260411();
     }
 
     const date = new Date(dateString);

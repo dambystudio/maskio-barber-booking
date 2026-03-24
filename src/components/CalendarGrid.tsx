@@ -112,6 +112,11 @@ const CalendarGrid = ({
     // Orari pomeridiani
     const selectedDateObj = new Date(selectedDate + 'T00:00:00');
     const dayOfWeek = selectedDateObj.getDay();
+
+    if (selectedDate === '2026-04-11') {
+      slots.push('13:00', '13:30', '14:00', '14:30');
+      return slots;
+    }
     
     if (selectedDate === '2026-04-11') {
       // 11 aprile 2026: orari fino alle 15 (ultimo slot 14:30), pomeriggio chiuso

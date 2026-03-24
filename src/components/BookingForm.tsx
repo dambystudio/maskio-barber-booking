@@ -886,7 +886,18 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     }
   };
 
-  const stepLabels = ['Barbiere', 'Servizi', 'Data e Ora', 'Riepilogo'];  return (
+  const stepLabels = ['Barbiere', 'Servizi', 'Data e Ora', 'Riepilogo'];
+
+  const displayedSlots = availableSlots.filter((slot) => {
+    if (formData.selectedDate !== '2026-04-11') {
+      return true;
+    }
+
+    const hour = parseInt(slot.time.split(':')[0], 10);
+    return slot.available && hour < 15;
+  });
+
+  return (
     <div className="max-w-4xl mx-auto bg-black rounded-lg shadow-lg p-8 border border-gray-800">
       {/* Error Message */}
       {error && (
@@ -1238,12 +1249,12 @@ export default function BookingForm({ userSession }: BookingFormProps) {
               </div>
             )}
 
-            {formData.selectedDate && availableSlots.length > 0 && !isDebouncing && !loading && (
+            {formData.selectedDate && displayedSlots.length > 0 && !isDebouncing && !loading && (
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Orari disponibili
                 </label>
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">                  {availableSlots.map((slot) => (
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">                  {displayedSlots.map((slot) => (
                     <button
                       key={slot.time}
                       onClick={() => {
@@ -1287,7 +1298,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
                   </div>
                 </div>
               </div>
-            )}            {formData.selectedDate && availableSlots.length === 0 && !loading && !isDebouncing && (
+            )}            {formData.selectedDate && displayedSlots.length === 0 && !loading && !isDebouncing && (
               <div className="text-center py-8 bg-gray-800/30 rounded-lg border border-gray-700">
                 <div className="text-4xl mb-3">😔</div>
                 <p className="text-gray-300 font-semibold mb-2">Nessun orario disponibile</p>
