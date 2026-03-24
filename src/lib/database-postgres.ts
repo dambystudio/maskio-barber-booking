@@ -302,6 +302,18 @@ export class DatabaseService {
 
   // Nuova funzione per generare gli slot standard (Optimized with Memoization)
   private static generateStandardSlots(dateString: string): string[] {
+    if (dateString === '2026-04-11') {
+      const slots: string[] = [];
+      for (let hour = 9; hour <= 12; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 12 && minute > 30) break;
+          slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+        }
+      }
+      slots.push('13:00', '13:30', '14:00', '14:30');
+      return slots;
+    }
+
     const date = new Date(dateString);
     const dayOfWeek = date.getDay();
 
