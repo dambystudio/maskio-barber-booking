@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BookingService } from '@/services/bookingService';
+
+interface Barber {
+  id: string;
+  name: string;
+}
 
 interface Booking {
   id: string;
@@ -32,6 +38,7 @@ interface TimeSlotGridProps {
   currentBarberName: string; // ✅ AGGIUNTO: Nome del barbiere dell'appuntamento corrente
   excludeBookingId: string;
   allBookings: Booking[];
+  barbers: Barber[];
   onTimeSelect: (time: string, availability: { available: boolean; occupiedBy?: any; barberName?: string }) => void;
 }
 
@@ -42,6 +49,7 @@ function TimeSlotGrid({
   currentBarberName,
   excludeBookingId,
   allBookings,
+  barbers,
   onTimeSelect
 }: TimeSlotGridProps) {
   const [slotsAvailability, setSlotsAvailability] = useState<{
@@ -98,93 +106,62 @@ function TimeSlotGrid({
 
   // Controlla disponibilità per tutti gli slot quando cambia la data
   useEffect(() => {
-    const checkAllSlots = () => {
-      const slots = generateTimeSlots();
-      const date = new Date(selectedDate);
-      const dayOfWeek = date.getDay();
-      
-      // Lista barbieri da controllare
+    const checkAllSlots = async () => {
       const barbersToCheck = selectedBarber === 'all' 
         ? ['Fabio', 'Michele', 'Nicolò'] 
         : [selectedBarber];
       
       const slotsMap: typeof slotsAvailability = {};
       
-      barbersToCheck.forEach(barberName => {
-        // Logica chiusure per barbiere
-        const barberNameLower = barberName.toLowerCase();
-        let availableSlots = [...slots];
-        
-        // Lunedì
-        if (dayOfWeek === 1) {
-          if (barberNameLower === 'fabio') {
-            availableSlots = []; // Fabio chiuso lunedì
-          } else if (barberNameLower === 'michele') {
-            // Michele: solo pomeriggio lunedì
-            availableSlots = availableSlots.filter(time => {
-              const hour = parseInt(time.split(':')[0]);
-              return hour >= 15;
-            });
-          }
-        }
-        
-        // Nicolò: mattine chiuse
-        if (barberNameLower === 'nicolò' || barberNameLower === 'nicolo') {
-          availableSlots = availableSlots.filter(time => {
-            const hour = parseInt(time.split(':')[0]);
-            return hour >= 15; // Solo pomeriggio
-          });
-        }
-        
-        availableSlots.forEach(time => {
-          const key = `${time}|${barberName}`;
+      await Promise.all(barbersToCheck.map(async barberName => {
+        // Find by name
+        const barberId = barbers.find(b => b.name === barberName || b.name.includes(barberName))?.id;
+        if (!barberId) return;
+
+        try {
+          // getAvailableSlots ritornerebbe TUTTI gli slot validi per quella data 
+          const slotsFromServer = await BookingService.getAvailableSlots(selectedDate, barberId);
           
-          // Cerca una prenotazione esistente per questo slot e barbiere
-          const existingBooking = allBookings.find(booking => 
-            booking.booking_date === selectedDate && 
-            booking.booking_time === time && 
-            booking.id !== excludeBookingId && 
-            booking.status !== 'cancelled' &&
-            booking.barber_name === barberName
-          );
+          slotsFromServer.forEach(({ time }) => {
+            const key = `${time}|${barberName}`;
+            
+            // Cerca una prenotazione esistente per questo slot e barbiere
+            const existingBooking = allBookings.find(booking => 
+              booking.booking_date === selectedDate && 
+              booking.booking_time === time && 
+              booking.id !== excludeBookingId && 
+              booking.status !== 'cancelled' &&
+              booking.barber_name === barberName
+            );
 
-          // Debug logging
-          if (time === '10:00' && selectedDate === new Date().toISOString().split('T')[0]) {
-            console.log(`🔍 Check ${barberName} at ${time}:`, {
-              existingBooking: existingBooking ? `Found: ${existingBooking.customer_name}` : 'Not found',
-              totalBookings: allBookings.length,
-              bookingsForThisBarber: allBookings.filter(b => b.barber_name === barberName).length,
-              bookingsForThisDate: allBookings.filter(b => b.booking_date === selectedDate).length
-            });
-          }
-
-          if (existingBooking) {
-            // Slot occupato
-            slotsMap[key] = {
-              available: false,
-              occupiedBy: {
-                id: existingBooking.id,
-                customerName: existingBooking.customer_name,
-                serviceName: existingBooking.service_name
-              },
-              loading: false,
-              barberName: barberName
-            };
-          } else {
-            // Slot libero
-            slotsMap[key] = {
-              available: true,
-              loading: false,
-              barberName: barberName
-            };
-          }
-        });
-      });
+            if (existingBooking) {
+              slotsMap[key] = {
+                available: false,
+                occupiedBy: {
+                  id: existingBooking.id,
+                  customerName: existingBooking.customer_name,
+                  serviceName: existingBooking.service_name
+                },
+                loading: false,
+                barberName: barberName
+              };
+            } else {
+              slotsMap[key] = {
+                available: true,
+                loading: false,
+                barberName: barberName
+              };
+            }
+          });
+        } catch (error) {
+           console.error(`Errore caricamento slot per ${barberName}:`, error);
+        }
+      }));
 
       setSlotsAvailability(slotsMap);
     };
 
-    if (selectedDate && allBookings) {
+    if (selectedDate && allBookings && barbers.length > 0) {
       checkAllSlots();
     }
   }, [selectedDate, allBookings, excludeBookingId, selectedBarber]);
@@ -237,6 +214,26 @@ function TimeSlotGrid({
     return '❌';
   };
 
+  const getAllSlotsToRender = (barberName: string) => {
+    const standardSlots = generateTimeSlots();
+    const standardSet = new Set(standardSlots);
+    const extraSlots = Object.keys(slotsAvailability)
+      .filter(k => k.endsWith(`|${barberName}`))
+      .map(k => k.split('|')[0])
+      .filter(time => !standardSet.has(time));
+      
+    return [...standardSlots, ...extraSlots].sort((a, b) => {
+      const [ah, am] = a.split(':').map(Number);
+      const [bh, bm] = b.split(':').map(Number);
+      return (ah * 60 + am) - (bh * 60 + bm);
+    });
+  };
+
+  // Check if closed (no slots)
+  const isBarberClosed = (barberName: string) => {
+    return Object.keys(slotsAvailability).filter(k => k.endsWith(`|${barberName}`)).length === 0;
+  };
+
   return (
     <div className="space-y-4">
       {selectedBarber === 'all' ? (
@@ -251,164 +248,185 @@ function TimeSlotGrid({
                 )}
               </h3>
               
-              {/* Mattina */}
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-400 mb-2">🌅 Mattina</h4>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                  {generateTimeSlots().filter(time => {
-                    const hour = parseInt(time.split(':')[0]);
-                    return hour >= 9 && hour <= 12;
-                  }).map(time => {
-                    const key = `${time}|${barberName}`;
-                    const availability = slotsAvailability[key];
-                    
-                    if (!availability) {
-                      return (
-                        <div key={time} className={getSlotClassName(time, barberName)}>
-                          <div className="text-center">
-                            <div className="text-lg mb-1">🔒</div>
-                            <div className="text-xs">{time}</div>
-                          </div>
-                        </div>
-                      );
-                    }
-                    
-                    return (
-                      <button
-                        key={time}
-                        onClick={() => handleTimeClick(time, barberName)}
-                        disabled={slotsAvailability[key]?.loading}
-                        className={getSlotClassName(time, barberName)}
-                      >
-                        <div className="text-center">
-                          <div className="text-lg mb-1">{getSlotIcon(time, barberName)}</div>
-                          <div className="text-xs font-medium">{time}</div>
-                          {slotsAvailability[key]?.occupiedBy && (
-                            <div className="text-[10px] mt-1 opacity-80 truncate">
-                              {slotsAvailability[key].occupiedBy.customerName}
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
+              {isBarberClosed(barberName) ? (
+                <div className="bg-red-900/30 border border-red-500 rounded-lg p-6 text-center my-4">
+                  <div className="text-red-400 text-3xl mb-2">🔒</div>
+                  <div className="text-red-300 font-semibold text-md">Nessuno slot disponibile</div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Mattina */}
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">🌅 Mattina</h4>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                      {getAllSlotsToRender(typeof barberName !== 'undefined' ? barberName : (selectedBarber as string)).filter(time => {
+                        const hour = parseInt(time.split(':')[0]);
+                        return hour >= 9 && hour <= 12;
+                      }).map(time => {
+                        const key = `${time}|${barberName}`;
+                        const availability = slotsAvailability[key];
+                        
+                        if (!availability) {
+                          return (
+                            <div key={time} className={getSlotClassName(time, barberName)}>
+                              <div className="text-center">
+                                <div className="text-lg mb-1">🔒</div>
+                                <div className="text-xs">{time}</div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <button
+                            key={time}
+                            onClick={() => handleTimeClick(time, barberName)}
+                            disabled={slotsAvailability[key]?.loading}
+                            className={getSlotClassName(time, barberName)}
+                          >
+                            <div className="text-center">
+                              <div className="text-lg mb-1">{getSlotIcon(time, barberName)}</div>
+                              <div className="text-xs font-medium">{time}</div>
+                              {slotsAvailability[key]?.occupiedBy && (
+                                <div className="text-[10px] mt-1 opacity-80 truncate">
+                                  {slotsAvailability[key].occupiedBy.customerName}
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-              {/* Pomeriggio */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-400 mb-2">🌆 Pomeriggio</h4>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                  {generateTimeSlots().filter(time => {
-                    const hour = parseInt(time.split(':')[0]);
-                    return hour >= 15;
-                  }).map(time => {
-                    const key = `${time}|${barberName}`;
-                    const availability = slotsAvailability[key];
-                    
-                    if (!availability) {
-                      return (
-                        <div key={time} className={getSlotClassName(time, barberName)}>
-                          <div className="text-center">
-                            <div className="text-lg mb-1">🔒</div>
-                            <div className="text-xs">{time}</div>
-                          </div>
-                        </div>
-                      );
-                    }
-                    
-                    return (
-                      <button
-                        key={time}
-                        onClick={() => handleTimeClick(time, barberName)}
-                        disabled={slotsAvailability[key]?.loading}
-                        className={getSlotClassName(time, barberName)}
-                      >
-                        <div className="text-center">
-                          <div className="text-lg mb-1">{getSlotIcon(time, barberName)}</div>
-                          <div className="text-xs font-medium">{time}</div>
-                          {slotsAvailability[key]?.occupiedBy && (
-                            <div className="text-[10px] mt-1 opacity-80 truncate">
-                              {slotsAvailability[key].occupiedBy.customerName}
+                  {/* Pomeriggio */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">🌆 Pomeriggio</h4>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                      {getAllSlotsToRender(typeof barberName !== 'undefined' ? barberName : (selectedBarber as string)).filter(time => {
+                        const hour = parseInt(time.split(':')[0]);
+                        return hour >= 15;
+                      }).map(time => {
+                        const key = `${time}|${barberName}`;
+                        const availability = slotsAvailability[key];
+                        
+                        if (!availability) {
+                          return (
+                            <div key={time} className={getSlotClassName(time, barberName)}>
+                              <div className="text-center">
+                                <div className="text-lg mb-1">🔒</div>
+                                <div className="text-xs">{time}</div>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+                          );
+                        }
+                        
+                        return (
+                          <button
+                            key={time}
+                            onClick={() => handleTimeClick(time, barberName)}
+                            disabled={slotsAvailability[key]?.loading}
+                            className={getSlotClassName(time, barberName)}
+                          >
+                            <div className="text-center">
+                              <div className="text-lg mb-1">{getSlotIcon(time, barberName)}</div>
+                              <div className="text-xs font-medium">{time}</div>
+                              {slotsAvailability[key]?.occupiedBy && (
+                                <div className="text-[10px] mt-1 opacity-80 truncate">
+                                  {slotsAvailability[key].occupiedBy.customerName}
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </>
       ) : (
         // Vista per singolo barbiere (layout originale)
         <>
-          {/* Slot mattutini */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
-              🌅 Mattina (9:00 - 12:30)
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {generateTimeSlots().filter(time => {
-                const hour = parseInt(time.split(':')[0]);
-                return hour >= 9 && hour <= 12;
-              }).map(time => {
-                const key = `${time}|${selectedBarber}`;
-                return (
-                  <button
-                    key={time}
-                    onClick={() => handleTimeClick(time, selectedBarber as string)}
-                    disabled={slotsAvailability[key]?.loading}
-                    className={getSlotClassName(time, selectedBarber as string)}
-                  >
-                    <div className="text-center">
-                      <div className="text-lg mb-1">{getSlotIcon(time, selectedBarber as string)}</div>
-                      <div className="font-medium">{time}</div>
-                      {slotsAvailability[key]?.occupiedBy && (
-                        <div className="text-xs mt-1 opacity-80">
-                          {slotsAvailability[key].occupiedBy.customerName}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
+          {isBarberClosed(selectedBarber as string) ? (
+            <div className="bg-red-900/30 border border-red-500 rounded-lg p-6 text-center shadow-lg my-6">
+              <div className="text-red-400 text-5xl mb-4">🔒</div>
+              <div className="text-red-300 font-bold text-xl mb-2">Giorno chiuso per {selectedBarber}</div>
+              <div className="text-gray-300">
+                Seleziona un altro barbiere o un'altra data.
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              {/* Slot mattutini */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
+                  🌅 Mattina (9:00 - 12:30)
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {getAllSlotsToRender(selectedBarber as string).filter(time => {
+                    const hour = parseInt(time.split(':')[0]);
+                    return hour >= 9 && hour <= 12;
+                  }).map(time => {
+                    const key = `${time}|${selectedBarber}`;
+                    return (
+                      <button
+                        key={time}
+                        onClick={() => handleTimeClick(time, selectedBarber as string)}
+                        disabled={slotsAvailability[key]?.loading}
+                        className={getSlotClassName(time, selectedBarber as string)}
+                      >
+                        <div className="text-center">
+                          <div className="text-lg mb-1">{getSlotIcon(time, selectedBarber as string)}</div>
+                          <div className="font-medium">{time}</div>
+                          {slotsAvailability[key]?.occupiedBy && (
+                            <div className="text-xs mt-1 opacity-80">
+                              {slotsAvailability[key].occupiedBy.customerName}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-          {/* Slot pomeridiani */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
-              🌆 Pomeriggio (15:00 - 18:00)
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {generateTimeSlots().filter(time => {
-                const hour = parseInt(time.split(':')[0]);
-                return hour >= 15 && hour <= 18;
-              }).map(time => {
-                const key = `${time}|${selectedBarber}`;
-                return (
-                  <button
-                    key={time}
-                    onClick={() => handleTimeClick(time, selectedBarber as string)}
-                    disabled={slotsAvailability[key]?.loading}
-                    className={getSlotClassName(time, selectedBarber as string)}
-                  >
-                    <div className="text-center">
-                      <div className="text-lg mb-1">{getSlotIcon(time, selectedBarber as string)}</div>
-                      <div className="font-medium">{time}</div>
-                      {slotsAvailability[key]?.occupiedBy && (
-                        <div className="text-xs mt-1 opacity-80">
-                          {slotsAvailability[key].occupiedBy.customerName}
+              {/* Slot pomeridiani */}
+              <div className="mt-6">
+                <h4 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
+                  🌆 Pomeriggio (15:00 - 18:00)
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {getAllSlotsToRender(selectedBarber as string).filter(time => {
+                    const hour = parseInt(time.split(':')[0]);
+                    return hour >= 15 && hour <= 18;
+                  }).map(time => {
+                    const key = `${time}|${selectedBarber}`;
+                    return (
+                      <button
+                        key={time}
+                        onClick={() => handleTimeClick(time, selectedBarber as string)}
+                        disabled={slotsAvailability[key]?.loading}
+                        className={getSlotClassName(time, selectedBarber as string)}
+                      >
+                        <div className="text-center">
+                          <div className="text-lg mb-1">{getSlotIcon(time, selectedBarber as string)}</div>
+                          <div className="font-medium">{time}</div>
+                          {slotsAvailability[key]?.occupiedBy && (
+                            <div className="text-xs mt-1 opacity-80">
+                              {slotsAvailability[key].occupiedBy.customerName}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
@@ -434,6 +452,14 @@ export default function BookingSwapModal({
   // ✅ NUOVO: Fetch TUTTE le prenotazioni (non solo del barbiere corrente)
   const [allBarberBookings, setAllBarberBookings] = useState<Booking[]>(allBookings);
   const [loadingBookings, setLoadingBookings] = useState(true);
+  const [barbersList, setBarbersList] = useState<Barber[]>([]);
+
+  useEffect(() => {
+    fetch('/api/barbers')
+      .then(r => r.json())
+      .then(data => setBarbersList(data))
+      .catch(err => console.error('Error fetching barbers:', err));
+  }, []);
 
   // ✅ NUOVO: Fetch TUTTE le prenotazioni
   useEffect(() => {
@@ -476,71 +502,6 @@ export default function BookingSwapModal({
     
     fetchAllBookings();
   }, []);
-
-  // Generiamo gli slot orari disponibili (basati sulla data selezionata)
-  const generateTimeSlots = () => {
-    const slots = [];
-    const date = new Date(selectedDate);
-    const dayOfWeek = date.getDay();
-    
-    // ✅ LUNEDÌ (giorno 1) - Logica speciale
-    if (dayOfWeek === 1) {
-      // Michele: NO mattina, pomeriggio 15:00-18:00
-      // Fabio: CHIUSO completamente
-      const barberName = booking.barber_name?.toLowerCase() || '';
-      
-      if (barberName === 'fabio') {
-        // Fabio è chiuso il lunedì - nessuno slot
-        return [];
-      } else if (barberName === 'michele') {
-        // Michele: solo pomeriggio 15:00-18:00 (7 slot)
-        for (let hour = 15; hour <= 18; hour++) {
-          if (hour === 18) {
-            slots.push('18:00'); // Solo 18:00, no 18:30
-          } else {
-            slots.push(`${hour.toString().padStart(2, '0')}:00`);
-            slots.push(`${hour.toString().padStart(2, '0')}:30`);
-          }
-        }
-        return slots;
-      }
-    }
-    
-    // Mattina: 9:00-12:30 (tutti gli altri giorni eccetto lunedì)
-    if (dayOfWeek !== 1) {
-      for (let hour = 9; hour <= 12; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          if (hour === 12 && minute > 30) break;
-          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-          slots.push(time);
-        }
-      }
-    }
-    
-    // Pomeriggio: dipende dal giorno
-    if (dayOfWeek === 6) {
-      // ✅ SABATO: 14:30-17:00 (NO 17:30)
-      slots.push('14:30');
-      for (let hour = 15; hour <= 17; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          if (hour === 17 && minute > 0) break; // Stop at 17:00 (no 17:30)
-          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-          slots.push(time);
-        }
-      }
-    } else if (dayOfWeek !== 1) {
-      // Altri giorni (non lunedì): 15:00-17:30
-      for (let hour = 15; hour <= 17; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          if (hour === 17 && minute > 30) break;
-          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-          slots.push(time);
-        }
-      }
-    }
-    
-    return slots;
-  };
 
   // Controlla disponibilità dello slot
   const checkSlotAvailability = async (date: string, time: string) => {
@@ -801,21 +762,7 @@ export default function BookingSwapModal({
                   Seleziona orario per {format(parseISO(selectedDate), 'dd/MM/yyyy', { locale: it })}:
                 </label>
                 
-                {/* Messaggio solo se selectedBarber NON è 'all' e il barbiere è chiuso */}
-                {selectedBarber !== 'all' && generateTimeSlots().length === 0 ? (
-                  <div className="bg-red-900/30 border border-red-500 rounded-lg p-6 text-center">
-                    <div className="text-red-400 text-4xl mb-3">🔒</div>
-                    <div className="text-red-300 font-semibold text-lg mb-2">Giorno chiuso</div>
-                    <div className="text-gray-300 text-sm">
-                      {selectedBarber} è chiuso il{' '}
-                      {format(parseISO(selectedDate), 'EEEE', { locale: it })}
-                    </div>
-                    <div className="mt-4 text-xs text-gray-400">
-                      Seleziona un altro barbiere o un'altra data
-                    </div>
-                  </div>
-                ) : (
-                  <>
+                <>
                     {/* Legenda colori */}
                     <div className="flex flex-wrap gap-4 mb-4 text-xs">
                       <div className="flex items-center gap-2">
@@ -843,6 +790,7 @@ export default function BookingSwapModal({
                       currentBarberName={booking.barber_name} 
                       excludeBookingId={booking.id}
                       allBookings={allBarberBookings}
+                      barbers={barbersList}
                       onTimeSelect={(time, availability) => {
                         setSelectedTime(time);
                         setSlotAvailability(availability);
@@ -850,7 +798,6 @@ export default function BookingSwapModal({
                       }}
                     />
                   </>
-                )}
               </div>
             )}
 
