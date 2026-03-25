@@ -7,6 +7,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isDateClosed } from '@/lib/closure-utils';
 import { isBarberClosed } from '@/lib/barber-closures';
+import { getBarberClosures } from '@/lib/barber-closures';
 
 
 // API Version: 1.0.1 - Fix barber_id inclusion
@@ -310,11 +311,32 @@ export async function POST(request: NextRequest) {  try {    // Check authentica
       );
     }
 
-    // Controlla le chiusure specifiche del barbiere per la data e fascia oraria
+    // Controlla le chiusure del barbiere per la data e fascia oraria.
+    // Se esiste uno schedule specifico con dayOff=false (apertura eccezionale),
+    // ignora le chiusure ricorrenti e applica solo eventuali chiusure specifiche per data.
     if (bookingData.barberId) {
       const barber = await DatabaseService.getBarberById(String(bookingData.barberId));
       if (barber?.email) {
-        const barberClosed = await isBarberClosed(barber.email, bookingData.date, bookingData.time);
+        const schedule = await DatabaseService.getBarberSchedule(String(bookingData.barberId), bookingData.date);
+        const isExceptionalOpening = !!schedule && !schedule.dayOff;
+
+        let barberClosed = false;
+
+        if (isExceptionalOpening) {
+          const specificClosures = await getBarberClosures(barber.email, bookingData.date);
+          const hour = parseInt(bookingData.time.split(':')[0]);
+          const isMorning = hour < 14;
+
+          barberClosed = specificClosures.some(closure => {
+            if (closure.closureType === 'full') return true;
+            if (closure.closureType === 'morning' && isMorning) return true;
+            if (closure.closureType === 'afternoon' && !isMorning) return true;
+            return false;
+          });
+        } else {
+          barberClosed = await isBarberClosed(barber.email, bookingData.date, bookingData.time);
+        }
+
         if (barberClosed) {
           return NextResponse.json(
             { error: 'Il barbiere non è disponibile in questo orario' },
