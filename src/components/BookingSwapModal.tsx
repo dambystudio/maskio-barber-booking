@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -176,7 +176,7 @@ function TimeSlotGrid({
     if (selectedDate && allBookings && barbers.length > 0) {
       checkAllSlots();
     }
-  }, [selectedDate, allBookings, excludeBookingId, selectedBarber]);
+  }, [selectedDate, allBookings, excludeBookingId, selectedBarber, barbers]);
 
   const handleTimeClick = (time: string, barberName: string) => {
     const key = `${time}|${barberName}`;
@@ -465,6 +465,8 @@ export default function BookingSwapModal({
   const [allBarberBookings, setAllBarberBookings] = useState<Booking[]>(allBookings);
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [barbersList, setBarbersList] = useState<Barber[]>([]);
+  const allBookingsRef = useRef(allBookings);
+  allBookingsRef.current = allBookings;
 
   useEffect(() => {
     fetch('/api/barbers')
@@ -502,11 +504,11 @@ export default function BookingSwapModal({
           setAllBarberBookings(bookingsArray);
         } else {
           console.error('❌ Failed to fetch all bookings:', response.status);
-          setAllBarberBookings(allBookings); // Fallback
+          setAllBarberBookings(allBookingsRef.current); // Fallback
         }
       } catch (error) {
         console.error('❌ Error fetching all bookings:', error);
-        setAllBarberBookings(allBookings); // Fallback
+        setAllBarberBookings(allBookingsRef.current); // Fallback
       } finally {
         setLoadingBookings(false);
       }

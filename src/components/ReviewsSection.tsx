@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { StarIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import BookingButton from './BookingButton';
@@ -32,9 +32,9 @@ const ReviewsSection = () => {
   const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
   const [reviewsData, setReviewsData] = useState<ReviewsData | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const retryCountRef = useRef(0);
 
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/google-reviews', {
@@ -58,9 +58,9 @@ const ReviewsSection = () => {
         setReviewsData(data);
       } else {
         // Se non ci sono recensioni, prova un retry
-        if (retryCount < 2) {
-          console.log(`Retry ${retryCount + 1}/2 - Nessuna recensione ricevuta`);
-          setRetryCount(prev => prev + 1);
+        if (retryCountRef.current < 2) {
+          console.log(`Retry ${retryCountRef.current + 1}/2 - Nessuna recensione ricevuta`);
+          retryCountRef.current += 1;
           setTimeout(loadReviews, 2000); // Retry dopo 2 secondi
           return;
         }
@@ -69,9 +69,9 @@ const ReviewsSection = () => {
       console.error('Error loading reviews:', error);
       
       // Se fallisce, prova un retry
-      if (retryCount < 2) {
-        console.log(`Retry ${retryCount + 1}/2 dopo errore:`, error);
-        setRetryCount(prev => prev + 1);
+      if (retryCountRef.current < 2) {
+        console.log(`Retry ${retryCountRef.current + 1}/2 dopo errore:`, error);
+        retryCountRef.current += 1;
         setTimeout(loadReviews, 2000);
         return;
       }
@@ -114,15 +114,15 @@ const ReviewsSection = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadReviews();
-  }, []);
+  }, [loadReviews]);
 
   // Funzione per riprovare il caricamento
   const handleRetry = () => {
-    setRetryCount(0);
+    retryCountRef.current = 0;
     loadReviews();
   };
 

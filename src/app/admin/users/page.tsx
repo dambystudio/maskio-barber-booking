@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -34,7 +34,7 @@ export default function AdminUsersPage() {
   );
 
   // Verifica permessi tramite API invece che da sessione
-  const checkAdminPermissions = async () => {
+  const checkAdminPermissions = useCallback(async () => {
     try {
       if (!session?.user?.email) return;
 
@@ -69,31 +69,9 @@ export default function AdminUsersPage() {
     } finally {
       setPermissionsChecked(true);
     }
-  };
+  }, [session?.user?.email]);
 
-  useEffect(() => {
-    if (status === 'loading') return;
-
-    if (!session) {
-      router.push('/auth/signin');
-      return;
-    }
-
-    checkAdminPermissions();
-  }, [session, status, router]);
-
-  useEffect(() => {
-    if (!permissionsChecked) return;
-
-    if (!hasAdminAccess) {
-      router.push('/');
-      return;
-    }
-
-    fetchUsers();
-  }, [permissionsChecked, hasAdminAccess, router]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/users');
       if (response.ok) {
@@ -107,7 +85,29 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (!session) {
+      router.push('/auth/signin');
+      return;
+    }
+
+    checkAdminPermissions();
+  }, [session, status, router, checkAdminPermissions]);
+
+  useEffect(() => {
+    if (!permissionsChecked) return;
+
+    if (!hasAdminAccess) {
+      router.push('/');
+      return;
+    }
+
+    fetchUsers();
+  }, [permissionsChecked, hasAdminAccess, router, fetchUsers]);
 
   const updateUserRole = async (userId: string, newRole: 'customer' | 'barber' | 'admin') => {
     setUpdateLoading(userId);

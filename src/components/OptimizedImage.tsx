@@ -35,7 +35,6 @@ const OptimizedImage: FC<OptimizedImageProps> = ({
 
   const imageProps = {
     src: getOptimizedSrc(src),
-    alt,
     className,
     priority,
     quality,
@@ -46,6 +45,7 @@ const OptimizedImage: FC<OptimizedImageProps> = ({
   if (fill) {
     return (
       <Image
+        alt={alt || ''}
         {...imageProps}
         fill
         sizes={sizes || '100vw'}
@@ -55,6 +55,7 @@ const OptimizedImage: FC<OptimizedImageProps> = ({
 
   return (
     <Image
+      alt={alt || ''}
       {...imageProps}
       width={width}
       height={height}

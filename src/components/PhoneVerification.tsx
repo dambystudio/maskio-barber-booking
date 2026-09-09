@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
 interface PhoneVerificationProps {
@@ -27,28 +27,7 @@ export default function PhoneVerification({
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
 
-  // Send initial SMS when component mounts
-  useEffect(() => {
-    if (!initialSmsSent) {
-      sendVerificationCode();
-      setInitialSmsSent(true);
-    }
-  }, [initialSmsSent]);
-
-  // Countdown timer for blocked state
-  useEffect(() => {
-    if (blockedUntil) {
-      const timer = setInterval(() => {
-        const now = new Date();
-        if (now >= blockedUntil) {
-          setBlockedUntil(null);
-          setError(null);
-        }
-      }, 1000);
-      
-      return () => clearInterval(timer);
-    }
-  }, [blockedUntil]);  const sendVerificationCode = async () => {
+  const sendVerificationCode = useCallback(async () => {
     setSending(true);
     setError(null);
     setSuccess(null);
@@ -95,7 +74,31 @@ export default function PhoneVerification({
     } finally {
       setSending(false);
     }
-  };
+  }, [phone, isSignupFlow, userId]);
+
+  // Send initial SMS when component mounts
+  useEffect(() => {
+    if (!initialSmsSent) {
+      sendVerificationCode();
+      setInitialSmsSent(true);
+    }
+  }, [initialSmsSent, sendVerificationCode]);
+
+  // Countdown timer for blocked state
+  useEffect(() => {
+    if (blockedUntil) {
+      const timer = setInterval(() => {
+        const now = new Date();
+        if (now >= blockedUntil) {
+          setBlockedUntil(null);
+          setError(null);
+        }
+      }, 1000);
+      
+      return () => clearInterval(timer);
+    }
+  }, [blockedUntil]);
+
   const verifyCode = async () => {
     if (!code.trim()) {
       setError('Inserisci il codice di verifica');

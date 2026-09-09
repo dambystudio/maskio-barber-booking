@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { format, parseISO, addDays, isToday, getDay } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -315,8 +315,10 @@ export default function PannelloPrenotazioni() {
     const emails = Object.keys(barberMapping);
     const others = emails.filter(email => email !== currentEmail);
     return others;
-  };  // Verifica permessi tramite API invece che da sessione
-  const checkPermissions = async () => {
+  };
+  
+  // Verifica permessi tramite API invece che da sessione
+  const checkPermissions = useCallback(async () => {
     try {
       if (!session?.user?.email) return;
 
@@ -351,10 +353,10 @@ export default function PannelloPrenotazioni() {
     } finally {
       setPermissionsChecked(true);
     }
-  };
+  }, [session?.user?.email]);
 
   // <-- NUOVA FUNZIONE FETCH ALL BOOKINGS -->
-  const fetchAllBarberBookings = async () => {
+  const fetchAllBarberBookings = useCallback(async () => {
     if (!session?.user?.email) return;
 
     console.log(`📡 Inizio fetch di TUTTE le prenotazioni per la modalità calendario`);
@@ -373,30 +375,36 @@ export default function PannelloPrenotazioni() {
         // Get barbers list to map barber_id to name
         const barbersResponse = await fetch('/api/barbers');
         const barbersData = await barbersResponse.json();
-        console.log('👥 Barbers data received:', barbersData);
-        const barbersMap = new Map(barbersData.map((b: any) => [b.id, b.name]));
-        console.log('🗺️ Barbers map:', Array.from(barbersMap.entries()));
+        const barbersList = barbersData || [];
 
-        // 🔥 DEBUG: Stampo TUTTI i campi della prima prenotazione
-        if (data.bookings && data.bookings.length > 0) {
-          console.log('🔥 PRIMA PRENOTAZIONE - TUTTI I CAMPI:', data.bookings[0]);
-          console.log('🔥 Campi disponibili:', Object.keys(data.bookings[0]));
-        }
+        // Map barbers by ID for easy lookup
+        const barbersById: { [key: string]: string } = {};
+        barbersList.forEach((barber: any) => {
+          barbersById[barber.id] = barber.name;
+        });
 
-        // Map database fields to UI fields
+        // Add barber_name to each booking based on barber_id
         const mappedBookings = (data.bookings || []).map((booking: any) => {
-          const barberId = booking.barber_id || booking.barberId;
-          const barberName = booking.barber_name
-            || booking.barberName
-            || booking.barber
-            || (barberId && barbersMap.get(barberId))
-            || 'N/A';
+          // Use barber name from ID, or try to get from barber email/id
+          let barberName = booking.barber_name;
 
-          console.log('🔍 Booking mapping:', {
-            booking_id: booking.id,
-            barber_id: barberId,
-            mapped_name: barberName,
-            has_in_map: barberId ? barbersMap.has(barberId) : false
+          if (!barberName && booking.barber_id) {
+            barberName = barbersById[booking.barber_id];
+          }
+
+          if (!barberName && booking.barber_id) {
+            // Try to map by email
+            const barber = barbersList.find((b: any) => b.email === booking.barber_id);
+            if (barber) barberName = barber.name;
+          }
+
+          console.log(`Mapped booking:`, {
+            id: booking.id,
+            barber_id: booking.barber_id,
+            barber_name: barberName,
+            time: booking.booking_time || booking.time,
+            date: booking.booking_date || booking.date,
+            customer: booking.customer_name
           });
 
           return {
@@ -408,15 +416,6 @@ export default function PannelloPrenotazioni() {
           };
         });
 
-        console.log('🔄 Mapped bookings sample (first 3):', mappedBookings.slice(0, 3));
-        console.log('🔍 Fields check:', mappedBookings[0] ? {
-          has_booking_date: !!mappedBookings[0].booking_date,
-          has_date: !!mappedBookings[0].date,
-          booking_date_value: mappedBookings[0].booking_date,
-          date_value: mappedBookings[0].date,
-          barber_name: mappedBookings[0].barber_name
-        } : 'No bookings');
-
         setAllBookings(mappedBookings);
       } else {
         console.error('❌ Errore nel fetch di tutte le prenotazioni:', response.statusText);
@@ -424,7 +423,7 @@ export default function PannelloPrenotazioni() {
     } catch (error) {
       console.error('❌ Errore critico nel fetch di tutte le prenotazioni:', error);
     }
-  };
+  }, [session?.user?.email]);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -432,8 +431,9 @@ export default function PannelloPrenotazioni() {
     if (!session) {
       window.location.href = '/auth/signin';
       return;
-    } checkPermissions();
-  }, [session, status]);
+    }
+    checkPermissions();
+  }, [session, status, checkPermissions]);
 
   // Esegui il fetch di tutte le prenotazioni una volta che i permessi sono stati verificati
   useEffect(() => {
@@ -444,7 +444,7 @@ export default function PannelloPrenotazioni() {
       // Carica le aperture eccezionali
       loadExceptionalOpenings();
     }
-  }, [permissionsChecked, isAuthorized]);
+  }, [permissionsChecked, isAuthorized, fetchAllBarberBookings]);
 
   // Carica i giorni di chiusura dal localStorage e sincronizza con il server
   useEffect(() => {
@@ -560,7 +560,7 @@ export default function PannelloPrenotazioni() {
     }
   };
   // Funzione per caricare le chiusure ricorrenti del barbiere dal server
-  const loadClosureSettingsFromServer = async () => {
+  const loadClosureSettingsFromServer = useCallback(async () => {
     try {
       // Per le chiusure ricorrenti, usa la nuova API specifica per barbiere
       const params = new URLSearchParams();
@@ -600,7 +600,7 @@ export default function PannelloPrenotazioni() {
       setClosedDays(new Set([0]));
       setClosedDates(new Set());
     }
-  };
+  }, [selectedClosureBarber, isAdmin, currentBarber]);
 
   // ✅ NUOVA FUNZIONE: Ricerca cliente per nome
   const searchCustomerBookings = async (searchQuery: string) => {
@@ -723,7 +723,7 @@ export default function PannelloPrenotazioni() {
       console.log('🔄 Reloading closure settings for barber:', selectedClosureBarber || currentBarber);
       loadClosureSettingsFromServer();
     }
-  }, [selectedClosureBarber, permissionsChecked, currentBarber]);
+  }, [selectedClosureBarber, permissionsChecked, currentBarber, loadClosureSettingsFromServer]);
 
   // ✅ NUOVO: Inizializza checkbox per barbieri non-admin
   useEffect(() => {

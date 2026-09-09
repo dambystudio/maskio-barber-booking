@@ -1,7 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // Extend Window interface
 declare global {
@@ -20,16 +20,12 @@ export default function DebugPushPage() {
   const [subscription, setSubscription] = useState<any>(null);
   const [swState, setSwState] = useState<any>(null);
 
-  const addLog = (message: string) => {
+  const addLog = useCallback((message: string) => {
     console.log(message);
     setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
-
-  useEffect(() => {
-    checkEnvironment();
   }, []);
 
-  const checkEnvironment = async () => {
+  const checkEnvironment = useCallback(async () => {
     addLog('🔍 === CONTROLLO AMBIENTE ===');
     
     // 1. Service Worker Support
@@ -93,7 +89,11 @@ export default function DebugPushPage() {
     } catch (error: any) {
       addLog(`❌ Errore controllo SW: ${error.message}`);
     }
-  };
+  }, [addLog]);
+
+  useEffect(() => {
+    checkEnvironment();
+  }, [checkEnvironment]);
 
   const requestPermission = async () => {
     addLog('🚀 === RICHIESTA PERMESSO ===');

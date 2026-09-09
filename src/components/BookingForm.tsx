@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useCallback, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Service, Barber, BookingFormData } from '../types/booking';
@@ -431,7 +431,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.selectedDate, formData.selectedBarber]);
   // Check if a date is closed (either weekly recurring closure or specific date closure)
-  const isDateClosed = (dateString: string) => {
+  const isDateClosed = useCallback((dateString: string) => {
     try {
       // Parse the date string to get the day of week
       const [year, month, day] = dateString.split('-').map(Number);
@@ -453,10 +453,10 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       console.error('Error checking if date is closed:', error);
       return false;
     }
-  };
+  }, [closedDays, closedDates]);
 
   // Check if the selected barber is closed on a specific date due to recurring closures
-  const isBarberClosedRecurring = (dateString: string) => {
+  const isBarberClosedRecurring = useCallback((dateString: string) => {
     if (!formData.selectedBarber) return false;
     
     try {
@@ -481,7 +481,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
       console.error('Error checking if barber is closed:', error);
       return false;
     }
-  };
+  }, [formData.selectedBarber, barberClosedDays]);
 
   // Check if the selected barber is closed on a specific date (recurring + specific closures)
   const isBarberClosed = (dateString: string) => {
@@ -598,7 +598,7 @@ export default function BookingForm({ userSession }: BookingFormProps) {
     // Debounce ridotto per mostrare subito i giorni occupati
     const timeoutId = setTimeout(updateUnavailableDatesOptimized, 100);
     return () => clearTimeout(timeoutId);
-  }, [formData.selectedBarber, barberClosedDays]); // ✅ FIX: Wait for barberClosedDays to be loaded
+  }, [formData.selectedBarber, barberClosedDays, isBarberClosedRecurring, isDateClosed]);
   // Helper function to generate date buttons for the next 2 months (60 days)
   const generateDateButtons = () => {
     const dates = [];
