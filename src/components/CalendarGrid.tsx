@@ -121,12 +121,10 @@ const CalendarGrid = ({
     if (selectedDate === '2026-04-11') {
       // 11 aprile 2026: orari fino alle 15 (ultimo slot 14:30), pomeriggio chiuso
       slots.push('13:00', '13:30', '14:00', '14:30');
-    } else if (dayOfWeek === 1) { // Lunedì - solo pomeriggio fino alle 18:00
-      for (let hour = 15; hour <= 18; hour++) {
-        if (hour === 18) {
-          slots.push(`${hour.toString().padStart(2, '0')}:00`); // Solo 18:00, no 18:30
-        } else {
-          slots.push(`${hour.toString().padStart(2, '0')}:00`);
+    } else if (dayOfWeek === 1) { // Lunedì - pomeriggio fino alle 17:00
+      for (let hour = 15; hour <= 17; hour++) {
+        slots.push(`${hour.toString().padStart(2, '0')}:00`);
+        if (hour < 17) {
           slots.push(`${hour.toString().padStart(2, '0')}:30`);
         }
       }

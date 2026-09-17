@@ -101,6 +101,15 @@ function TimeSlotGrid({
           slots.push(time);
         }
       }
+    } else if (dayOfWeek === 1) {
+      // ✅ LUNEDÌ: 15:00-17:00 (ultimo appuntamento 17:00)
+      for (let hour = 15; hour <= 17; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 17 && minute > 0) break;
+          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(time);
+        }
+      }
     } else if (dayOfWeek !== 0) {
       // Altri giorni (non domenica): 15:00-18:00
       for (let hour = 15; hour <= 18; hour++) {

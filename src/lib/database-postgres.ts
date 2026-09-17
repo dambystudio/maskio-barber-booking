@@ -331,12 +331,21 @@ export class DatabaseService {
       return slots;
     }
 
-    // Monday (1) - Half day: only afternoon 15:00-17:30
+    // Monday (1) - 09:00-12:30 + 15:00-17:00 (ultimo appuntamento 17:00)
     if (dayOfWeek === 1) {
-      // Only afternoon slots 15:00-17:30 for Monday
+      // Morning slots 9:00-12:30
+      for (let hour = 9; hour <= 12; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 12 && minute > 30) break;
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(timeString);
+        }
+      }
+
+      // Afternoon slots 15:00-17:00 (ultimo appuntamento 17:00)
       for (let hour = 15; hour <= 17; hour++) {
         for (let minute = 0; minute < 60; minute += 30) {
-          if (hour === 17 && minute > 30) break;
+          if (hour === 17 && minute > 0) break;
           const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
           slots.push(timeString);
         }
