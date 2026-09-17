@@ -184,24 +184,32 @@ function generateAllTimeSlots(dateString: string, barberName?: string): string[]
     return slots;
   }
 
-  // Monday (1) - Michele: pomeriggio 15:00-18:00 | Fabio: chiuso
+  // Monday (1) - Michele e Nicolò: mattina (09:00-12:30) e pomeriggio (15:00-17:00) | Fabio: chiuso
   if (dayOfWeek === 1) {
     const barberNameLower = (barberName || '').toLowerCase();
-    
-    // Michele ha pomeriggio (15:00-18:00)
-    if (barberNameLower.includes('michele')) {
-      // Afternoon slots 15:00-18:00 for Michele
-      for (let hour = 15; hour <= 18; hour++) {
-        if (hour === 18) {
-          // Solo 18:00, no 18:30
-          slots.push('18:00');
-        } else {
-          slots.push(`${hour.toString().padStart(2, '0')}:00`);
-          slots.push(`${hour.toString().padStart(2, '0')}:30`);
-        }
+    // Fabio è chiuso il lunedì (riposo settimanale)
+    if (barberNameLower.includes('fabio')) {
+      return slots;
+    }
+
+    // Morning slots 9:00-12:30
+    for (let hour = 9; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 12 && minute > 30) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
       }
     }
-    // Fabio è chiuso il lunedì, quindi ritorna array vuoto
+
+    // Afternoon slots 15:00-17:00 (ultimo appuntamento 17:00)
+    for (let hour = 15; hour <= 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 17 && minute > 0) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+
     return slots;
   }
 
