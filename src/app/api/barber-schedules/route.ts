@@ -40,13 +40,11 @@ export async function POST(request: NextRequest) {
     
     if (!dayOff && allDay) {
       // Generate slots based on day
-      if (dayOfWeek === 1) { // Monday - Michele afternoon only
-        if (barberEmail === 'michelebiancofiore0230@gmail.com') {
-          availableSlots = ['15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'];
-        } else {
-          // Fabio closed on Monday
-          availableSlots = [];
-        }
+      if (dayOfWeek === 1) { // Monday - 09:00-12:30 + 15:00-17:00
+        availableSlots = [
+          '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+          '15:00', '15:30', '16:00', '16:30', '17:00'
+        ];
       } else if (dayOfWeek === 6) { // Saturday
         availableSlots = [
           '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',

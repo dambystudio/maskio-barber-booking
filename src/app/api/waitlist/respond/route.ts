@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { neon } from '@neondatabase/serverless';
+import { isWithinMondayBookingCutoff } from '@/lib/universal-slots';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -59,6 +60,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (response === 'accepted') {
+      if (!isWithinMondayBookingCutoff(entry.date, entry.offered_time)) {
+        return NextResponse.json(
+          { error: 'L’orario offerto non rientra negli orari prenotabili del salone' },
+          { status: 400 }
+        );
+      }
+
       // L'utente accetta: crea la prenotazione
       const newBooking = await sql`
         INSERT INTO bookings (

@@ -3,6 +3,7 @@ import { DatabaseService } from '@/lib/database';
 import { isDateClosed } from '@/lib/closure-utils';
 import { getBarberRecurringClosures, getBarberClosures } from '@/lib/barber-closures';
 import { getScheduleTimeSlots, isManualExceptionalSchedule } from '@/lib/barber-schedule-exceptions';
+import { filterSlotsByMondayBookingCutoff } from '@/lib/universal-slots';
 
 interface BatchAvailabilityRequest {
   barberId: string;
@@ -118,7 +119,9 @@ export async function POST(request: NextRequest) {
         // Se c'è uno schedule con day_off=false, usa gli slot configurati per quel giorno.
         // Se la data era ricorrentemente chiusa, arriva qui solo se è un'apertura eccezionale manuale.
         if (schedule && !schedule.dayOff && schedule.availableSlots) {
-          const allTimeSlots = getScheduleTimeSlots(schedule.availableSlots, schedule.unavailableSlots);
+          const allTimeSlots = filterSlotsByMondayBookingCutoff(
+            date, getScheduleTimeSlots(schedule.availableSlots, schedule.unavailableSlots)
+          );
 
           if (date === '2025-10-30') {
             console.log(`🔍 [Oct 30] Parsed slots:`, {
@@ -211,6 +214,7 @@ export async function POST(request: NextRequest) {
           allTimeSlots = await generateAllTimeSlots(date, requestCache);
         }
 
+        allTimeSlots = filterSlotsByMondayBookingCutoff(date, allTimeSlots);
         const totalSlots = allTimeSlots.length;
 
         if (totalSlots === 0) {
@@ -333,6 +337,25 @@ async function generateAllTimeSlots(dateString: string, requestCache?: RequestCa
   } else if (dayOfWeek === 0) {
     // Sunday is closed
     return slots;
+  } else if (dayOfWeek === 1) {
+    // Monday (9:00-12:30, 15:00-17:00)
+    // Morning slots 9:00-12:30
+    for (let hour = 9; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 12 && minute > 30) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+
+    // Afternoon slots 15:00-17:00 (ultimo appuntamento 17:00)
+    for (let hour = 15; hour <= 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 17 && minute > 0) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
   } else {
     // Monday to Friday (9:00-12:30, 15:00-19:00)
     // Morning slots 9:00-12:30

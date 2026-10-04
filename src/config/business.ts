@@ -41,7 +41,7 @@ export const BUSINESS = {
     `${CANONICAL_ORIGIN}/og-maskio-1200x630.webp`,
   ],
   hours: [
-    { day: 'Lunedì', schemaDay: 'Monday', periods: [{ opens: '15:30', closes: '18:30' }] },
+    { day: 'Lunedì', schemaDay: 'Monday', periods: [{ opens: '09:00', closes: '13:00' }, { opens: '15:00', closes: '17:30' }] },
     { day: 'Martedì', schemaDay: 'Tuesday', periods: [{ opens: '09:00', closes: '13:00' }, { opens: '15:00', closes: '18:00' }] },
     { day: 'Mercoledì', schemaDay: 'Wednesday', periods: [{ opens: '09:00', closes: '13:00' }, { opens: '15:00', closes: '18:00' }] },
     { day: 'Giovedì', schemaDay: 'Thursday', periods: [] },

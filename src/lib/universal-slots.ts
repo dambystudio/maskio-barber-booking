@@ -3,6 +3,22 @@
 
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=Sunday, 1=Monday, etc.
 
+/** Apply Monday's existing standard schedule to saved/custom schedules too. */
+export function isWithinMondayBookingCutoff(date: string, time: string): boolean {
+  // Calendar dates must not shift to Sunday in timezones west of UTC.
+  if (new Date(`${date}T00:00:00Z`).getUTCDay() !== 1) return true;
+
+  const lastBookableSlot = getUniversalSlots(1).at(-1);
+  if (!lastBookableSlot || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return false;
+
+  // Read the existing weekly schedule; do not duplicate its closing time here.
+  return time <= lastBookableSlot;
+}
+
+export function filterSlotsByMondayBookingCutoff(date: string, slots: string[]): string[] {
+  return slots.filter(time => isWithinMondayBookingCutoff(date, time));
+}
+
 /**
  * Get universal base slots for any day of the week
  * These are the same for ALL barbers before applying closures
@@ -15,7 +31,7 @@ export function getUniversalSlots(dayOfWeek: DayOfWeek): string[] {
     return [];
   }
 
-  // Monday (1): 09:00-12:30 + 15:00-18:00
+  // Monday (1): 09:00-12:30 + 15:00-17:00
   if (dayOfWeek === 1) {
     // Morning: 09:00-12:30 (8 slots)
     for (let hour = 9; hour <= 12; hour++) {
@@ -24,10 +40,10 @@ export function getUniversalSlots(dayOfWeek: DayOfWeek): string[] {
     }
     slots.push('12:30');
 
-    // Afternoon: 15:00-18:00 (7 slots)
-    for (let hour = 15; hour <= 18; hour++) {
+    // Afternoon: 15:00-17:00 (5 slots, last appointment at 17:00)
+    for (let hour = 15; hour <= 17; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
-      if (hour < 18) slots.push(`${hour.toString().padStart(2, '0')}:30`);
+      if (hour < 17) slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
 
     return slots;
@@ -120,22 +136,10 @@ export function getAutoClosureType(
   dayOfWeek: DayOfWeek
 ): 'full' | 'morning' | 'afternoon' | null {
 
-  // Michele: morning closure on Monday
-  if (barberEmail === 'michelebiancofiore0230@gmail.com' && dayOfWeek === 1) {
-    return 'morning';
-  }
-
-  // Nicolò: morning closure on Monday
-  if (barberEmail === 'nicolodesantis069@gmail.com' && dayOfWeek === 1) {
-    return 'morning';
-  }
-
   // Fabio: full closure on Monday
   if (barberEmail === 'fabio.cassano97@icloud.com' && dayOfWeek === 1) {
     return 'full';
   }
-
-
 
   return null;
 }
@@ -161,19 +165,9 @@ export function getAutoClosureReason(
   barberEmail: string,
   closureType: 'full' | 'morning' | 'afternoon'
 ): string {
-  if (barberEmail === 'michelebiancofiore0230@gmail.com') {
-    return 'Chiusura automatica - Solo pomeriggio il lunedì';
-  }
-
-  if (barberEmail === 'nicolodesantis069@gmail.com') {
-    return 'Chiusura automatica - Solo pomeriggio il lunedì';
-  }
-
   if (barberEmail === 'fabio.cassano97@icloud.com') {
     return 'Chiusura automatica - Riposo settimanale';
   }
-
-
 
   return 'Chiusura automatica';
 }
