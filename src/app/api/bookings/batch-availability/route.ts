@@ -3,6 +3,7 @@ import { DatabaseService } from '@/lib/database';
 import { isDateClosed } from '@/lib/closure-utils';
 import { getBarberRecurringClosures, getBarberClosures } from '@/lib/barber-closures';
 import { getScheduleTimeSlots, isManualExceptionalSchedule } from '@/lib/barber-schedule-exceptions';
+import { filterSlotsByMondayBookingCutoff } from '@/lib/universal-slots';
 
 interface BatchAvailabilityRequest {
   barberId: string;
@@ -118,7 +119,9 @@ export async function POST(request: NextRequest) {
         // Se c'è uno schedule con day_off=false, usa gli slot configurati per quel giorno.
         // Se la data era ricorrentemente chiusa, arriva qui solo se è un'apertura eccezionale manuale.
         if (schedule && !schedule.dayOff && schedule.availableSlots) {
-          const allTimeSlots = getScheduleTimeSlots(schedule.availableSlots, schedule.unavailableSlots);
+          const allTimeSlots = filterSlotsByMondayBookingCutoff(
+            date, getScheduleTimeSlots(schedule.availableSlots, schedule.unavailableSlots)
+          );
 
           if (date === '2025-10-30') {
             console.log(`🔍 [Oct 30] Parsed slots:`, {
@@ -211,6 +214,7 @@ export async function POST(request: NextRequest) {
           allTimeSlots = await generateAllTimeSlots(date, requestCache);
         }
 
+        allTimeSlots = filterSlotsByMondayBookingCutoff(date, allTimeSlots);
         const totalSlots = allTimeSlots.length;
 
         if (totalSlots === 0) {

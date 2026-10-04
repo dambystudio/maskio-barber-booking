@@ -9,6 +9,7 @@ import { isDateClosed } from '@/lib/closure-utils';
 import { isBarberClosed, isBarberClosedRecurring } from '@/lib/barber-closures';
 import { getBarberClosures } from '@/lib/barber-closures';
 import { isManualExceptionalSchedule } from '@/lib/barber-schedule-exceptions';
+import { isWithinMondayBookingCutoff } from '@/lib/universal-slots';
 
 
 // API Version: 1.0.1 - Fix barber_id inclusion
@@ -302,6 +303,13 @@ export async function POST(request: NextRequest) {  try {    // Check authentica
       );
     }
 
+    if (!isWithinMondayBookingCutoff(bookingData.date, bookingData.time)) {
+      return NextResponse.json(
+        { error: 'L’orario selezionato non rientra negli orari prenotabili del salone' },
+        { status: 400 }
+      );
+    }
+
     // 🔐 SECURITY FIX: Validazione chiusure lato server (sourced from DB, non localStorage)
     // Blocca prenotazioni in giorni/date chiusi anche se il client ha localStorage alterato
     const shopClosed = await isDateClosed(bookingData.date);
@@ -435,6 +443,27 @@ export async function PUT(request: NextRequest) {
         { error: 'ID prenotazione mancante' },
         { status: 400 }
       );
+    }
+
+    // Validate only actual scheduling changes: metadata edits and cancellations
+    // must remain possible for existing appointments outside today's schedule.
+    if (updates.date !== undefined || updates.time !== undefined || updates.barberId !== undefined) {
+      const existingBooking = await DatabaseService.getBookingById(bookingId);
+      if (!existingBooking) {
+        return NextResponse.json({ error: 'Prenotazione non trovata' }, { status: 404 });
+      }
+      const targetDate = updates.date ?? existingBooking.date;
+      const targetTime = updates.time ?? existingBooking.time;
+      const schedulingChanged = targetDate !== existingBooking.date ||
+        targetTime !== existingBooking.time ||
+        (updates.barberId !== undefined && updates.barberId !== existingBooking.barberId);
+
+      if (schedulingChanged && !isWithinMondayBookingCutoff(targetDate, targetTime)) {
+        return NextResponse.json(
+          { error: 'L’orario selezionato non rientra negli orari prenotabili del salone' },
+          { status: 400 }
+        );
+      }
     }
 
     const updatedBooking = await DatabaseService.updateBooking(bookingId, updates);

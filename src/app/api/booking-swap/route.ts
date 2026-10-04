@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { isWithinMondayBookingCutoff } from '@/lib/universal-slots';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL non definito');
@@ -73,6 +74,13 @@ export async function POST(request: NextRequest) {
       if (!newDate || !newTime) {
         console.error('❌ Parametri mancanti:', { newDate, newTime });
         return NextResponse.json({ error: 'Nuova data e ora richieste' }, { status: 400 });
+      }
+
+      if (!isWithinMondayBookingCutoff(newDate, newTime)) {
+        return NextResponse.json(
+          { error: 'L’orario selezionato non rientra negli orari prenotabili del salone' },
+          { status: 400 }
+        );
       }
 
       // ✅ NUOVO: Supporto per cambio barbiere
@@ -154,6 +162,15 @@ export async function POST(request: NextRequest) {
       const booking2 = bookings.find(b => b.id === booking2Id);
       if (!booking2) {
         return NextResponse.json({ error: 'Seconda prenotazione non trovata' }, { status: 404 });
+      }
+
+      // Both appointments must land within the same configured weekly schedule.
+      if (!isWithinMondayBookingCutoff(booking2.date, booking2.time) ||
+          !isWithinMondayBookingCutoff(booking1.date, booking1.time)) {
+        return NextResponse.json(
+          { error: 'Uno degli orari non rientra negli orari prenotabili del salone' },
+          { status: 400 }
+        );
       }
 
       // ✅ MODIFICA: Gestione reciproca - barbieri possono scambiare appuntamenti tra loro
@@ -263,6 +280,10 @@ export async function GET(request: NextRequest) {
 
     if (!barberEmail || !date || !time) {
       return NextResponse.json({ error: 'Parametri mancanti' }, { status: 400 });
+    }
+
+    if (!isWithinMondayBookingCutoff(date, time)) {
+      return NextResponse.json({ available: false });
     }
 
     // Trova il barber_id dall'email

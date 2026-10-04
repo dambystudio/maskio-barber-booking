@@ -3,6 +3,7 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { eq, and, desc, asc, sql as dsql } from 'drizzle-orm';
 import * as schema from './schema';
+import { filterSlotsByMondayBookingCutoff } from './universal-slots';
 
 // Initialize database connection
 const sql = neon(process.env.DATABASE_URL!);
@@ -299,6 +300,9 @@ export class DatabaseService {
       // Il giorno è marcato come libero
       return [];
     }
+
+    // Stored schedules may still contain Monday slots after the weekly cutoff.
+    availableSlots = filterSlotsByMondayBookingCutoff(date, availableSlots);
 
     // Get booked slots for this date and barber
     const bookings = await this.getBookingsByDate(date);

@@ -3,6 +3,22 @@
 
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=Sunday, 1=Monday, etc.
 
+/** Apply Monday's existing standard schedule to saved/custom schedules too. */
+export function isWithinMondayBookingCutoff(date: string, time: string): boolean {
+  // Calendar dates must not shift to Sunday in timezones west of UTC.
+  if (new Date(`${date}T00:00:00Z`).getUTCDay() !== 1) return true;
+
+  const lastBookableSlot = getUniversalSlots(1).at(-1);
+  if (!lastBookableSlot || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return false;
+
+  // Read the existing weekly schedule; do not duplicate its closing time here.
+  return time <= lastBookableSlot;
+}
+
+export function filterSlotsByMondayBookingCutoff(date: string, slots: string[]): string[] {
+  return slots.filter(time => isWithinMondayBookingCutoff(date, time));
+}
+
 /**
  * Get universal base slots for any day of the week
  * These are the same for ALL barbers before applying closures

@@ -3,6 +3,7 @@ import { DatabaseService } from '@/lib/database';
 import { isDateClosed, getClosureSettings } from '@/lib/closure-utils';
 import { isBarberClosed, isBarberClosedRecurring } from '@/lib/barber-closures';
 import { getScheduleTimeSlots, isManualExceptionalSchedule } from '@/lib/barber-schedule-exceptions';
+import { filterSlotsByMondayBookingCutoff } from '@/lib/universal-slots';
 
 interface TimeSlot {
   time: string;
@@ -64,6 +65,8 @@ export async function GET(request: NextRequest) {
       // No specific schedule found, use standard generated slots
       allPossibleSlots = generateAllTimeSlots(date, barberName);
     }
+
+    allPossibleSlots = filterSlotsByMondayBookingCutoff(date, allPossibleSlots);
 
     const morningCutoffHour = date === '2026-04-11' ? 15 : 14;
     
